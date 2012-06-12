@@ -1,0 +1,210 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D95B782415879BE1004590CA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B782315879BE1004590CA /* main.cpp */; };
+		D95B782615879BE1004590CA /* ColloidalGelRheology.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D95B782515879BE1004590CA /* ColloidalGelRheology.1 */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D95B781D15879BE1004590CA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D95B782615879BE1004590CA /* ColloidalGelRheology.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D95B781F15879BE1004590CA /* ColloidalGelRheology */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ColloidalGelRheology; sourceTree = BUILT_PRODUCTS_DIR; };
+		D95B782315879BE1004590CA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D95B782515879BE1004590CA /* ColloidalGelRheology.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ColloidalGelRheology.1; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D95B781C15879BE1004590CA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D95B781415879BE0004590CA = {
+			isa = PBXGroup;
+			children = (
+				D95B782215879BE1004590CA /* ColloidalGelRheology */,
+				D95B782015879BE1004590CA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D95B782015879BE1004590CA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D95B781F15879BE1004590CA /* ColloidalGelRheology */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D95B782215879BE1004590CA /* ColloidalGelRheology */ = {
+			isa = PBXGroup;
+			children = (
+				D95B782315879BE1004590CA /* main.cpp */,
+				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
+			);
+			path = ColloidalGelRheology;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D95B781E15879BE1004590CA /* ColloidalGelRheology */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D95B782915879BE1004590CA /* Build configuration list for PBXNativeTarget "ColloidalGelRheology" */;
+			buildPhases = (
+				D95B781B15879BE1004590CA /* Sources */,
+				D95B781C15879BE1004590CA /* Frameworks */,
+				D95B781D15879BE1004590CA /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ColloidalGelRheology;
+			productName = ColloidalGelRheology;
+			productReference = D95B781F15879BE1004590CA /* ColloidalGelRheology */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D95B781615879BE0004590CA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+			};
+			buildConfigurationList = D95B781915879BE0004590CA /* Build configuration list for PBXProject "ColloidalGelRheology" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D95B781415879BE0004590CA;
+			productRefGroup = D95B782015879BE1004590CA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D95B781E15879BE1004590CA /* ColloidalGelRheology */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D95B781B15879BE1004590CA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D95B782415879BE1004590CA /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D95B782715879BE1004590CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D95B782815879BE1004590CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D95B782A15879BE1004590CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D95B782B15879BE1004590CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D95B781915879BE0004590CA /* Build configuration list for PBXProject "ColloidalGelRheology" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D95B782715879BE1004590CA /* Debug */,
+				D95B782815879BE1004590CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D95B782915879BE1004590CA /* Build configuration list for PBXNativeTarget "ColloidalGelRheology" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D95B782A15879BE1004590CA /* Debug */,
+				D95B782B15879BE1004590CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D95B781615879BE0004590CA /* Project object */;
+}
