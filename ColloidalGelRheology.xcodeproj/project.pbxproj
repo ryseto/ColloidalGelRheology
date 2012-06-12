@@ -9,6 +9,13 @@
 /* Begin PBXBuildFile section */
 		D95B782415879BE1004590CA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B782315879BE1004590CA /* main.cpp */; };
 		D95B782615879BE1004590CA /* ColloidalGelRheology.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D95B782515879BE1004590CA /* ColloidalGelRheology.1 */; };
+		D95B782D15879C9F004590CA /* wall.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B782C15879C9F004590CA /* wall.cpp */; };
+		D95B783215879D6C004590CA /* system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783115879D6C004590CA /* system.cpp */; };
+		D95B783515879DE3004590CA /* quaternion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783415879DE3004590CA /* quaternion.cpp */; };
+		D95B783815879E29004590CA /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783715879E29004590CA /* particle.cpp */; };
+		D95B783C15879E8E004590CA /* grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783B15879E8E004590CA /* grid.cpp */; };
+		D95B784015879EFC004590CA /* contable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783F15879EFC004590CA /* contable.cpp */; };
+		D95B784415879F68004590CA /* bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B784315879F67004590CA /* bond.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +35,23 @@
 		D95B781F15879BE1004590CA /* ColloidalGelRheology */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ColloidalGelRheology; sourceTree = BUILT_PRODUCTS_DIR; };
 		D95B782315879BE1004590CA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D95B782515879BE1004590CA /* ColloidalGelRheology.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ColloidalGelRheology.1; sourceTree = "<group>"; };
+		D95B782C15879C9F004590CA /* wall.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wall.cpp; sourceTree = "<group>"; };
+		D95B782E15879CD7004590CA /* wall.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wall.h; sourceTree = "<group>"; };
+		D95B782F15879D10004590CA /* vec3d.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vec3d.h; sourceTree = "<group>"; };
+		D95B783015879D43004590CA /* system.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
+		D95B783115879D6C004590CA /* system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system.cpp; sourceTree = "<group>"; };
+		D95B783315879DA4004590CA /* quaternion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = quaternion.h; sourceTree = "<group>"; };
+		D95B783415879DE3004590CA /* quaternion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quaternion.cpp; sourceTree = "<group>"; };
+		D95B783615879DFF004590CA /* particle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = particle.h; sourceTree = "<group>"; };
+		D95B783715879E29004590CA /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
+		D95B783915879E52004590CA /* output.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = output.h; sourceTree = "<group>"; };
+		D95B783A15879E73004590CA /* grid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = grid.h; sourceTree = "<group>"; };
+		D95B783B15879E8E004590CA /* grid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = grid.cpp; sourceTree = "<group>"; };
+		D95B783E15879EDB004590CA /* contable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = contable.h; sourceTree = "<group>"; };
+		D95B783F15879EFC004590CA /* contable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = contable.cpp; sourceTree = "<group>"; };
+		D95B784115879F32004590CA /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		D95B784215879F43004590CA /* bond.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bond.h; sourceTree = "<group>"; };
+		D95B784315879F67004590CA /* bond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bond.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,7 +85,24 @@
 			isa = PBXGroup;
 			children = (
 				D95B782315879BE1004590CA /* main.cpp */,
+				D95B782C15879C9F004590CA /* wall.cpp */,
 				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
+				D95B782E15879CD7004590CA /* wall.h */,
+				D95B782F15879D10004590CA /* vec3d.h */,
+				D95B783015879D43004590CA /* system.h */,
+				D95B783115879D6C004590CA /* system.cpp */,
+				D95B783315879DA4004590CA /* quaternion.h */,
+				D95B783415879DE3004590CA /* quaternion.cpp */,
+				D95B783615879DFF004590CA /* particle.h */,
+				D95B783715879E29004590CA /* particle.cpp */,
+				D95B783915879E52004590CA /* output.h */,
+				D95B783A15879E73004590CA /* grid.h */,
+				D95B783B15879E8E004590CA /* grid.cpp */,
+				D95B783E15879EDB004590CA /* contable.h */,
+				D95B783F15879EFC004590CA /* contable.cpp */,
+				D95B784115879F32004590CA /* common.h */,
+				D95B784215879F43004590CA /* bond.h */,
+				D95B784315879F67004590CA /* bond.cpp */,
 			);
 			path = ColloidalGelRheology;
 			sourceTree = "<group>";
@@ -117,6 +158,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				D95B782415879BE1004590CA /* main.cpp in Sources */,
+				D95B782D15879C9F004590CA /* wall.cpp in Sources */,
+				D95B783215879D6C004590CA /* system.cpp in Sources */,
+				D95B783515879DE3004590CA /* quaternion.cpp in Sources */,
+				D95B783815879E29004590CA /* particle.cpp in Sources */,
+				D95B783C15879E8E004590CA /* grid.cpp in Sources */,
+				D95B784015879EFC004590CA /* contable.cpp in Sources */,
+				D95B784415879F68004590CA /* bond.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
