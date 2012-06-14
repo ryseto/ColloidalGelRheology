@@ -28,7 +28,6 @@ System::System()
 }
 
 System::~System(){
-	//fout_yap.close();
     fout_conf.close();
 	fout_data.close();
 	fout_log.close();
@@ -74,7 +73,6 @@ void System::TimeDevStrainControlShearEuler(vector<Particle *> &particle_active,
 		(*it_particle)->move_Euler();
 	}
 }
-
 
 void System::setParameterFile(char *parameters_file_)
 {
@@ -219,14 +217,14 @@ void System::prepareCalculationParameters()
 }
 
 void System::optimalTimeStep(){
-    //double dt_new = sqrt( max_move_step /  max_force );
-    double dt_new = max_move_step /  max_velocity;
+    double dt_new = max_move_step / max_velocity;
     if ( dt_new > dt_max ){
         dt_new = dt_max;
     } else {
         cerr << "small time step"  << dt_new << endl;
     }
     
+    cerr << "dt=" << dt_new << endl;
     
     dt = dt_new;
 }
@@ -242,13 +240,11 @@ void System::calcShearStress(){
     double stress_x_bot = wl[0]->stressSensor_x();
     double stress_x_top = wl[1]->stressSensor_x();
     stress_x = 0.5*(abs(stress_x_bot) + abs(stress_x_top));
-    if (stress_x < 1e-3){
+    if (stress_x < 1e-8){
         diff_stress_x = 0;
     }else{
         diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
     }
-    cerr << stress_x << ' ' << diff_stress_x << endl;
-    //    cerr << stress_x << endl;
     double stress_z_bot = wl[0]->stressSensor_z();
     double stress_z_top = wl[1]->stressSensor_z();
     stress_z = 0.5*(abs(stress_z_bot)+abs(stress_z_top));
@@ -354,11 +350,13 @@ void System::readParameter(const string &codeword, const string &value)
     keylist["rootdir:"]=1; const int _rootdir = 1;
     keylist["bond0_file:"]=2; const int _bond0_file = 2;
     keylist["bond1_file:"]=3; const int _bond1_file = 3;
-    keylist["lx:"]=9; const int _lx = 9;
-    keylist["lz_init:"]=10; const int _lz_init = 10;
+//    keylist["lx:"]=9; const int _lx = 9;
+//    keylist["lz_init:"]=10; const int _lz_init = 10;
     keylist["initial_compaction:"]=11; const int _initial_compaction=11;
     keylist["volumefraction_increment:"]=12; const int _volumefraction_increment=12;
 	keylist["max_volume_fraction:"]=13; const int _max_volume_fraction=13;
+    keylist["step_strain_x:"]=14; const int _step_strain_x=14;
+    keylist["max_strain_x:"]=15; const int _max_strain_x=15;
     keylist["wall_velocity:"]=20;const int _wall_velocity=20;
     //    keylist["dt_max:"]=21; const int _dt_max=21;
     keylist["max_move_step:"]=22; const int _max_move_step=22;
@@ -374,16 +372,21 @@ void System::readParameter(const string &codeword, const string &value)
         case _rootdir: rootdir = value; break;
         case _bond0_file: bond0_file = value; break;
         case _bond1_file: bond1_file = value; break;
-        case _lx: lx = atof(value.c_str()); break;
-        case _lz_init: lz_init = atof( value.c_str()) ; break;
+  //      case _lx: lx = atof(value.c_str()); break;
+//        case _lz_init: lz_init = atof( value.c_str()) ; break;
             //		case _dt_max: dt_max = atof( value.c_str()) ; break;
         case _initial_compaction: initial_compaction = atof(value.c_str()) ; break;
             //case _tolerance_convergence: tolerance_convergence = atof(value.c_str()); break;
 		case _interval_convergence_check: interval_convergence_check = atoi(value.c_str()); break;
         case _max_velocity_convergence: max_velocity_convergence = atof(value.c_str()); break;
         case _wall_velocity: wall_velocity = atof(value.c_str()); break;
-        case _max_ang_velocity_convergence: max_ang_velocity_convergence = atof(value.c_str());; break;
-		case _max_volume_fraction: max_volume_fraction = atof(value.c_str());; break;
+        
+        case _max_ang_velocity_convergence: max_ang_velocity_convergence = atof(value.c_str()); break;
+		case _max_volume_fraction: max_volume_fraction = atof(value.c_str()); break;
+            
+        case _step_strain_x: step_strain_x = atof(value.c_str()); break;
+        case _max_strain_x: max_strain_x = atof(value.c_str()); break;
+            
 		case _max_move_step: max_move_step = atof(value.c_str()); break;
         case _volumefraction_increment: volumefraction_increment = atof(value.c_str());; break;
         case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str());; break;
@@ -397,22 +400,34 @@ void System::readParameter(const string &codeword, const string &value)
 
 void System::importPositions()
 {	
-    string path = rootdir + "/" + init_cluster_file;
 	vector<vec3d> init_aggregate;
     vector<int> init_aggregate_cluster;
 	ifstream fin;
+    string path = rootdir + "/" + init_cluster_file;
+	string s_parameters_file = parameters_file;
+	int i1 = path.find_first_of("W") + 1;
+	int i2 = path.find_first_of("H",i1);
+    int i3 = path.find_first_of("_",i2);
+    char width_str[4];
+    char height_str[4];
+	sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
+    sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
     fin.open( path.c_str());
     if (! fin.is_open() ){
-        cerr << "no initial file" << endl;
-        exit(1);
+        string path = init_cluster_file;
+        fin.open( path.c_str());
+        if (! fin.is_open() ){
+            cerr << "no initial file" << endl;
+            exit(1);
+        }
     }
-    cerr << "lx = " << lx  << endl;
+    lx = atof(width_str);
+    lz_init = atof(height_str);
 #ifdef TWODIMENSION
     ly = 2.;
 #else 
     ly = lx;
 #endif
-    
 	double x, y, z;
     int i_cluster;
 	if (simulation == 'c' || simulation == 's'){
@@ -428,15 +443,11 @@ void System::importPositions()
             init_aggregate_cluster.push_back(i_cluster);
 		}while (!fin.eof());
 	}
-	
-    //	init_aggregate.pop_back();
+    init_aggregate.pop_back();
 	int count_particle_number = 0;
-    
-    //	while ( !init_aggregate.empty() ){
-    for (int i = 0 ; i < init_aggregate.size()-1 ; i++){
-		//vec3d new_p = init_aggregate.back();
+    cerr << "N=" << init_aggregate.size() << endl;
+    for (int i = 0 ; i < init_aggregate.size(); i++){
         vec3d new_p = init_aggregate[i];
-        //init_aggregate.pop_back();
 		particle.push_back(new Particle(count_particle_number, new_p,
                                         init_aggregate_cluster[i],
                                         *this) );
@@ -450,7 +461,6 @@ void System::importPositions()
 }
 
 void System::setRod(int m){
-	
 	for (int i = 0 ; i < m ; i++){
 		vec3d new_p(0, 0, 2*i - m);
 		particle.push_back(new Particle(i, new_p, 0, *this) );
@@ -476,7 +486,6 @@ void System::shiftCenterOfMass(vector<vec3d> &p)
 		p_iter->y += ly/2;
 		p_iter->z += lz/2;
 	}
-    
 }
 
 /* Checking active bonds at the first step.
@@ -500,11 +509,11 @@ void System::check_active(vector<Particle *> &particle_active, vector<Bond *> &b
 void System::calcLocalStrains(){
     /* The minimum and maximum distances between two particles.
      */
-    r_min = 2.;
-    r_max = 2.;
-    bending_angle_max = 0.;
-    torsional_angle_max = 0.;
-    sliding_disp_max = 0.;
+    r_min = 2;
+    r_max = 2;
+    bending_angle_max = 0;
+    torsional_angle_max = 0;
+    sliding_disp_max = 0;
     for (int i=0; i < n_bond; i++){
         if (bond[i]->status){
             if (bond[i]->r < r_min){
@@ -895,9 +904,7 @@ void System::checkState(vector <Particle *> &particle_active,
         sum_num_of_contacts_for_active_particle += particle_active[i]->valCn_size();
     }
     average_contact_number = (1.*sum_num_of_contacts_for_active_particle) / n_particle_active;
-    //
-    //////////////////////////////////////////////////////////////////////////
-    // Calc forces
+    
     int n_bond_active = bond_active.size();
 	for (int i=0; i < n_bond_active; i++){
         bond_active[i]->addContactForce();
@@ -905,7 +912,7 @@ void System::checkState(vector <Particle *> &particle_active,
 	double bforce_max = 0;
 	double bforce_sum = 0;
 	for (int i=0; i < n_bond_active; i++){
-        double bforce = bond_active[i]->strenghOfForce();
+        double bforce = bond_active[i]->forceNorm();
         bforce_sum += bforce;
         if ( bforce > bforce_max ){
             bforce_max = bforce ;
@@ -932,13 +939,7 @@ void System::checkState(vector <Particle *> &particle_active,
     for (int i=0; i < n_particle_active; i++){
 		particle_active[i]->resetForce();
 	}
-    //
-    //////////////////////////////////////////////////////////////////////////
-    //
     calcLocalStrains();
-    //
-    //////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////
 }
 
 bool System::checkPercolation(){
@@ -954,10 +955,15 @@ bool System::checkPercolation(){
 }
 
 void System::shiftForPercolation(){
-    //This version can deal only 2D
+    /* This version can deal only 2D
+     * This is only for the cases that a percolated cluster is separated by
+     * top and bottom walls.
+     * If not, we have to consider all particles
+     * for the possible collision.
+     */
     double del_x_min = 1000;
+    cerr << "wall groups:  " ;
     cerr << wl[0]->wall_group.size() << ' ' << wl[1]->wall_group.size() << endl; 
-    
     for (int i = 0; i < wl[1]->wall_group.size(); i++){
         int i_uppder = wl[1]->wall_group[i]; 
         vec3d p_up = particle[i_uppder]->p;
@@ -971,23 +977,18 @@ void System::shiftForPercolation(){
             double yy_zz = sq(p_lo.y - p_up.y) + sq(p_lo.z - p_up.z);
             if (4 - yy_zz > 0){
                 double del_x = p_lo.x - p_up.x - sqrt( 4 - yy_zz);
-                //                cerr << del_x << endl;
                 if ( del_x < del_x_min){
                     del_x_min = del_x;
                 }
             }            
         }
-        //cerr << i << " " << del_x_min << endl;
-    }
-    
+    }    
     for (int i = 0; i < wl[1]->wall_group.size(); i++){
         int k = wl[1]->wall_group[i];
-        particle[k]->x_shift(del_x_min);
+        particle[k]->x_shift(del_x_min+0.0001);
     }
     cerr << " del_x_min : " << del_x_min << endl;
 }
-
-
 
 /*
  *	Adjust 
@@ -995,27 +996,22 @@ void System::shiftForPercolation(){
  *  - Bond vector 
  */ 
 void System::simuAdjustment(){
-	//shiftCenterOfMass(particle);
 	ForAllParticle{
 		(*p_iter)->setNorm_u();
 	}
-    if (simulation == 'c'||simulation == 's'){
+    if (simulation == 'c'){
         lz0 = (wl[1]->z + wl[0]->z) / 2;
     }
 }
 
 void System::makeNeighbor(){
     if (simulation == 'c'||simulation == 's'){
-        double close_to_bot_wall = (wl[0]->z) + 2.;
-        double close_to_top_wall = (wl[1]->z) - 2.;
-        
-        grid->remake_with_walls(close_to_bot_wall, close_to_top_wall, particle);
+        grid->remake_with_walls((wl[0]->z) + 2, (wl[1]->z) - 2, particle);
         ForAllParticle{
             (*p_iter)->makeNeighbor();
         }
         wl[0]->makeNeighbor();
         wl[1]->makeNeighbor();		
-        
     } else {
         grid->remake(particle);
         ForAllParticle{
@@ -1026,20 +1022,18 @@ void System::makeNeighbor(){
 
 void System::setWall()
 {
-    double z_min = 100, z_max = 0;
-    ForAllParticle{
-        if ( (*p_iter)->z() > z_max){z_max = (*p_iter)->z();}
-        if ( (*p_iter)->z() < z_min){z_min = (*p_iter)->z();}
-    }
-    //  cerr << "z_max " << z_max << endl;
-    //    cerr << "z_min " << z_min << endl;
+    //    double z_min = 100, z_max = 0;
+    //  ForAllParticle{
+    //        if ( (*p_iter)->z() > z_max){z_max = (*p_iter)->z();}
+    //      if ( (*p_iter)->z() < z_min){z_min = (*p_iter)->z();}
+    //    }
     n_bot = n_particle;
     n_top = n_particle+1;
-    wl.push_back(new Wall(n_bot, z_min - 1.0, *this)); // wl[0] --> bot
-    //wl.push_back(new Wall(n_bot, 0, *this)); // wl[0] --> bot
+    //wl.push_back(new Wall(n_bot, z_min - 1.0, *this)); // wl[0] --> bot
+    wl.push_back(new Wall(n_bot, 0, *this)); // wl[0] --> bot
     //  cerr << "wall created at z = " << z_min - 1.0 << endl;
-    wl.push_back(new Wall(n_top, z_max + 1.0, *this)); // wl[1] --> top
-    //wl.push_back(new Wall(n_top, lz_init, *this)); // wl[1] --> top
+    //wl.push_back(new Wall(n_top, z_max + 1.0, *this)); // wl[1] --> top
+    wl.push_back(new Wall(n_top, lz_init, *this)); // wl[1] --> top
     //    cerr << "wall created at z = " << z_max + 1.0 << endl;
     renew_Lz();
     cerr << "Lz_init = " << lz << endl;
@@ -1051,6 +1045,7 @@ void System::regeneration(){
 		bond[*b]->regeneration();
 		counterRegenerate ++;
 	}
+    regeneration_bond.clear();
 }
 
 void System::regeneration_onebyone(){
@@ -1068,28 +1063,6 @@ void System::regeneration_onebyone(){
 }
 
 void System::rupture(vector<Bond *> &bond_active){
-    // To be check
-	foreach(vector<int>, rupture_bond, b){
-		bond[*b]->rupture();	
-		counterBreak ++;
-	}
-	/*	
-	 * This is a dangerous trick.
-	 * I should change this part more suitable way.
-	 */
-    int n_bond_active = bond_active.size() ;
-	for (int i = 0 ; i < n_bond_active; i++){
-		if ( bond_active[i]->status == 0 ){
-			bond_active[i] = bond_active.back();
-            bond_active[i]->number_activebond = i;
-			bond_active.pop_back();
-            n_bond_active --;
-			i --;
-		}
-	}    
-}
-
-void System::rupture_onebyone(vector<Bond *> &bond_active){
     double D_max = 0;
     int most_stressed_bond = rupture_bond[0] ;
     int n_rupture_bond =  rupture_bond.size();
@@ -1105,14 +1078,17 @@ void System::rupture_onebyone(vector<Bond *> &bond_active){
     bond_active[ i_bondactive ] = bond_active.back();
     bond_active[ i_bondactive ]->number_activebond = i_bondactive;
     bond_active.pop_back();
+    rupture_bond.clear();
 }
 
 void System::makeInitialBond(double generation_distance){
 	double tmp = sq_dist_generate;
 	sq_dist_generate = sq(generation_distance);
 	makeNeighbor();
-	generateBond();	
-    
+	generateBond();
+    /* z 方向の周期境界条件で生成した初期配置。
+     * 粒子の中心座標は z
+     */
 	if (simulation == 'c'||simulation == 's'){
         vector<int> bot_list;
         vector<int> top_list;
@@ -1120,7 +1096,7 @@ void System::makeInitialBond(double generation_distance){
             if ( particle[i]->p.z  <= 3 ){
                 bot_list.push_back(i);
             }
-            if ( particle[i]->p.z  >= lz_init - 3 ){
+            if ( particle[i]->p.z  >= lz_init - 3){
                 top_list.push_back(i);
             }
         }
@@ -1142,6 +1118,6 @@ void System::makeInitialBond(double generation_distance){
 
 void System::checkBondFailure(vector<Bond *> &bond_active){
 	foreach( vector<Bond *>, bond_active, it_bond){
-        (*it_bond)->failureCondition();	
+        (*it_bond)->cheackBondStress();	
 	}
 }

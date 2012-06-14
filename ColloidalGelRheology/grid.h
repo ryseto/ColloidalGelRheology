@@ -13,13 +13,11 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
-//#include <map>
 #include "common.h"
 #include "vec3d.h"
 #include "particle.h"
-
 using namespace std;
-const int max_number_point =20000;
+const int max_number_point = 20000;
 class Particle;
 
 class Grid{

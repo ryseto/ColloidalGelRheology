@@ -253,21 +253,19 @@ void Bond::regeneration(){
 }
 
 
-void Bond::failureCondition(){
+void Bond::cheackBondStress(){
 	/* Condition of bond failure
      * The bond can be robuster by compression?
      * The normalization for des[0] should not be cp_f_n_max;
      * Now, this effect is neglected.
      */
-    
     if (central_force){
         if ( q > 0.1 ){
             sy->rupture_bond.push_back(bond_number);
         }
         return;
     }
-    
-    if ( q < 0. ){
+    if ( q <= 0. ){
         // force_normal < 0;
         des[0] = force_normal * para.robust_bond_compression;
     } else {
@@ -281,7 +279,7 @@ void Bond::failureCondition(){
 	des[3] = 0.0;
 #endif
 	D_function = des[0] + des[1] + des[2] + des[3] ;
-	/**********************************************/
+
 	if ( D_function > 1. ){	
         if ( force_normal > para.fnc ){
             sy->rupture_bond.push_back(bond_number);                            

@@ -138,10 +138,8 @@ void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &parti
 	vcell_wall[0].clear();
 	vcell_wall[1].clear();
 	for (int i = 0; i < numberOfParticle; ++i ){		
-		gl[i] = p_to_grid( *particle[i]->p_pos() );
-        
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
-        
+		gl[i] = p_to_grid( *particle[i]->p_pos() );        
+		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);        
         if (particle[i]->wall == false) {
 			if ( particle[i]->p.z < zbot ) {
                 vcell_wall[0].push_back(i);
@@ -169,8 +167,7 @@ void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
 }
 
 
-GridPoint Grid::p_to_grid(const vec3d &p){
-    
+GridPoint Grid::p_to_grid(const vec3d &p){    
     /* 3D */
 	gp_tmp.x = (int)(p.x/h);
     if (gp_tmp.x == gx_max ){
@@ -210,15 +207,6 @@ void Grid::get_neighbor_list(const vec3d &p, vector<int> &neighbor){
 			neighbor.push_back( *iter );
 		}
 	}
-    //	for(int gx = gp_tmp.x-1; gx <= gp_tmp.x+1; ++gx){	
-    //		for(int gy = gp_tmp.y-1; gy <= gp_tmp.y+1; ++gy){	
-    //			for(int gz = gp_tmp.z-1; gz <= gp_tmp.z+1; ++gz){
-    //				foreach(vector<int>, vcell[gx][gy][gz], iter){
-    //					neighbor.push_back(*iter);
-    //				}
-    //			}
-    //		}
-    //	}
 }
 
 void Grid::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor){

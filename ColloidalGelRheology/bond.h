@@ -131,10 +131,10 @@ public:
     inline double valBendingAngle(){return ang_bend.norm();}
     inline double valTorsionalAngle(){return abs(ang_tort);}
     inline double valSlidingDisplacement(){return d_slid.norm();}
-	inline double strenghOfForce(){return force0.norm();}
+	inline double forceNorm(){return force0.norm();}
     
     void whichparticle(int &i, int &j);
-    void failureCondition();
+    void cheackBondStress();
     
     vec3d position(int i){
         return *pp[i];

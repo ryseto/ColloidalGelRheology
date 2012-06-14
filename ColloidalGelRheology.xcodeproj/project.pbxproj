@@ -86,7 +86,6 @@
 			children = (
 				D95B782315879BE1004590CA /* main.cpp */,
 				D95B782C15879C9F004590CA /* wall.cpp */,
-				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
 				D95B782E15879CD7004590CA /* wall.h */,
 				D95B782F15879D10004590CA /* vec3d.h */,
 				D95B783015879D43004590CA /* system.h */,
@@ -103,6 +102,7 @@
 				D95B784115879F32004590CA /* common.h */,
 				D95B784215879F43004590CA /* bond.h */,
 				D95B784315879F67004590CA /* bond.cpp */,
+				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
 			);
 			path = ColloidalGelRheology;
 			sourceTree = "<group>";
@@ -221,6 +221,7 @@
 		D95B782A15879BE1004590CA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -228,6 +229,7 @@
 		D95B782B15879BE1004590CA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -251,6 +253,7 @@
 				D95B782B15879BE1004590CA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

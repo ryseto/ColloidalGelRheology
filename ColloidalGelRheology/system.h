@@ -18,7 +18,6 @@
 #include <vector>
 #include <map>
 using namespace std;
-
 class Grid;
 class Bond;
 class Wall;
@@ -28,8 +27,6 @@ class ConTable;
 class System {
 protected:
 	void shiftCenterOfMass(vector<vec3d> &p);
-    
-    //	vector <double> stress_equilibrium;
 	ofstream fout_data;
 	ofstream fout_log;
 	ofstream fout_yap;
@@ -38,9 +35,7 @@ protected:
     string bond0_file;
     string bond1_file;
     string rootdir;
-    
-    //	double modified_area_fraction;    
-    
+
 public:
 	System();
 	~System();
@@ -66,7 +61,6 @@ public:
     void regeneration();
     void regeneration_onebyone();
     void rupture(vector<Bond *> &bond_active);
-    void rupture_onebyone(vector<Bond *> &bond_active);
     void TimeDevStrainControlCompactionEuler(vector<Particle *> &particle_active, 
                                              vector<Bond *> &bond_active,
                                              bool wall_move);
@@ -77,15 +71,12 @@ public:
     void check_active(vector<Particle *> &particle_active, vector<Bond *> &bond_active);
     bool checkPercolation();
     void shiftForPercolation();
-    
     void calcStress();
     void calcShearStress();
-    
     void simuAdjustment();
 	void prepareCalculationParameters();
 	void preparationOutput();
     void calcVolumeFraction();
-    //    void calcModifiedVolumeFraction();
     void calcLocalStrains();
 	void setUnitForce(double);
 	void setWallStress(double, double, double);
@@ -112,6 +103,8 @@ public:
     vector<Bond *> bond;
     vector<Particle *> particle;
     vector<Wall *> wl;
+    Wall *wl_top;
+    Wall *wl_bot;
     Grid *grid;
     vector<int> regeneration_bond;
 	vector<int> rupture_bond;
@@ -211,6 +204,8 @@ public:
     double stress_change_convergence;
     double initial_compaction;
 	double max_volume_fraction;
+    double step_strain_x;
+    double max_strain_x;
     
 	int relax_for_restructuring;
     double volumefraction_increment;

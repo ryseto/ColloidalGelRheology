@@ -25,6 +25,7 @@ struct ConnectPointWall {
 };
 
 enum WallType {top, bot};
+
 class Wall{
 private:
 	System *sy;

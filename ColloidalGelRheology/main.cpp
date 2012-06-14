@@ -14,7 +14,6 @@
 #include "output.h"
 using namespace std;
 void cerr_command_usage();
-//void shearFlow(int argc, char *const argv[], System &sy);
 void rheologyTest(int argc, char *const argv[], System &sy);
 void testParameters(int argc, char *const argv[], System &sy);
 void rod_bending(int argc, char *const argv[], System &sy);
@@ -23,6 +22,11 @@ int main (int argc, char *const argv[])
 {
 	System sy;
 	sy.simulation = argv[1][0];
+#ifdef TWODIMENSION
+    cerr << "2D simulation\n";
+#else
+    cerr << "3D simulation\n";
+#endif
 	cerr << sy.simulation << endl;
     if (sy.simulation == 't'){
         testParameters(argc, argv, sy);
@@ -49,7 +53,6 @@ void testParameters(int argc, char *const argv[], System &sy){
     
     sy.particle.push_back(new Particle(0, vec3d(0.,0.,0.), 0, sy));
     sy.particle.push_back(new Particle(1, vec3d(2.,0.,0.), 0, sy));
-    
     //    particle.push_back(new Particle(2, vec3d(4,0,0), sy));
 	sy.n_particle = 2;
     for (int i=0; i< sy.n_particle ; i++){
@@ -155,8 +158,9 @@ void strainControlShear(System &sy){
     vector <Particle *> particle_active;
 	vector <Bond *> bond_active;
 	sy.check_active(particle_active, bond_active);
+    sy.calcVolumeFraction();
     sy.outputConfiguration('n');
-    while (sy.checkPercolation() == false){
+    while(sy.checkPercolation() == false){
         sy.shiftForPercolation();
         sy.makeNeighbor();
         sy.generateBond( bond_active );
@@ -164,77 +168,74 @@ void strainControlShear(System &sy){
     }
 	sy.makeNeighbor();
     sy.calcVolumeFraction();
-    double strain_x_equilibrium = 0.01;
+    double strain_x_equilibrium = sy.step_strain_x;
     bool prog_strain = true;
     sy.dt = sy.dt_max;
     sy.strain_x = 0;
     int counter_relax_for_restructuring = 0;
-    int limit_stopnumber = 0;
+    double stress_x_before = sy.stress_x;
+    double stress_z_before = sy.stress_z;
+    double strain_x_before = sy.strain_x;
+    
     sy.checkState(particle_active, bond_active);
-	while( sy.strain_x < 10){
+	while( sy.strain_x < sy.max_strain_x){
         ////////////////////////////////////////////////////////////// 
         //// The information of state is kept to be compare 
         //// after time iteration.
-        double stress_x_before = sy.stress_x;
-        double stress_z_before = sy.stress_z;
-        double strain_x_before = sy.strain_x;
 		int counterRegenerate_before = sy.counterRegenerate;
-        ////
         ///////////////////////////////////////////////////////////////
         //// Set up the simulation of this time interval.
-        //// 
         double t_next = sy.time + sy.interval_convergence_check*sy.dt_max;
         sy.calc_count = 0;
         while ( sy.time < t_next ){
             if (counter_relax_for_restructuring ++ > sy.relax_for_restructuring){
                 prog_strain = true;
-                limit_stopnumber = 0;
             } else{
                 prog_strain = false;
-                if (limit_stopnumber++ > 10){
-                    prog_strain = true;
-                }
             }
             if ( sy.strain_x >= strain_x_equilibrium ){
                 prog_strain = false;
             }
-            sy.TimeDevStrainControlShearEuler(particle_active, bond_active, prog_strain);
+            sy.TimeDevStrainControlShearEuler(particle_active, 
+                                              bond_active, prog_strain);
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
+                    cerr << sy.regeneration_bond.size() << endl;
                     sy.regeneration();
-                    sy.regeneration_bond.clear();
                     counter_relax_for_restructuring = 0;
                 }
                 if (!sy.rupture_bond.empty()){
                     sy.rupture(bond_active);
-                    sy.rupture_bond.clear();
                     counter_relax_for_restructuring = 0;
                 }
             }
-            
             if ( sy.calc_count % 100 == 0 ){
                 sy.makeNeighbor();
             }
-            
             sy.generateBond( bond_active );
             sy.wl[0]->addNewContact(particle_active);            
             sy.wl[1]->addNewContact(particle_active);
-            sy.calcVolumeFraction();
             sy.time += sy.dt;
             sy.calc_count ++;
         }
-        
         ////
         ///////////////////////////////////////////////////////////////
-        sy.calcShearStress();
-        sy.checkState(particle_active, bond_active);
         sy.simuAdjustment();
-        sy.stress_x_change = abs(sy.stress_x - stress_x_before)/sy.stress_x;
+        sy.checkState(particle_active, bond_active);
+        sy.calcShearStress();
+        if (sy.diff_stress_x == 0){
+            sy.stress_x_change = 0;
+        } else {
+            sy.stress_x_change = abs(sy.stress_x - stress_x_before)/sy.stress_x;
+        }
         sy.stress_z_change = abs(sy.stress_z - stress_z_before)/sy.stress_z;
         sy.strain_x = abs( sy.wl[0]->x - sy.wl[1]->x )/sy.lz;
 		sy.strain_z = (sy.lz_init - sy.lz)/sy.lz_init;
-        sy.d_strain_x = sy.strain_x - strain_x_before;        
+        sy.d_strain_x = sy.strain_x - strain_x_before;
+        stress_x_before = sy.stress_x;
+        stress_z_before = sy.stress_z;
+        strain_x_before = sy.strain_x;
 		sy.output_log();
 		sy.makeNeighbor();
         sy.optimalTimeStep();
@@ -260,12 +261,11 @@ void strainControlShear(System &sy){
                 sy.monitorDeformation('e');
                 /////////////////////////
                 counter_relax_for_restructuring = 0;
-                strain_x_equilibrium = strain_x_equilibrium + 0.01;
+                strain_x_equilibrium += sy.step_strain_x;
                 prog_strain = true;
             } 
 		} 
 	}
-    cerr << "compaction finish VF=" << sy.volume_fraction << endl;
     return;
 }
 
@@ -429,8 +429,7 @@ void rheologyTest(int argc, char *const argv[], System &sy){
 	sy.setBondGenerationDistance(2.0);
 	sy.prepareCalculationParameters();
 	sy.preparationOutput();
-    sy.setWall();
-    
+    sy.setWall();    
     sy.initGrid();
 	//outputParameter(sy, fout_yap);
 	sy.initDEM();

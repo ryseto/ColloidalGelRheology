@@ -6,7 +6,6 @@
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
-//#include <iostream>
 #include "particle.h"
 
 Particle::Particle(int particle_number_, const vec3d &position, 
@@ -19,7 +18,7 @@ Particle::Particle(int particle_number_, const vec3d &position,
     orientation.set(1., 0., 0., 0.);
     resetForce();
 	wall = false;
-	if ( sy->simulation == 's'){
+	if (sy->simulation == 's'){
 		z0 = sy->lz/2;
 	}
 }
@@ -261,5 +260,13 @@ void Particle::x_shift( double dx ){
     p.x += dx;
     if (p.x > sy->lx){
         p.x -= sy->lx;
+    } else if (p.x < 0){
+        p.x += sy->lx;
     }
 }
+
+
+
+
+
+

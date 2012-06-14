@@ -44,13 +44,15 @@ void Wall::addNewContact(vector<Particle *> &particle_active){
     int n_neighbor = neighbor.size();
 	for(int j=0; j < n_neighbor; j++){
 		if (  u.z*(sy->particle[neighbor[j]]->p.z - z) <= 1.0 ){
-			wall_particle.push_back( sy->particle[ neighbor[j] ] );
-			sy->particle[ neighbor[j] ]->wall = true;
-			neighbor[j] = neighbor.back();				
-			neighbor.pop_back();
-            n_neighbor --;
-			generated = true;
-			j--;
+            if ( sy->particle[ neighbor[j] ]->wall == false){
+                wall_particle.push_back( sy->particle[ neighbor[j] ] );
+                sy->particle[ neighbor[j] ]->wall = true;
+                neighbor[j] = neighbor.back();				
+                neighbor.pop_back();
+                n_neighbor --;
+                generated = true;
+                j--;
+            }
 		}
 	}
 	if (generated){
@@ -67,8 +69,10 @@ void Wall::addNewContact(vector<Particle *> &particle_active){
 }
 
 void Wall::initWallParticle(int i){
-    wall_particle.push_back( sy->particle[i] );
-    sy->particle[i]->wall = true;
+    if ( sy->particle[i]->wall == false){
+        wall_particle.push_back( sy->particle[i] );
+        sy->particle[i]->wall = true;
+    }
 }
 
 
@@ -124,9 +128,7 @@ double Wall::stressSensor_x(){
     foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->calc_stack_Force();
 	}
-    
     double force_x = 0; 
-    
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		force_x += ((*iter_p)->vectorForce()).x ;
 	}
@@ -159,7 +161,7 @@ bool Wall::markWallConnected(){
             return true;
         }
     }
-    cerr << wt << " : "  << wall_group.size() << endl;
+    cerr << "wall" << wt << " : "  << wall_group.size() << endl;
     return false;
 }
 
