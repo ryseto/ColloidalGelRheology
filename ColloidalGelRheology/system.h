@@ -34,8 +34,8 @@ protected:
     ofstream fout_deform;
     string bond0_file;
     string bond1_file;
-    string rootdir;
-
+    double eta_factor;
+    
 public:
 	System();
 	~System();
@@ -74,7 +74,7 @@ public:
     void calcStress();
     void calcShearStress();
     void simuAdjustment();
-	void prepareCalculationParameters();
+	void setSimulationViscosity();
 	void preparationOutput();
     void calcVolumeFraction();
     void calcLocalStrains();
@@ -213,8 +213,8 @@ public:
     double max_ang_velocity_convergence;
     double diff_stress_convergence;
 	int interval_convergence_check;
-	double d_strain_x;
-	double d_strain_z;
+	double strain_x_change;
+	double strain_z_change;
     double dLz_outputconfig;    
 };
 

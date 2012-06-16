@@ -94,14 +94,14 @@
 				D95B783415879DE3004590CA /* quaternion.cpp */,
 				D95B783615879DFF004590CA /* particle.h */,
 				D95B783715879E29004590CA /* particle.cpp */,
+				D95B784215879F43004590CA /* bond.h */,
+				D95B784315879F67004590CA /* bond.cpp */,
 				D95B783915879E52004590CA /* output.h */,
 				D95B783A15879E73004590CA /* grid.h */,
 				D95B783B15879E8E004590CA /* grid.cpp */,
 				D95B783E15879EDB004590CA /* contable.h */,
 				D95B783F15879EFC004590CA /* contable.cpp */,
 				D95B784115879F32004590CA /* common.h */,
-				D95B784215879F43004590CA /* bond.h */,
-				D95B784315879F67004590CA /* bond.cpp */,
 				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
 			);
 			path = ColloidalGelRheology;

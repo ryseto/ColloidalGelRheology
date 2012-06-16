@@ -27,7 +27,6 @@ int main (int argc, char *const argv[])
 #else
     cerr << "3D simulation\n";
 #endif
-	cerr << sy.simulation << endl;
     if (sy.simulation == 't'){
         testParameters(argc, argv, sy);
 	} else {
@@ -41,7 +40,6 @@ void testParameters(int argc, char *const argv[], System &sy){
 	/* read files */
     sy.readParameterFile();
     sy.readBondParameter();
-    
     sy.lx = 50.;
     sy.ly = 50.;
     sy.lz = 50.;
@@ -66,7 +64,7 @@ void testParameters(int argc, char *const argv[], System &sy){
 	/* prepare calcuration */
 	sy.initGrid();
 	sy.setBondGenerationDistance(2.0);
-	sy.prepareCalculationParameters();
+	sy.setSimulationViscosity();
 	sy.preparationOutput();
     
 	sy.initDEM();
@@ -132,22 +130,10 @@ void testParameters(int argc, char *const argv[], System &sy){
     
 }
 
-void cerr_command_usage_shearflow()
+void cerr_command_usage()
 {
-	cerr << "usage of RestructuringShearFlow:" << endl;
-	cerr << "arg: ";
-	cerr << "parameter_file ";
-	cerr << "initial_file ";
-	cerr << "shear_rate ";
-	cerr << "timestep ";
-	cerr << "version ";
-	cerr << endl;
-}
-
-void cerr_command_usage_compression()
-{
-	cerr << "usage of compression:" << endl;
-	cerr << "arg: c ";
+	cerr << "usage of ColloidalGelRheology" << endl;
+	cerr << "arg: c/s ";
 	cerr << "parameter_file ";
 	cerr << "initial_file ";
 	cerr << "version ";
@@ -164,10 +150,9 @@ void strainControlShear(System &sy){
         sy.shiftForPercolation();
         sy.makeNeighbor();
         sy.generateBond( bond_active );
-        sy.outputConfiguration('n');
     }
-	sy.makeNeighbor();
-    sy.calcVolumeFraction();
+    sy.outputConfiguration('e');
+	sy.makeNeighbor(); // To be checked.
     double strain_x_equilibrium = sy.step_strain_x;
     bool prog_strain = true;
     sy.dt = sy.dt_max;
@@ -176,13 +161,16 @@ void strainControlShear(System &sy){
     double stress_x_before = sy.stress_x;
     double stress_z_before = sy.stress_z;
     double strain_x_before = sy.strain_x;
-    
     sy.checkState(particle_active, bond_active);
+    sy.outputData();
 	while( sy.strain_x < sy.max_strain_x){
         ////////////////////////////////////////////////////////////// 
         //// The information of state is kept to be compare 
         //// after time iteration.
 		int counterRegenerate_before = sy.counterRegenerate;
+        stress_x_before = sy.stress_x;
+        stress_z_before = sy.stress_z;
+        strain_x_before = sy.strain_x;
         ///////////////////////////////////////////////////////////////
         //// Set up the simulation of this time interval.
         double t_next = sy.time + sy.interval_convergence_check*sy.dt_max;
@@ -201,7 +189,6 @@ void strainControlShear(System &sy){
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
-                    cerr << sy.regeneration_bond.size() << endl;
                     sy.regeneration();
                     counter_relax_for_restructuring = 0;
                 }
@@ -210,7 +197,7 @@ void strainControlShear(System &sy){
                     counter_relax_for_restructuring = 0;
                 }
             }
-            if ( sy.calc_count % 100 == 0 ){
+            if ( sy.calc_count % 1000 == 0 ){
                 sy.makeNeighbor();
             }
             sy.generateBond( bond_active );
@@ -219,28 +206,23 @@ void strainControlShear(System &sy){
             sy.time += sy.dt;
             sy.calc_count ++;
         }
-        ////
         ///////////////////////////////////////////////////////////////
         sy.simuAdjustment();
         sy.checkState(particle_active, bond_active);
         sy.calcShearStress();
         if (sy.diff_stress_x == 0){
             sy.stress_x_change = 0;
+            sy.stress_z_change = 0;
         } else {
             sy.stress_x_change = abs(sy.stress_x - stress_x_before)/sy.stress_x;
+            sy.stress_z_change = abs(sy.stress_z - stress_z_before)/sy.stress_z;
         }
-        sy.stress_z_change = abs(sy.stress_z - stress_z_before)/sy.stress_z;
         sy.strain_x = abs( sy.wl[0]->x - sy.wl[1]->x )/sy.lz;
 		sy.strain_z = (sy.lz_init - sy.lz)/sy.lz_init;
-        sy.d_strain_x = sy.strain_x - strain_x_before;
-        stress_x_before = sy.stress_x;
-        stress_z_before = sy.stress_z;
-        strain_x_before = sy.strain_x;
 		sy.output_log();
 		sy.makeNeighbor();
         sy.optimalTimeStep();
 		if ( sy.strain_x >= strain_x_equilibrium ){
-            cerr << "check equilibrium" << sy.strain_x << endl;
             /* Check the equilibrium condition
              * (1) The change of the measured stress is enough small.
              * (2) The difference between the stresses at the two walls is enough small.
@@ -273,7 +255,6 @@ void strainControlCompression(System &sy)
 {
     vector <Particle *> particle_active;
 	vector <Bond *> bond_active;
-    
 	sy.check_active(particle_active, bond_active);
 	sy.makeNeighbor();
     sy.calcVolumeFraction();
@@ -298,18 +279,14 @@ void strainControlCompression(System &sy)
         sy.outputConfiguration('n');
         exit(1);
     }
-    
-    
-    
+        
 	while( sy.volume_fraction < sy.max_volume_fraction ){
         ////////////////////////////////////////////////////////////// 
         //// The information of state is kept to be compare 
         //// after time iteration.
-		double lz_before = sy.lz;
         double stress_z_before = sy.stress_z;
         double stress_x_before = sy.stress_x;
 		int counterRegenerate_before = sy.counterRegenerate;
-        ////
         ///////////////////////////////////////////////////////////////
         //// Set up the simulation of this time interval.
         //// 
@@ -326,13 +303,11 @@ void strainControlCompression(System &sy)
                     compaction = true;
                 }
             }
-            
             if (sy.volume_fraction > vf_equilibrium){
                 compaction = false;
             }
             
             sy.TimeDevStrainControlCompactionEuler(particle_active, bond_active, compaction);
-            
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
@@ -369,7 +344,6 @@ void strainControlCompression(System &sy)
         sy.stress_z_change = abs(sy.stress_z - stress_z_before)/sy.stress_z;
         sy.stress_x_change = abs(sy.stress_x - stress_x_before)/sy.stress_x;
         sy.strain_z = (sy.lz_init - sy.lz)/sy.lz_init;
-        sy.d_strain_z = abs(lz_before - sy.lz)/sy.lz;		
         
         
 		sy.output_log();
@@ -391,30 +365,30 @@ void strainControlCompression(System &sy)
              * (5) No restructuring.
              *  ---------> The equilibrium requires (1)-(5).
              */
-            if (sy.stress_z_change < sy.stress_change_convergence
-                && sy.diff_stress_z < sy.diff_stress_convergence
-                && sy.max_velocity < sy.max_velocity_convergence
-                && sy.max_ang_velocity < sy.max_ang_velocity_convergence
-                && counterRegenerate_before == sy.counterRegenerate){
-                cerr <<"Equilibrium!"<< endl;
-                sy.outputData();
-                sy.outputConfiguration('e');
-                sy.monitorDeformation('e');
-                /////////////////////////
-                counter_relax_for_restructuring = 0;
-                vf_equilibrium = vf_equilibrium* sy.volumefraction_increment;     
-                compaction = true;
-            } 
+            if ((sy.stress_z_change < sy.stress_change_convergence
+                 && sy.diff_stress_z < sy.diff_stress_convergence)
+                || sy.stress_z_change < 1e-8 ){
+                if( sy.max_velocity < sy.max_velocity_convergence
+                   && sy.max_ang_velocity < sy.max_ang_velocity_convergence
+                   && counterRegenerate_before == sy.counterRegenerate){
+                    cerr <<"Equilibrium!"<< endl;
+                    sy.outputData();
+                    sy.outputConfiguration('e');
+                    sy.monitorDeformation('e');
+                    counter_relax_for_restructuring = 0;
+                    vf_equilibrium = vf_equilibrium* sy.volumefraction_increment;     
+                    compaction = true;
+                }
+            }
 		} 
 	}
-    //    cerr << "compaction finish VF=" << sy.volume_fraction << endl;
     return;
 }
 
 void rheologyTest(int argc, char *const argv[], System &sy){
 	/* arguments */
 	if (argc < 5){
-		cerr_command_usage_compression();
+		cerr_command_usage();
 		exit(1);
 	}
 	sy.setParameterFile(argv[2]);
@@ -426,9 +400,9 @@ void rheologyTest(int argc, char *const argv[], System &sy){
 	sy.importPositions();
 	/* prepare calcuration */
     sy.initialprocess = true;
+    sy.setSimulationViscosity();
+    sy.preparationOutput();
 	sy.setBondGenerationDistance(2.0);
-	sy.prepareCalculationParameters();
-	sy.preparationOutput();
     sy.setWall();    
     sy.initGrid();
 	//outputParameter(sy, fout_yap);

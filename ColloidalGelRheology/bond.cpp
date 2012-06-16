@@ -267,9 +267,13 @@ void Bond::cheackBondStress(){
     }
     if ( q <= 0. ){
         // force_normal < 0;
-        des[0] = force_normal * para.robust_bond_compression;
+        des[0] = force_normal * para.reinforce_factor;
     } else {
-        des[0] = sq(force_normal/para.fnc);
+        if (para.fnc == 0){
+            des[0] = 1;
+        } else {
+            des[0] = sq(force_normal/para.fnc);
+        }
     }    
 	des[1] = force_sliding.sq_norm()/sq_fsc;
 	des[2] = moment_bending.sq_norm()/sq_mbc;
@@ -280,7 +284,7 @@ void Bond::cheackBondStress(){
 #endif
 	D_function = des[0] + des[1] + des[2] + des[3] ;
 
-	if ( D_function > 1. ){	
+	if ( D_function >= 1. ){	
         if ( force_normal > para.fnc ){
             sy->rupture_bond.push_back(bond_number);                            
             sy->rup_normal ++;

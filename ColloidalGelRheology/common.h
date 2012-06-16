@@ -98,8 +98,7 @@ struct BondParameter {
     double s_max;
     double b_max;
     double t_max;
-    double overlap_force_factor;
-    double robust_bond_compression;
+    double reinforce_factor;
     
 };
 

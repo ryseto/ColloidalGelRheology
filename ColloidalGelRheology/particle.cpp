@@ -118,16 +118,15 @@ void Particle::checkNearBoundary(){
 }
 
 void Particle::move_Euler(){
+    /*
+     * The effect of eta should be checked.
+     */
     a_velocity = force - sy->eta*velocity;
     a_omega = 2.5*( torque - sy->eta_rot*omega);
     p += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
     velocity += a_velocity*sy->dt;
 	omega    += a_omega*sy->dt;
-    
-    //    static int cnt = 0;
-    //    std::cout << cnt++ << ' ' << velocity.norm() << std::endl;
-    
     orientation.infinitesimalRotation( d_rotation );
     for (int i = 0; i < cn_size ; ++i){
         cn[i].u.rotateInfinitesimal( d_rotation );
@@ -136,7 +135,6 @@ void Particle::move_Euler(){
 #endif
 	}
 	resetForce();
-    
     if (near_boundary){
         if ( p.x < 0. ) 
             p.x += sy->lx;

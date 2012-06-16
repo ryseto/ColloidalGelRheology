@@ -14,17 +14,8 @@ System::System()
 	n_particle = 0;
 	n_bond = 0;
 	sprintf(version ,"0");
-	dt = 0.;
-	stress_z = 0.;
-	stress_x = 0.;
-	strain_x = 0.;
-    strain_z = 0.;
-	max_force = 0.;
-	d_strain_x = 0;
-	d_strain_z = 0;
     ct = new ConTable;
     grid = new Grid;
-    //    modified_area_fraction = -1;
 }
 
 System::~System(){
@@ -93,6 +84,10 @@ void System::initDEM(){
 	time = 0.;
 	counterBreak = 0;
 	counterRegenerate = 0;
+	stress_z = 0.;
+	stress_x = 0.;
+	strain_x = 0.;
+    strain_z = 0.;
 }
 
 void System::preparationOutput(){
@@ -106,22 +101,21 @@ void System::preparationOutput(){
 	if(simulation == 'c'|| simulation == 's'){
 		sprintf(name_string, "%s_%s_%s",
 				parameters, init_cluster, version);
-        //	} else if(simulation == 'f'){
-        //		sprintf(name_string, "CF%s_%s_H%d_%s",
-        //				parameters, init_cluster, (int)lz_init, version);		
 	} else if(simulation == 't'){
         sprintf(name_string, "doublet");
     }
     
 	string fn_common = (string)name_string ;
-	sprintf(fn_snapshot, "ss_%s.yap", fn_common.c_str()); 
+
 	sprintf(fn_data, "data_%s.dat", fn_common.c_str()); 
 	sprintf(fn_log, "log_%s.dat", fn_common.c_str());	
 	sprintf(fn_conf, "conf_%s.dat", fn_common.c_str());
     sprintf(fn_deform, "deform_%s.dat", fn_common.c_str());
     
-    if ( simulation == 't')
+    if ( simulation == 't'){
+        sprintf(fn_snapshot, "ss_%s.yap", fn_common.c_str()); 
         fout_yap.open(fn_snapshot);    
+    }
 	fout_data.open(fn_data);	
 	fout_log.open(fn_log);
 	fout_conf.open(fn_conf);
@@ -136,12 +130,6 @@ void System::setInitClusterFile(char *init_cluster_file_)
 	int i_extention = s_init_cluster_file.find( ".dat" );
 	sprintf(init_cluster, "%s", 
 			(s_init_cluster_file.substr( i_backslash, i_extention-i_backslash)).c_str());
-    //    int i_L = s_init_cluster_file.find("_L")+2;
-    //  int j_L = s_init_cluster_file.find( "_", i_L );
-    //    sprintf(string_L, "%s", 
-    //			(s_init_cluster_file.substr( i_L, j_L - i_L)).c_str());
-    
-	//string input = s_init_cluster_file.substr(i_backslash, i_extention-i_backslash);
 }
 
 /*
@@ -154,8 +142,6 @@ void System::setVersion(char *version_)
 {
 	sprintf(version, "%s", version_);
 }
-
-
 
 void System::setBondGenerationDistance(double distance)
 {
@@ -183,37 +169,10 @@ void System::generateBond(){
 	}
 }
 
-void System::prepareCalculationParameters()
+void System::setSimulationViscosity()
 {
-    double k_max = 0;
-    if (k_max < bond0.kn )
-        k_max = bond0.kn;
-    if (k_max < bond0.ks )
-        k_max = bond0.ks;
-    if (k_max < bond0.kb )
-        k_max = bond0.kb;
-    if (k_max < bond0.kt )
-        k_max = bond0.kt;
-    if (k_max < bond1.kn )
-        k_max = bond1.kn;
-    if (k_max < bond1.ks )
-        k_max = bond1.ks;
-    if (k_max < bond1.kb )
-        k_max = bond1.kb;
-    if (k_max < bond1.kt )
-        k_max = bond1.kt;     
-    
-    dt_max = (1./50.)*(1./sqrt(k_max));
-    cerr << "dt_max = " << dt_max  << endl;
-    dt = dt_max;
-    eta = 0.05*bond0.c_bend;
-    //eta = bond0.c_bend;
+    eta = eta_factor*bond0.c_bend;
     eta_rot = (4.0/3.0)*eta;
-    if ( simulation == 'c' ||  simulation == 's'){
-		lx0 = lx/2;
-		ly0 = ly/2;
-        lz0 = lz_init/2;
-	}
 }
 
 void System::optimalTimeStep(){
@@ -223,9 +182,6 @@ void System::optimalTimeStep(){
     } else {
         cerr << "small time step"  << dt_new << endl;
     }
-    
-    cerr << "dt=" << dt_new << endl;
-    
     dt = dt_new;
 }
 
@@ -253,61 +209,82 @@ void System::calcShearStress(){
 
 
 void prepareBond(BondParameter & _bond){
-    double a0 = 1.0;
-    if (_bond.fnc != 0){
-        _bond.kn = _bond.fnc / _bond.n_max;
-        _bond.ks = _bond.fsc / _bond.s_max;
-        _bond.kb = _bond.mbc / (_bond.b_max * a0 * a0);
-        _bond.kt = _bond.mtc / (_bond.t_max * a0 * a0);
-        _bond.kn3 = _bond.overlap_force_factor * _bond.kn / sq(_bond.n_max);
-        
-        _bond.c_norm = 2*sqrt( _bond.kn);
-        _bond.c_slid = 2*sqrt( _bond.ks);
-        _bond.c_bend = 2*sqrt( (2./5.)*_bond.kb);
-        _bond.c_tort = 2*sqrt( (2./5.)*_bond.kt);
-        //_bond.c_bend = 2*sqrt( _bond.kb);
-        //_bond.c_tort = 2*sqrt( _bond.kt);
-        cerr << "k:" << _bond.kn << ' ' << _bond.ks << ' ' << _bond.kb << ' ' << _bond.kt << endl;
-        cerr << "c:" << _bond.c_norm << ' ' << _bond.c_slid << ' ' << _bond.c_bend << ' ' << _bond.c_tort << endl;
-    } else {
-        _bond.fnc = 0.;
-        _bond.kn = 1.0 / _bond.n_max;
-        _bond.ks = 0;
-        _bond.kb = 0;
-        _bond.kt = 0;
-        _bond.kn3 = _bond.overlap_force_factor * _bond.kn / sq(_bond.n_max);
-        _bond.c_norm = 2*sqrt( _bond.kn);
-        _bond.c_slid = 0;
-        _bond.c_bend = 0;
-        _bond.c_tort = 0;
-    }
+    _bond.n_max = _bond.fnc/_bond.kn;
+    _bond.s_max = _bond.fsc/_bond.ks;
+    _bond.b_max = _bond.mbc/_bond.kb;
+    _bond.t_max = _bond.mtc/_bond.kt;
+    _bond.c_norm = 2*sqrt( _bond.kn);
+    _bond.c_slid = 2*sqrt( _bond.ks);
+    _bond.c_bend = 2*sqrt( (2./5.)*_bond.kb);
+    _bond.c_tort = 2*sqrt( (2./5.)*_bond.kt);
+    cerr << "k:" << _bond.kn << ' ' << _bond.ks << ' ' << _bond.kb << ' ' << _bond.kt << endl;
+    cerr << "critical_strain:" << _bond.n_max << ' ' << _bond.s_max << ' ';
+    cerr << _bond.b_max << ' ' << _bond.t_max << endl;
+    cerr << "c:" << _bond.c_norm << ' ' << _bond.c_slid << ' ' << _bond.c_bend << ' ' << _bond.c_tort << endl;
 }
 
-void setBondParameter( BondParameter &bondparameter, string &bond_file, string &dir){
-    string path_bond = dir + "/" + bond_file;
+void readBond(const string &codeword, const string &value, BondParameter &bondparameter)
+{
+  
+    map<string,int> keylist;
+    keylist["fnc:"]=1; const int _fnc = 1;
+    keylist["fsc:"]=2; const int _fsc = 2;
+    keylist["mbc:"]=3; const int _mbc = 3;
+    keylist["mtc:"]=4; const int _mtc = 4;
+    keylist["kn:"]=5; const int _kn = 5;
+    keylist["ks:"]=6; const int _ks = 6;
+    keylist["kb:"]=7; const int _kb = 7;
+    keylist["kt:"]=8; const int _kt = 8;
+    keylist["kn3:"]=9; const int _kn3 = 9;
+    keylist["reinforce_factor:"]=10; const int _reinforce_factor = 10;
+	cerr << codeword << ' ' << value << endl;
+	switch(keylist[codeword]){
+        case _fnc: bondparameter.fnc = atof(value.c_str()); break;
+        case _fsc: bondparameter.fsc = atof(value.c_str()); break;
+        case _mbc: bondparameter.mbc = atof(value.c_str()); break;            
+        case _mtc: bondparameter.mtc = atof(value.c_str()); break;
+        case _kn: bondparameter.kn = atof(value.c_str()); break;
+        case _ks: bondparameter.ks = atof(value.c_str()); break;
+        case _kb: bondparameter.kb = atof(value.c_str()); break;            
+        case _kt: bondparameter.kt = atof(value.c_str()); break;
+        case _kn3: bondparameter.kn3 = atof(value.c_str()); break;
+        case _reinforce_factor: bondparameter.reinforce_factor = atof(value.c_str()); break;
+		default:
+			cerr << "Bond: The codeword " << codeword << " is'nt associated with an parameter" << endl;
+			exit(1);
+	}
+
+}
+
+
+void setBondParameter( BondParameter &bondparameter, string &bond_file){
+    string path_bond = bond_file;
     ifstream fin;
     if(fin.is_open())
         fin.close();
     fin.open(path_bond.c_str());
     string codeword;
-    fin >> codeword >> bondparameter.fnc;
-    fin >> codeword >> bondparameter.fsc;
-    fin >> codeword >> bondparameter.mbc;
-    fin >> codeword >> bondparameter.mtc;
-    fin >> codeword >> bondparameter.n_max;
-    fin >> codeword >> bondparameter.s_max;
-    fin >> codeword >> bondparameter.b_max;
-    fin >> codeword >> bondparameter.t_max;
-    fin >> codeword >> bondparameter.overlap_force_factor;
-    fin >> codeword >> bondparameter.robust_bond_compression;
+    string value;
+	while (!fin.eof()){
+		fin >> codeword;
+		if ( codeword == "#") {
+			char buf[1024]; fin.get(buf, 1024);
+		} else if (codeword == "!"){
+			break;
+		} else {
+			fin >> value ; 
+            if (fin.eof()) break;
+			readBond(codeword, value, bondparameter);
+		}
+	}
     fin.close();
     prepareBond(bondparameter);
     return;
 }
 
 void System::readBondParameter(){
-    setBondParameter(bond0, bond0_file, rootdir);
-    setBondParameter(bond1, bond1_file, rootdir);
+    setBondParameter(bond0, bond0_file);
+    setBondParameter(bond1, bond1_file);
 }
 
 void System::readParameterFile()
@@ -342,26 +319,21 @@ void System::readParameterFile()
     }
 }
 
-
 void System::readParameter(const string &codeword, const string &value)
 {
 	map<string,int> keylist;
-    
-    keylist["rootdir:"]=1; const int _rootdir = 1;
     keylist["bond0_file:"]=2; const int _bond0_file = 2;
     keylist["bond1_file:"]=3; const int _bond1_file = 3;
-//    keylist["lx:"]=9; const int _lx = 9;
-//    keylist["lz_init:"]=10; const int _lz_init = 10;
     keylist["initial_compaction:"]=11; const int _initial_compaction=11;
     keylist["volumefraction_increment:"]=12; const int _volumefraction_increment=12;
 	keylist["max_volume_fraction:"]=13; const int _max_volume_fraction=13;
     keylist["step_strain_x:"]=14; const int _step_strain_x=14;
     keylist["max_strain_x:"]=15; const int _max_strain_x=15;
     keylist["wall_velocity:"]=20;const int _wall_velocity=20;
-    //    keylist["dt_max:"]=21; const int _dt_max=21;
+    keylist["dt_max:"]=21; const int _dt_max=21;
     keylist["max_move_step:"]=22; const int _max_move_step=22;
+    keylist["eta_factor:"]=23;const int _eta_factor=23;
     keylist["relax_for_restructuring:"]=30; const int _relax_for_restructuring=30;
-    //    keylist["tolerance_convergence:"]=31; const int _tolerance_convergence=31;
 	keylist["interval_convergence_check:"]=31; const int _interval_convergence_check=31;
     keylist["max_velocity_convergence:"]=32; const int _max_velocity_convergence=32;
     keylist["max_ang_velocity_convergence:"]=33; const int _max_ang_velocity_convergence=33;
@@ -369,24 +341,18 @@ void System::readParameter(const string &codeword, const string &value)
     keylist["stress_change_convergence:"]=35;const int _stress_change_convergence=35;
 	cerr << codeword << ' ' << value << endl;
 	switch(keylist[codeword]){
-        case _rootdir: rootdir = value; break;
         case _bond0_file: bond0_file = value; break;
         case _bond1_file: bond1_file = value; break;
-  //      case _lx: lx = atof(value.c_str()); break;
-//        case _lz_init: lz_init = atof( value.c_str()) ; break;
-            //		case _dt_max: dt_max = atof( value.c_str()) ; break;
         case _initial_compaction: initial_compaction = atof(value.c_str()) ; break;
-            //case _tolerance_convergence: tolerance_convergence = atof(value.c_str()); break;
 		case _interval_convergence_check: interval_convergence_check = atoi(value.c_str()); break;
         case _max_velocity_convergence: max_velocity_convergence = atof(value.c_str()); break;
         case _wall_velocity: wall_velocity = atof(value.c_str()); break;
-        
+        case _dt_max: dt_max = atof(value.c_str()); break;
+        case _eta_factor: eta_factor = atof(value.c_str()); break;
         case _max_ang_velocity_convergence: max_ang_velocity_convergence = atof(value.c_str()); break;
 		case _max_volume_fraction: max_volume_fraction = atof(value.c_str()); break;
-            
         case _step_strain_x: step_strain_x = atof(value.c_str()); break;
         case _max_strain_x: max_strain_x = atof(value.c_str()); break;
-            
 		case _max_move_step: max_move_step = atof(value.c_str()); break;
         case _volumefraction_increment: volumefraction_increment = atof(value.c_str());; break;
         case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str());; break;
@@ -403,7 +369,7 @@ void System::importPositions()
 	vector<vec3d> init_aggregate;
     vector<int> init_aggregate_cluster;
 	ifstream fin;
-    string path = rootdir + "/" + init_cluster_file;
+    string path = init_cluster_file;
 	string s_parameters_file = parameters_file;
 	int i1 = path.find_first_of("W") + 1;
 	int i2 = path.find_first_of("H",i1);
@@ -414,13 +380,10 @@ void System::importPositions()
     sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
     fin.open( path.c_str());
     if (! fin.is_open() ){
-        string path = init_cluster_file;
-        fin.open( path.c_str());
-        if (! fin.is_open() ){
-            cerr << "no initial file" << endl;
-            exit(1);
-        }
+        cerr << "no initial file" << endl;
+        exit(1);
     }
+
     lx = atof(width_str);
     lz_init = atof(height_str);
 #ifdef TWODIMENSION
@@ -428,6 +391,10 @@ void System::importPositions()
 #else 
     ly = lx;
 #endif
+    lx0 = lx/2;
+    ly0 = ly/2;
+    lz0 = lz_init/2;
+    
 	double x, y, z;
     int i_cluster;
 	if (simulation == 'c' || simulation == 's'){
@@ -471,7 +438,6 @@ void System::setRod(int m){
 		exit(1);
 	}	
 }
-
 
 void System::shiftCenterOfMass(vector<vec3d> &p)
 {
@@ -640,11 +606,19 @@ void System::outputData(){
         del_strain = (strain_x - strain_previous);
         strain_previous = strain_x;
     }
-    
-	double rate_rup_normal = (rup_normal - rup_normal_previous)/del_strain;
-	double rate_rup_shear = (rup_shear - rup_shear_previous)/del_strain;
-	double rate_rup_bend = (rup_bend - rup_bend_previous)/del_strain;
-	double rate_rup_torsion = (rup_torsion - rup_torsion_previous)/del_strain ;
+    cerr << del_strain << endl;
+    double rate_rup_normal, rate_rup_shear, rate_rup_bend, rate_rup_torsion;
+    if (del_strain == 0){
+        rate_rup_normal = 0;
+        rate_rup_shear = 0;
+        rate_rup_bend = 0;
+        rate_rup_torsion = 0;
+    } else {
+        rate_rup_normal = (rup_normal - rup_normal_previous)/del_strain;
+        rate_rup_shear = (rup_shear - rup_shear_previous)/del_strain;
+        rate_rup_bend = (rup_bend - rup_bend_previous)/del_strain;
+        rate_rup_torsion = (rup_torsion - rup_torsion_previous)/del_strain ;
+    }
 	fout_data << volume_fraction << ' ' ; //1
     fout_data << stress_z << ' ' ;  // 2
 	fout_data << stress_x << ' ' ; // 3
@@ -702,9 +676,6 @@ void System::output_log()
         fout_log << "#24 diff_stress_x\n";
         fout_log << "#25 stress_z_change\n";
         fout_log << "#26 stress_x_change\n";
-        fout_log << "#27 d_strain_z\n";
-        fout_log << "#28 d_strain_x\n"; 
-        fout_log << "#29 calc_count\n";
 	}    
     
 	fout_log << time << ' '; //1
@@ -733,15 +704,11 @@ void System::output_log()
     fout_log << diff_stress_x << ' ' ; //24
     fout_log << stress_z_change << ' '; // 25
     fout_log << stress_x_change << ' '; // 26
-    fout_log << d_strain_z << ' '; // 27
-    fout_log << d_strain_x << ' '; // 28
-    fout_log << calc_count << ' '; // 29
 	fout_log << endl; 
 }
 
 void System::outputConfiguration(char equilibrium){
     lz0 = (wl[1]->z + wl[0]->z) / 2;
-    
 	fout_conf << "# " << equilibrium;
 	fout_conf << ' ' << volume_fraction;
 	fout_conf << ' ' << area_fraction;
@@ -793,7 +760,6 @@ void System::outputConfiguration(char equilibrium){
             fout_conf << (*bond_iter)->val_F_slid() << ' ';
             fout_conf << (*bond_iter)->val_M_bend() << ' ';
             fout_conf << (*bond_iter)->val_M_tors() << endl;
-            //fout_bconf << (*bond_iter)->orientation.q[3] << endl;
         }
     }
 }
