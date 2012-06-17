@@ -59,6 +59,7 @@ public:
     int wall_connected;    
 	bool wall;
 	bool near_boundary;
+    bool after_rupture;
 	double sq_force;
 	int particle_number;
     
@@ -150,7 +151,9 @@ public:
 	double valTorque(){ return torque.norm(); }
 	double valVelocity(){ return velocity.norm(); }
 	double valOmega(){ return omega.norm(); }
-	
+	double kineticEnergy(){
+        return 0.5*velocity.sq_norm() + 0.2*omega.sq_norm();
+    }
 	int valCn_size(){ return cn_size; }
 	void zero_velocity(){
 		velocity.reset();
@@ -164,7 +167,8 @@ public:
 	bool percolate(vector<int> perco_path);
     
     void markWallConnected(int wt, vector<int> &wall_group);
-    
+    void outputBond();
+
     
 };
 

@@ -53,7 +53,6 @@ void System::TimeDevStrainControlShearEuler(vector<Particle *> &particle_active,
         wl[0]->shearingStrainControl(-wall_velocity ); // bot
         wl[1]->shearingStrainControl(+wall_velocity ); // top
     }
-    
  	foreach( vector<Bond *>, bond_active, it_bond){
         (*it_bond)->addContactForce();
 	}
@@ -176,7 +175,14 @@ void System::setSimulationViscosity()
 }
 
 void System::optimalTimeStep(){
-    double dt_new = max_move_step / max_velocity;
+    double dt_new1 = max_move_step / max_velocity;
+    double dt_new2 = max_move_step / max_ang_velocity;
+    double dt_new;
+    if (dt_new1 < dt_new2){
+        dt_new = dt_new1;
+    } else {
+        dt_new = dt_new2;
+    }
     if ( dt_new > dt_max ){
         dt_new = dt_max;
     } else {
@@ -676,6 +682,7 @@ void System::output_log()
         fout_log << "#24 diff_stress_x\n";
         fout_log << "#25 stress_z_change\n";
         fout_log << "#26 stress_x_change\n";
+        fout_log << "#27 kinetic_energy\n";
 	}    
     
 	fout_log << time << ' '; //1
@@ -704,7 +711,7 @@ void System::output_log()
     fout_log << diff_stress_x << ' ' ; //24
     fout_log << stress_z_change << ' '; // 25
     fout_log << stress_x_change << ' '; // 26
-	fout_log << endl; 
+    fout_log << kinetic_energy  << endl; // 27
 }
 
 void System::outputConfiguration(char equilibrium){
@@ -906,6 +913,10 @@ void System::checkState(vector <Particle *> &particle_active,
 		particle_active[i]->resetForce();
 	}
     calcLocalStrains();
+    kinetic_energy = 0;
+    for (int i=0; i < n_particle; i++){
+		kinetic_energy += particle[i]->kineticEnergy();
+	}
 }
 
 bool System::checkPercolation(){
@@ -1015,27 +1026,32 @@ void System::regeneration(){
 }
 
 void System::regeneration_onebyone(){
-    double D_max = 0.;
-    int most_stressed_bond = -1;
+    int most_stressed_bond = regeneration_bond[0];
+    double D_max = bond[most_stressed_bond]->D_function;
     int n_regeneration_bond = regeneration_bond.size();
-    for (int i=0; i < n_regeneration_bond; i++){
-        if ( D_max < bond[ regeneration_bond[ i ] ]->D_function ){
-            D_max =  bond[ regeneration_bond[ i ] ]->D_function;
-            most_stressed_bond = regeneration_bond[ i ];
+    if (n_regeneration_bond > 1){
+        for (int i=1; i < n_regeneration_bond; i++){
+            if ( D_max < bond[regeneration_bond[i]]->D_function ){
+                D_max =  bond[regeneration_bond[i]]->D_function;
+                most_stressed_bond = regeneration_bond[i];
+            }
         }
     }
-    bond[ most_stressed_bond  ]->regeneration();
+    bond[ most_stressed_bond]->regeneration();
     counterRegenerate ++;
+    regeneration_bond.clear();
 }
 
 void System::rupture(vector<Bond *> &bond_active){
-    double D_max = 0;
     int most_stressed_bond = rupture_bond[0] ;
-    int n_rupture_bond =  rupture_bond.size();
-    for (int i=0; i< n_rupture_bond; i++){
-        if ( D_max < bond[ rupture_bond[ i ] ]->D_function ){
-            D_max =  bond[ rupture_bond[ i ] ]->D_function;
-            most_stressed_bond = rupture_bond[ i ];
+    double D_max = bond[most_stressed_bond]->D_function;
+    int n_rupture_bond = rupture_bond.size();
+    if ( n_rupture_bond > 1){
+        for (int i=1; i< n_rupture_bond; i++){
+            if ( D_max < bond[ rupture_bond[i] ]->D_function ){
+                D_max =  bond[ rupture_bond[i] ]->D_function;
+                most_stressed_bond = rupture_bond[i];
+            }
         }
     }
     bond[ most_stressed_bond ]->rupture();

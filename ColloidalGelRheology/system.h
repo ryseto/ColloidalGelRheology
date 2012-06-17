@@ -35,7 +35,7 @@ protected:
     string bond0_file;
     string bond1_file;
     double eta_factor;
-    
+    double kinetic_energy;
 public:
 	System();
 	~System();

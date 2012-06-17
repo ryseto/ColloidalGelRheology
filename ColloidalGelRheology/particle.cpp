@@ -262,7 +262,15 @@ void Particle::x_shift( double dx ){
         p.x += sy->lx;
     }
 }
-
+void Particle::outputBond(){
+    cout << "t " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0 << ' ' << particle_number << endl;
+    for (int i = 0; i < cn_size ; ++i){
+        cout << "l " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0  << ' ';
+        cout << p.x + cn[i].u.x - sy->lx0 << ' ' ;
+        cout << p.y + cn[i].u.y - sy->ly0  << ' ';
+        cout << p.z + cn[i].u.z - sy->lz0  << endl;
+    }
+}
 
 
 

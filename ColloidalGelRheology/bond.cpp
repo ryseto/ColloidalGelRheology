@@ -75,7 +75,12 @@ Bond::Bond(int d0, int d1, System &sy_){
     sq_mbc = sq(para.mbc);
     sq_mtc = sq(para.mtc);
     
-    calcForce();
+    q_old = 0;
+    d_slid_old.reset();
+    ang_bend_old.reset();
+    ang_tort_old = 0;
+
+    //calcForce();
 }
 
 Bond::~Bond(){
@@ -134,7 +139,8 @@ void Bond::calcForce(){
 	if (q < 0.){
 		/* compression --> negative */
         kn_compression = para.kn + para.kn3*q*q;
-		force_normal = kn_compression*q + (2.*sqrt(kn_compression)/sy->dt)*(q-q_old);
+		//force_normal = kn_compression*q + (2.*sqrt(kn_compression)/sy->dt)*(q-q_old);
+        force_normal = kn_compression*q + (para.c_norm/sy->dt)*(q-q_old);
 	} else {
 		/* traction --> positive */
 		force_normal =  para.kn*q + (para.c_norm/sy->dt)*(q-q_old);
@@ -249,7 +255,25 @@ void Bond::regeneration(){
 #endif
     u_vector[0] = (*p_particle0).orientation.ori_backward(*pu[0]);
     u_vector[1] = (*p_particle1).orientation.ori_backward(*pu[1]);    
-    calcForce();
+//////////////////////////////////////////////////////////////////////
+    u01 = *pu[1] - *pu[0];
+#ifndef TWODIMENSION
+    /* 3D */
+    d_slid.reset();
+    ang_bend.reset();
+    ang_tort = 0;
+#else
+    /* 2D */
+	d_slid.reset();
+    ang_bend.reset();
+#endif
+    d_slid_old = d_slid;
+    ang_bend_old = ang_bend;
+#ifndef TWODIMENSION
+    /* 3D */
+    ang_tort_old = ang_tort;
+#endif
+    D_function = 0;
 }
 
 
@@ -274,18 +298,18 @@ void Bond::cheackBondStress(){
         } else {
             des[0] = sq(force_normal/para.fnc);
         }
-    }    
+    }
 	des[1] = force_sliding.sq_norm()/sq_fsc;
 	des[2] = moment_bending.sq_norm()/sq_mbc;
 #ifndef TWODIMENSION
 	des[3] = sq(moment_torsion)/sq_mtc;
+    D_function = des[0] + des[1] + des[2] + des[3] ;
 #else
-	des[3] = 0.0;
+    D_function = des[0] + des[1] + des[2];
+//	des[3] = 0.0;
 #endif
-	D_function = des[0] + des[1] + des[2] + des[3] ;
-
 	if ( D_function >= 1. ){	
-        if ( force_normal > para.fnc ){
+        if ( q > 0 ){
             sy->rupture_bond.push_back(bond_number);                            
             sy->rup_normal ++;
         } else {            

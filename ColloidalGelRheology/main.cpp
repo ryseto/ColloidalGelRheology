@@ -176,9 +176,10 @@ void strainControlShear(System &sy){
         double t_next = sy.time + sy.interval_convergence_check*sy.dt_max;
         sy.calc_count = 0;
         while ( sy.time < t_next ){
-            if (counter_relax_for_restructuring ++ > sy.relax_for_restructuring){
+            if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 prog_strain = true;
             } else{
+                counter_relax_for_restructuring ++;
                 prog_strain = false;
             }
             if ( sy.strain_x >= strain_x_equilibrium ){
@@ -189,7 +190,8 @@ void strainControlShear(System &sy){
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
-                    sy.regeneration();
+                    //sy.regeneration();
+                    sy.regeneration_onebyone();
                     counter_relax_for_restructuring = 0;
                 }
                 if (!sy.rupture_bond.empty()){
@@ -197,12 +199,13 @@ void strainControlShear(System &sy){
                     counter_relax_for_restructuring = 0;
                 }
             }
-            if ( sy.calc_count % 1000 == 0 ){
-                sy.makeNeighbor();
-            }
             sy.generateBond( bond_active );
             sy.wl[0]->addNewContact(particle_active);            
             sy.wl[1]->addNewContact(particle_active);
+            
+            if ( sy.calc_count % 1000 == 0 ){
+                sy.makeNeighbor();
+            }
             sy.time += sy.dt;
             sy.calc_count ++;
         }
@@ -242,7 +245,7 @@ void strainControlShear(System &sy){
                 sy.outputConfiguration('e');
                 sy.monitorDeformation('e');
                 /////////////////////////
-                counter_relax_for_restructuring = 0;
+                //counter_relax_for_restructuring = 0;
                 strain_x_equilibrium += sy.step_strain_x;
                 prog_strain = true;
             } 
@@ -279,7 +282,6 @@ void strainControlCompression(System &sy)
         sy.outputConfiguration('n');
         exit(1);
     }
-        
 	while( sy.volume_fraction < sy.max_volume_fraction ){
         ////////////////////////////////////////////////////////////// 
         //// The information of state is kept to be compare 
