@@ -18,8 +18,8 @@ Grid::Grid(void){
 }
 
 Grid::~Grid(void){
-	for (int gx = 0; gx < gx_max; ++gx){
-		for (int gy = 0; gy < gy_max ; ++gy){
+	for (int gx = 0; gx < gx_max; gx++){
+		for (int gy = 0; gy < gy_max ; gy++){
 			DELETE(vcell[gx][gy]);				
 		}
 		DELETE(vcell[gx]);
@@ -43,10 +43,10 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 	gz_max = (int)( lz_/h );
 	vcell = new vector<int> ** [gx_max]; 
 	neighbor_cell = new	vector<GridPoint> ** [gx_max];
-	for (int gx = 0; gx < gx_max; ++gx){
+	for (int gx = 0; gx < gx_max; gx++){
 		vcell[gx] = new vector<int> * [gy_max];
 		neighbor_cell[gx] = new	vector<GridPoint> * [gy_max];
-		for (int gy = 0; gy < gy_max; ++gy){	
+		for (int gy = 0; gy < gy_max; gy++){	
 			vcell[gx][gy] = new vector<int> [gz_max];
 			neighbor_cell[gx][gy] = new	vector<GridPoint> [gz_max];
 		}
@@ -54,14 +54,14 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 	gl.resize(numberOfParticle);
 #ifndef TWODIMENSION
     /* 3D */
-	for (int gx = 0; gx < gx_max; ++gx){
-		for (int gy = 0; gy < gy_max; ++gy){	
-			for (int gz = 0; gz < gz_max; ++gz){
+	for (int gx = 0; gx < gx_max; gx++){
+		for (int gy = 0; gy < gy_max; gy++){	
+			for (int gz = 0; gz < gz_max; gz++){
 				////////////////////////////////////////
 				GridPoint gp;
-				for(gp.x = gx-1; gp.x <= gx+1; ++gp.x){	
-					for(gp.y = gy-1; gp.y <= gy+1; ++gp.y){	
-						for(gp.z = gz-1; gp.z <= gz+1; ++gp.z){
+				for(gp.x = gx-1; gp.x <= gx+1; gp.x++){
+					for(gp.y = gy-1; gp.y <= gy+1; gp.y++){
+						for(gp.z = gz-1; gp.z <= gz+1; gp.z++){
 							if ( gp.z >= 0 && gp.z < gz_max){
 								GridPoint gp_tmp = gp;
 								if (gp_tmp.x == -1) 
@@ -84,12 +84,12 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 #else
     /* 2D */
 	int gy = 0;
-	for (int gx = 0; gx < gx_max; ++gx){
-		for (int gz = 0; gz < gz_max; ++gz){
+	for (int gx = 0; gx < gx_max; gx++){
+		for (int gz = 0; gz < gz_max; gz++){
 			////////////////////////////////////////
 			GridPoint gp;
-			for(gp.x = gx-1; gp.x <= gx+1; ++gp.x){	
-				for(gp.z = gz-1; gp.z <= gz+1; ++gp.z){
+			for(gp.x = gx-1; gp.x <= gx+1; gp.x++){	
+				for(gp.z = gz-1; gp.z <= gz+1; gp.z++){
 					if ( gp.z >= 0 && gp.z < gz_max){
 						GridPoint gp_tmp = gp;
 						if (gp_tmp.x == -1) 
@@ -108,18 +108,18 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 
 void Grid::remake(vector<Particle *> &particle){
 #ifndef TWODIMENSION
-	for (int i = 0; i < numberOfParticle; ++i ){
+	for (int i = 0; i < numberOfParticle; i++ ){
 		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
 	}	
-	for (int i = 0; i < numberOfParticle; ++i ){
+	for (int i = 0; i < numberOfParticle; i++ ){
 		gl[i] = p_to_grid( *particle[i]->p_pos() );
 		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
 	}
 #else
-	for (int i = 0; i < numberOfParticle; ++i ){
+	for (int i = 0; i < numberOfParticle; i++ ){
 		vcell[gl[i].x][0][gl[i].z].clear();
 	}	
-	for (int i = 0; i < numberOfParticle; ++i ){
+	for (int i = 0; i < numberOfParticle; i++ ){
 		gl[i] = p_to_grid( *particle[i]->p_pos() );
 		vcell[gl[i].x][0][gl[i].z].push_back(i);
 	}
@@ -132,12 +132,12 @@ void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &parti
 	 * Particles locating at z < zbot and z > ztop are 
      * marked as near-wall particles.
 	 */
-    for (int i = 0; i < numberOfParticle; ++i ){
+    for (int i = 0; i < numberOfParticle; i++ ){
         vcell[gl[i].x][gl[i].y][gl[i].z].clear();
     }	
 	vcell_wall[0].clear();
 	vcell_wall[1].clear();
-	for (int i = 0; i < numberOfParticle; ++i ){		
+	for (int i = 0; i < numberOfParticle; i++ ){		
 		gl[i] = p_to_grid( *particle[i]->p_pos() );        
 		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);        
         if (particle[i]->wall == false) {
@@ -151,11 +151,11 @@ void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &parti
 }
 
 void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
-	for (int i = 0; i < numberOfParticle; ++i ){
+	for (int i = 0; i < numberOfParticle; i++ ){
 		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
 	}	
 	vcell_wall[0].clear();
-	for (int i = 0; i < numberOfParticle; ++i ){		
+	for (int i = 0; i < numberOfParticle; i++ ){		
 		gl[i] = p_to_grid( *particle[i]->p_pos() );
 		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
 		if (particle[i]->wall ==false) {

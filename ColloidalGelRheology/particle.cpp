@@ -18,13 +18,19 @@ Particle::Particle(int particle_number_, const vec3d &position,
     orientation.set(1., 0., 0., 0.);
     resetForce();
 	wall = false;
-	if (sy->simulation == 's'){
-		z0 = sy->lz/2;
-	}
+#ifdef TWODIMENSION
+    cn = new ConnectPoint [6];
+#else
+    cn = new ConnectPoint [12];
+#endif
 }
 
 Particle::Particle(int particle_number_){
     setInitial(particle_number_);
+}
+
+Particle::~Particle(){
+    delete [] cn;
 }
 
 void Particle::setInitial(int particle_number_){
@@ -102,14 +108,14 @@ void Particle::generateBond(){
 }
 
 void Particle::delConnectPoint(int bond_number){
-	for (int i=0; i < cn_size-1 ; ++i){
+    cn_size --;
+	for (int i=0; i < cn_size ; i++){
 		if ( cn[i].bond == bond_number ){			
-			cn[i] = cn[ cn_size-1 ];
+			cn[i] = cn[ cn_size ];
 			sy->bond[ cn[i].bond ]->chPointer(i, particle_number);
 			break;
 		}
 	}
-	cn_size --;
 	return;
 }
 
@@ -123,12 +129,13 @@ void Particle::move_Euler(){
      */
     a_velocity = force - sy->eta*velocity;
     a_omega = 2.5*( torque - sy->eta_rot*omega);
-    p += velocity*sy->dt;
-	d_rotation = omega*sy->dt;
     velocity += a_velocity*sy->dt;
-	omega    += a_omega*sy->dt;
+	omega += a_omega*sy->dt;
+    
+    p += velocity*sy->dt;
+	d_rotation = omega*sy->dt;  
     orientation.infinitesimalRotation( d_rotation );
-    for (int i = 0; i < cn_size ; ++i){
+    for (int i = 0; i < cn_size ; i++){
         cn[i].u.rotateInfinitesimal( d_rotation );
 #ifndef TWODIMENSION
 		cn[i].tor_angle += dot( d_rotation, cn[i].u );        
@@ -173,7 +180,6 @@ void Particle::output(ofstream &fout){
         fout << ' '  << p.y - sy->ly0 + vec[i].y;
         fout << ' '  << p.z - sy->lz0 + vec[i].z;
         fout << endl;
-        
     }
     fout << "y 11" << endl;
     fout << "@ 3" << endl;
@@ -189,7 +195,7 @@ void Particle::output(ofstream &fout){
 }
 
 void Particle::calc_stack_Force(){
-    for (int i = 0; i < cn_size ; ++i){
+    for (int i = 0; i < cn_size ; i++){
         sy->bond[ cn[i].bond ]->calcForce();
         force += sy->bond[cn[i].bond ]->forceToParticle(particle_number);
     }
@@ -202,7 +208,7 @@ void Particle::setRotate(vec3d axis, const double angle){
         tmp_angle += d_ang;
         d_rotation = d_ang*axis;
         orientation.infinitesimalRotation( d_rotation );
-        for (int i = 0; i < cn_size ; ++i){
+        for (int i = 0; i < cn_size ; i++){
             cn[i].u.rotateInfinitesimal( d_rotation );
 #ifndef TWODIMENSION
             cn[i].tor_angle += dot( d_rotation, cn[i].u );
@@ -220,7 +226,7 @@ bool Particle::percolate(vector<int> perco_path){
         }
     }
     
-    for (int i = 0; i < cn_size ; ++i){
+    for (int i = 0; i < cn_size ; i++){
         bool passed = false;
         for (int j=0; j< perco_path.size(); j++){
             if ( perco_path[i] == cn[i].next){
@@ -239,11 +245,10 @@ bool Particle::percolate(vector<int> perco_path){
 }
 
 void Particle::markWallConnected(int wt, vector<int> &wall_group){
-    
     if ( wall_connected == -1 ){
         wall_group.push_back(particle_number);
         wall_connected = wt;
-        for (int i = 0; i < cn_size ; ++i){
+        for (int i = 0; i < cn_size ; i++){
             sy->particle[cn[i].next]->markWallConnected(wt, wall_group);
         }
     } else {
@@ -263,12 +268,20 @@ void Particle::x_shift( double dx ){
     }
 }
 void Particle::outputBond(){
-    cout << "t " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0 << ' ' << particle_number << endl;
-    for (int i = 0; i < cn_size ; ++i){
+    cout << "t " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0 << ' ' << particle_number << endl;  
+    for (int i = 0; i < cn_size ; i++){
         cout << "l " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0  << ' ';
         cout << p.x + cn[i].u.x - sy->lx0 << ' ' ;
         cout << p.y + cn[i].u.y - sy->ly0  << ' ';
         cout << p.z + cn[i].u.z - sy->lz0  << endl;
+    }    
+    if (cn_size >= 5){
+        cout << "r 1 " << endl;
+        cout << "@ 3 " << endl;
+        cout << "c ";
+        cout << p.x - sy->lx0 << ' ' ;
+        cout << p.y - sy->ly0  << ' ';
+        cout << p.z - sy->lz0  << endl;
     }
 }
 

@@ -24,12 +24,12 @@ private:
 	int cn_size;
 	vec3d a_velocity;
 	vec3d a_omega;
-	vec3d a_velocity_1st;
-	vec3d a_omega_1st;
+//	vec3d a_velocity_1st;
+//	vec3d a_omega_1st;
 	vec3d velocity;
 	vec3d omega;
-	vec3d velocity_1st;
-	vec3d omega_1st;
+//	vec3d velocity_1st;
+//	vec3d omega_1st;
 	vec3d force;
 	vec3d torque;
 	vec3d v_old;
@@ -40,9 +40,8 @@ private:
 	vec3d omega_relative;
 	vec3d p_pdcopy;
 	vector<int> neighbor;
-	ConnectPoint cn[16];
+	ConnectPoint *cn;
 	System *sy;
-	double z0;
 protected:
 	void (vec3d::*p_change)(double, double, double);
 	void remove_list_neighbor_all();
@@ -50,18 +49,17 @@ public:
 	Particle(int particle_number_, const vec3d &position, const int initial_cluster,
              System &sy);
 	Particle(int paritcle_number_);
-	~Particle(){
-	}
-	
+	~Particle();
+
+    int particle_number;    
 	vec3d p;
     quaternion orientation;
+
     int init_cluster;
     int wall_connected;    
 	bool wall;
 	bool near_boundary;
-    bool after_rupture;
 	double sq_force;
-	int particle_number;
     
 	void makeNeighbor();
     void checkNearBoundary();
@@ -72,7 +70,7 @@ public:
 		cn[cn_size].next = next_particle;
 		cn[cn_size].bond = bond_number;
 		cn[cn_size].tor_angle = 0.;
-		++ cn_size;
+		cn_size++;
 	}
     
 	void addGravityForce();
@@ -103,15 +101,12 @@ public:
 		torque += torque_;
 	}
     void calc_stack_Force();
-    
     void setRotate(vec3d axis, const double angle);
-    
 	void setNorm_u(){
-		for (int i = 0; i < cn_size ; ++i){
+		for (int i = 0; i < cn_size ; i++){
 			cn[i].u.unitvector();
 		}
 	}
-    
 	void setVelocityZero(){
 		velocity.reset();
 		omega.reset();
@@ -120,11 +115,8 @@ public:
 	inline double x(){return p.x;}
 	inline double y(){return p.y;}
 	inline double z(){return p.z;}	
-    
 	void z_shift( double dz ){ p.z += dz; }
-    
     void x_shift( double dx );
-    
 	inline vec3d pos(){return p;}	
 	void setInitial(int disk_number_);
 	void setPosition(const vec3d &position);
@@ -136,14 +128,9 @@ public:
 	vec3d *pu(int i){return &( cn[i].u ); }
 	double *p_tor_angle_back(){return &( cn[cn_size-1].tor_angle ); }
 	double *p_tor_angle(int i){return &( cn[i].tor_angle ); }
-	
 	void generateBond();
-    //	void generateBond_All();
-    
-	//void wallInclude(){ wall = true; };
-	void output(ofstream &fout);
-    
-	void cerr(){
+    void output(ofstream &fout);
+    	void cerr(){
 		std::cerr << "c " << p.x << ' ' << p.y << ' ' << p.z << std::endl;
 		//fout << particle_number << ' ' << p.x << ' ' << p.y << ' ' << p.z << endl;
 	}	
@@ -157,7 +144,6 @@ public:
 	int valCn_size(){ return cn_size; }
 	void zero_velocity(){
 		velocity.reset();
-		velocity_1st.reset();
 	}
 	void addForce(double fx, double fy, double fz){
 		force.x += fx;

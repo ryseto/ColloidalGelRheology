@@ -202,6 +202,7 @@ public:
     double stress_x_change; 
     double stress_z_change;
     double stress_change_convergence;
+    double stress_minimum;
     double initial_compaction;
 	double max_volume_fraction;
     double step_strain_x;

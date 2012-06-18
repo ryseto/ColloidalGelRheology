@@ -190,12 +190,22 @@ void strainControlShear(System &sy){
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
-                    //sy.regeneration();
+                    //cout << "@ 2" << endl;
+                    //for (int i = 0; i < sy.n_particle ; i++){
+                    //sy.particle[i]->outputBond();
+                    //}
                     sy.regeneration_onebyone();
+                    //cout << endl;                                        
                     counter_relax_for_restructuring = 0;
+                    
                 }
                 if (!sy.rupture_bond.empty()){
+                    //cout << "@ 2" << endl;
+                    // for (int i = 0; i < sy.n_particle ; i++){
+                    //sy.particle[i]->outputBond();
+                    //}
                     sy.rupture(bond_active);
+                    //cout << endl;
                     counter_relax_for_restructuring = 0;
                 }
             }
@@ -227,16 +237,18 @@ void strainControlShear(System &sy){
         sy.optimalTimeStep();
 		if ( sy.strain_x >= strain_x_equilibrium ){
             /* Check the equilibrium condition
-             * (1) The change of the measured stress is enough small.
-             * (2) The difference between the stresses at the two walls is enough small.
+             * (1.1) The difference between the stresses at the two walls is enough small.
+             * (1.2) The stress is less than the minimum stress.
+             * (2) The change of the measured stress is enough small.
              * (3) The maximum velocity of the particles are enough small.
              * (4) The maximum angular velocity of the particles are enough small.
              *  ---------> Bond breakup requires (1)-(4).
              * (5) No restructuring.
              *  ---------> The equilibrium requires (1)-(5).
              */
-            if (sy.stress_x_change < sy.stress_change_convergence
-                && sy.diff_stress_x < sy.diff_stress_convergence
+            if ( (sy.diff_stress_x < sy.diff_stress_convergence
+                  ||  sy.stress_x < sy.stress_minimum)
+                && sy.stress_x_change < sy.stress_change_convergence
                 && sy.max_velocity < sy.max_velocity_convergence
                 && sy.max_ang_velocity < sy.max_ang_velocity_convergence
                 && counterRegenerate_before == sy.counterRegenerate){
@@ -248,7 +260,7 @@ void strainControlShear(System &sy){
                 //counter_relax_for_restructuring = 0;
                 strain_x_equilibrium += sy.step_strain_x;
                 prog_strain = true;
-            } 
+            }
 		} 
 	}
     return;

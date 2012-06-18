@@ -15,8 +15,7 @@ Bond::Bond(int d0, int d1, System &sy_){
 	sy = &sy_;	
     status = 1;
     initial_bond = sy->initialprocess;
-	bond_number = sy->n_bond;
-	sy->n_bond ++ ;
+	bond_number = sy->n_bond ++; 
 	d[0] = d0, d[1] = d1;  
 	sy->ct->on_connect( d[0], d[1] );
 	p_particle0 = sy->particle[d[0]];
@@ -70,7 +69,6 @@ Bond::Bond(int d0, int d1, System &sy_){
     (*p_tor[0]) = 0.;
     (*p_tor[1]) = 0.;
 #endif
-    
     sq_fsc = sq(para.fsc);
     sq_mbc = sq(para.mbc);
     sq_mtc = sq(para.mtc);
@@ -79,8 +77,6 @@ Bond::Bond(int d0, int d1, System &sy_){
     d_slid_old.reset();
     ang_bend_old.reset();
     ang_tort_old = 0;
-
-    //calcForce();
 }
 
 Bond::~Bond(){
@@ -214,6 +210,16 @@ void Bond::periodicBoundary_rvec(vec3d & r_vec_tmp){
 }
 
 void Bond::rupture(){
+    /*
+     cout << "@ 5" << endl;
+     cout << "r 0.3" << endl;
+     cout << "c " << (*p_particle0).p.x - sy->lx0 << ' ';
+     cout <<         (*p_particle0).p.y - sy->ly0 << ' ';
+     cout <<         (*p_particle0).p.z - sy->lz0 << endl;
+     cout << "c " << (*p_particle1).p.x - sy->lx0 << ' ';
+     cout <<         (*p_particle1).p.y - sy->ly0 << ' ';
+     cout <<         (*p_particle1).p.z - sy->lz0 << endl;
+     */
     status = 0;
 	sy->ct->off_connect( d[0], d[1] );
     (*p_particle0).delConnectPoint(bond_number);
@@ -236,6 +242,19 @@ void Bond::regeneration(){
             central_force = true;
         }
     }
+    /*
+     cerr << (*p_particle0).particle_number << "--x--" << (*p_particle1).particle_number << endl;
+     cerr << des[0] << ' ' << des[1] << ' ' << des[2] << endl;
+     cerr << force_normal <<' ' << force_sliding.norm() << ' ' << moment_bending.norm()  << endl;
+     cout << "@ 4" << endl;
+     cout << "r 0.3" << endl;
+     cout << "c " << (*p_particle0).p.x - sy->lx0 << ' ';
+     cout <<         (*p_particle0).p.y - sy->ly0 << ' ';
+     cout <<         (*p_particle0).p.z - sy->lz0 << endl;
+     cout << "c " << (*p_particle1).p.x - sy->lx0 << ' ';
+     cout <<         (*p_particle1).p.y - sy->ly0 << ' ';
+     cout <<         (*p_particle1).p.z - sy->lz0 << endl;
+     */
     //  check_boundary();
     periodicBoundary_rvec(r_vec);
 #ifndef TWODIMENSION
@@ -259,23 +278,16 @@ void Bond::regeneration(){
     u01 = *pu[1] - *pu[0];
 #ifndef TWODIMENSION
     /* 3D */
-    d_slid.reset();
-    ang_bend.reset();
-    ang_tort = 0;
+    d_slid_old.reset();
+    ang_bend_old.reset();
+    ang_tort_old = 0;
 #else
     /* 2D */
-	d_slid.reset();
-    ang_bend.reset();
-#endif
-    d_slid_old = d_slid;
-    ang_bend_old = ang_bend;
-#ifndef TWODIMENSION
-    /* 3D */
-    ang_tort_old = ang_tort;
+	d_slid_old.reset();
+    ang_bend_old.reset();
 #endif
     D_function = 0;
 }
-
 
 void Bond::cheackBondStress(){
 	/* Condition of bond failure
@@ -289,7 +301,7 @@ void Bond::cheackBondStress(){
         }
         return;
     }
-    if ( q <= 0. ){
+    if ( q < 0 ){
         // force_normal < 0;
         des[0] = force_normal * para.reinforce_factor;
     } else {
@@ -306,10 +318,9 @@ void Bond::cheackBondStress(){
     D_function = des[0] + des[1] + des[2] + des[3] ;
 #else
     D_function = des[0] + des[1] + des[2];
-//	des[3] = 0.0;
 #endif
-	if ( D_function >= 1. ){	
-        if ( q > 0 ){
+	if ( D_function >= 1 ){	
+        if ( q >= 0 ){
             sy->rupture_bond.push_back(bond_number);                            
             sy->rup_normal ++;
         } else {            
@@ -319,7 +330,7 @@ void Bond::cheackBondStress(){
                 if (des[1] > des[3]){
                     sy->rup_shear ++; // 1 > 2 && 1 > 3
                 } else {
-                    sy->rup_torsion ++;// 3 > 1 > 2 
+                    sy->rup_torsion ++; // 3 > 1 > 2 
                 }
             } else {
                 if (des[2] > des[3]){

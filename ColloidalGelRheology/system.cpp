@@ -345,6 +345,7 @@ void System::readParameter(const string &codeword, const string &value)
     keylist["max_ang_velocity_convergence:"]=33; const int _max_ang_velocity_convergence=33;
     keylist["diff_stress_convergence:"]=34;const int _diff_stress_convergence=34;    
     keylist["stress_change_convergence:"]=35;const int _stress_change_convergence=35;
+    keylist["stress_minimum:"]=36; const int _stress_minimum=36;
 	cerr << codeword << ' ' << value << endl;
 	switch(keylist[codeword]){
         case _bond0_file: bond0_file = value; break;
@@ -364,6 +365,7 @@ void System::readParameter(const string &codeword, const string &value)
         case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str());; break;
         case _stress_change_convergence: stress_change_convergence = atof(value.c_str());; break;
         case _relax_for_restructuring: relax_for_restructuring = atoi(value.c_str()); break;
+        case _stress_minimum: stress_minimum = atof(value.c_str()); break;
 		default:
 			cerr << "The codeword " << codeword << " is'nt associated with an parameter" << endl;
 			exit(1);
@@ -746,7 +748,8 @@ void System::outputConfiguration(char equilibrium){
 		fout_conf << (*p_iter)->orientation.q[2] << ' ';
         fout_conf << (*p_iter)->orientation.q[3] << ' ';
         fout_conf << (*p_iter)->init_cluster << ' ' ;
-        fout_conf << (*p_iter)->wall << endl;
+        fout_conf << (*p_iter)->wall << ' ';
+        fout_conf << (*p_iter)->valCn_size() << endl;
 	}
     int number_of_live_bonds = n_bond - counterBreak ;
     fout_conf << "B " << number_of_live_bonds << endl;    
@@ -1032,12 +1035,12 @@ void System::regeneration_onebyone(){
     if (n_regeneration_bond > 1){
         for (int i=1; i < n_regeneration_bond; i++){
             if ( D_max < bond[regeneration_bond[i]]->D_function ){
-                D_max =  bond[regeneration_bond[i]]->D_function;
+                D_max = bond[regeneration_bond[i]]->D_function;
                 most_stressed_bond = regeneration_bond[i];
             }
         }
     }
-    bond[ most_stressed_bond]->regeneration();
+    bond[most_stressed_bond]->regeneration();
     counterRegenerate ++;
     regeneration_bond.clear();
 }
