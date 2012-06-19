@@ -13,8 +13,9 @@
 
 Bond::Bond(int d0, int d1, System &sy_){
 	sy = &sy_;	
-    status = 1;
+    status = 1;    
     initial_bond = sy->initialprocess;
+    cnt_regeneration = 0;
 	bond_number = sy->n_bond ++; 
 	d[0] = d0, d[1] = d1;  
 	sy->ct->on_connect( d[0], d[1] );
@@ -259,6 +260,7 @@ void Bond::regeneration(){
             central_force = true;
         }
     }
+    cnt_regeneration++;
     //  check_boundary();
     periodicBoundary_rvec(r_vec);
 #ifndef TWODIMENSION

@@ -95,6 +95,8 @@ public:
      * Distance between particle. 
      * The gap between particles or particle and wall are give by r - 2a.
      */
+    int cnt_regeneration;
+    
 	double r;
     /*
      *  Evaluation of the rupture condition
@@ -106,8 +108,6 @@ public:
      */
     int number_activebond;
     vec3d e_normal;
-    
-    
 	void addContactForce();
 	void calcForce();
     vec3d forceToParticle(int paritlce_number ){

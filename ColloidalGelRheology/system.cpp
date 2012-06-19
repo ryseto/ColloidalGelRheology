@@ -769,7 +769,8 @@ void System::outputConfiguration(char equilibrium){
             fout_conf << (*bond_iter)->val_F_norm() << ' ';
             fout_conf << (*bond_iter)->val_F_slid() << ' ';
             fout_conf << (*bond_iter)->val_M_bend() << ' ';
-            fout_conf << (*bond_iter)->val_M_tors() << endl;
+            fout_conf << (*bond_iter)->val_M_tors() << ' ';
+            fout_conf << (*bond_iter)->cnt_regeneration << endl;
         }
     }
 }
