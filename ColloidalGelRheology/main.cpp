@@ -190,29 +190,20 @@ void strainControlShear(System &sy){
             if (counter_relax_for_restructuring > sy.relax_for_restructuring){
                 sy.checkBondFailure(bond_active);
                 if (!sy.regeneration_bond.empty()){
-                    //cout << "@ 2" << endl;
-                    //for (int i = 0; i < sy.n_particle ; i++){
-                    //sy.particle[i]->outputBond();
-                    //}
+                    //sy.outputRestructuring();
                     sy.regeneration_onebyone();
-                    //cout << endl;                                        
                     counter_relax_for_restructuring = 0;
                     
                 }
                 if (!sy.rupture_bond.empty()){
-                    //cout << "@ 2" << endl;
-                    // for (int i = 0; i < sy.n_particle ; i++){
-                    //sy.particle[i]->outputBond();
-                    //}
+                    //sy.outputRestructuring();
                     sy.rupture(bond_active);
-                    //cout << endl;
                     counter_relax_for_restructuring = 0;
                 }
             }
             sy.generateBond( bond_active );
             sy.wl[0]->addNewContact(particle_active);            
             sy.wl[1]->addNewContact(particle_active);
-            
             if ( sy.calc_count % 1000 == 0 ){
                 sy.makeNeighbor();
             }

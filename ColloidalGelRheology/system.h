@@ -91,6 +91,9 @@ public:
 	void output_log();
 	void outputYaplot();
 	void outputConfiguration(char equilibrium);
+    void outputRestructuring();
+
+    
     //	void recordEquibiruimVolumeFraction(){
     //		volume_fraction_equilibrium.push_back(volume_fraction);
     //	}

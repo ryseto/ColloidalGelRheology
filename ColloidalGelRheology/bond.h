@@ -135,7 +135,7 @@ public:
     
     void whichparticle(int &i, int &j);
     void cheackBondStress();
-    
+    void outputRuptureMark();
     vec3d position(int i){
         return *pp[i];
     }

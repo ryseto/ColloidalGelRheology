@@ -231,18 +231,10 @@ void Bond::rupture(){
     }
 }
 
-void Bond::regeneration(){
-    if (status == 1){
-        status = 2;        
-        para = sy->bond1;
-        sq_fsc = sq(para.fsc);
-        sq_mbc = sq(para.mbc);
-        sq_mtc = sq(para.mtc);
-        if (para.fnc == 0){
-            central_force = true;
-        }
-    }
-    /*
+void Bond::outputRuptureMark(){
+    /* Output the rupture event for debug.
+     *
+     */
      cerr << (*p_particle0).particle_number << "--x--" << (*p_particle1).particle_number << endl;
      cerr << des[0] << ' ' << des[1] << ' ' << des[2] << endl;
      cerr << force_normal <<' ' << force_sliding.norm() << ' ' << moment_bending.norm()  << endl;
@@ -254,7 +246,19 @@ void Bond::regeneration(){
      cout << "c " << (*p_particle1).p.x - sy->lx0 << ' ';
      cout <<         (*p_particle1).p.y - sy->ly0 << ' ';
      cout <<         (*p_particle1).p.z - sy->lz0 << endl;
-     */
+}
+
+void Bond::regeneration(){
+    if (status == 1){
+        status = 2;        
+        para = sy->bond1;
+        sq_fsc = sq(para.fsc);
+        sq_mbc = sq(para.mbc);
+        sq_mtc = sq(para.mtc);
+        if (para.fnc == 0){
+            central_force = true;
+        }
+    }
     //  check_boundary();
     periodicBoundary_rvec(r_vec);
 #ifndef TWODIMENSION

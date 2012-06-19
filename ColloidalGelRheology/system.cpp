@@ -1106,3 +1106,31 @@ void System::checkBondFailure(vector<Bond *> &bond_active){
         (*it_bond)->cheackBondStress();	
 	}
 }
+
+void System::outputRestructuring(){
+    cout << "@ 2" << endl;
+    for (int i = 0; i < n_particle ; i++){
+        particle[i]->outputBond();
+    }
+    for (int i = 0; i < regeneration_bond.size(); i++){
+        bond[regeneration_bond[i]]->outputRuptureMark();
+    }
+    for (int i = 0; i < rupture_bond.size(); i++){
+        bond[rupture_bond[i]]->outputRuptureMark();
+    } 
+
+    
+    cout << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
