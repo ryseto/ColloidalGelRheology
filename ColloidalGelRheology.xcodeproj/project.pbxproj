@@ -16,16 +16,29 @@
 		D95B783C15879E8E004590CA /* grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783B15879E8E004590CA /* grid.cpp */; };
 		D95B784015879EFC004590CA /* contable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783F15879EFC004590CA /* contable.cpp */; };
 		D95B784415879F68004590CA /* bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B784315879F67004590CA /* bond.cpp */; };
+		D98F8FDD1595598300CE8441 /* grid2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D98F8FDC1595598300CE8441 /* grid2.cpp */; };
+		D9A84DAD1592D67700B163BE /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9A84DAC1592D67700B163BE /* main.cpp */; };
+		D9A84DAF1592D67700B163BE /* StructureAnalysisCGR.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9A84DAE1592D67700B163BE /* StructureAnalysisCGR.1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		D95B781D15879BE1004590CA /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
+			dstPath = /usr/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
 				D95B782615879BE1004590CA /* ColloidalGelRheology.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D9A84DA71592D67700B163BE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D9A84DAF1592D67700B163BE /* StructureAnalysisCGR.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -52,10 +65,22 @@
 		D95B784115879F32004590CA /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D95B784215879F43004590CA /* bond.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bond.h; sourceTree = "<group>"; };
 		D95B784315879F67004590CA /* bond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bond.cpp; sourceTree = "<group>"; };
+		D98F8FDB1595597700CE8441 /* grid2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = grid2.h; sourceTree = "<group>"; };
+		D98F8FDC1595598300CE8441 /* grid2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = grid2.cpp; sourceTree = "<group>"; };
+		D9A84DA91592D67700B163BE /* StructureAnalysisCGR */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = StructureAnalysisCGR; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9A84DAC1592D67700B163BE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D9A84DAE1592D67700B163BE /* StructureAnalysisCGR.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = StructureAnalysisCGR.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D95B781C15879BE1004590CA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9A84DA61592D67700B163BE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -69,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				D95B782215879BE1004590CA /* ColloidalGelRheology */,
+				D9A84DAB1592D67700B163BE /* StructureAnalysisCGR */,
 				D95B782015879BE1004590CA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -77,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				D95B781F15879BE1004590CA /* ColloidalGelRheology */,
+				D9A84DA91592D67700B163BE /* StructureAnalysisCGR */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -97,14 +124,25 @@
 				D95B784215879F43004590CA /* bond.h */,
 				D95B784315879F67004590CA /* bond.cpp */,
 				D95B783915879E52004590CA /* output.h */,
-				D95B783A15879E73004590CA /* grid.h */,
 				D95B783B15879E8E004590CA /* grid.cpp */,
+				D95B783A15879E73004590CA /* grid.h */,
 				D95B783E15879EDB004590CA /* contable.h */,
 				D95B783F15879EFC004590CA /* contable.cpp */,
 				D95B784115879F32004590CA /* common.h */,
 				D95B782515879BE1004590CA /* ColloidalGelRheology.1 */,
 			);
 			path = ColloidalGelRheology;
+			sourceTree = "<group>";
+		};
+		D9A84DAB1592D67700B163BE /* StructureAnalysisCGR */ = {
+			isa = PBXGroup;
+			children = (
+				D9A84DAC1592D67700B163BE /* main.cpp */,
+				D98F8FDB1595597700CE8441 /* grid2.h */,
+				D98F8FDC1595598300CE8441 /* grid2.cpp */,
+				D9A84DAE1592D67700B163BE /* StructureAnalysisCGR.1 */,
+			);
+			path = StructureAnalysisCGR;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -125,6 +163,23 @@
 			name = ColloidalGelRheology;
 			productName = ColloidalGelRheology;
 			productReference = D95B781F15879BE1004590CA /* ColloidalGelRheology */;
+			productType = "com.apple.product-type.tool";
+		};
+		D9A84DA81592D67700B163BE /* StructureAnalysisCGR */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9A84DB21592D67700B163BE /* Build configuration list for PBXNativeTarget "StructureAnalysisCGR" */;
+			buildPhases = (
+				D9A84DA51592D67700B163BE /* Sources */,
+				D9A84DA61592D67700B163BE /* Frameworks */,
+				D9A84DA71592D67700B163BE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StructureAnalysisCGR;
+			productName = StructureAnalysisCGR;
+			productReference = D9A84DA91592D67700B163BE /* StructureAnalysisCGR */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -148,6 +203,7 @@
 			projectRoot = "";
 			targets = (
 				D95B781E15879BE1004590CA /* ColloidalGelRheology */,
+				D9A84DA81592D67700B163BE /* StructureAnalysisCGR */,
 			);
 		};
 /* End PBXProject section */
@@ -165,6 +221,15 @@
 				D95B783C15879E8E004590CA /* grid.cpp in Sources */,
 				D95B784015879EFC004590CA /* contable.cpp in Sources */,
 				D95B784415879F68004590CA /* bond.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9A84DA51592D67700B163BE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9A84DAD1592D67700B163BE /* main.cpp in Sources */,
+				D98F8FDD1595598300CE8441 /* grid2.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,7 +287,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
+				INSTALL_PATH = "$HOME/bin:";
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -230,7 +298,40 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
+				INSTALL_PATH = "$HOME/bin:";
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = x86_64;
+			};
+			name = Release;
+		};
+		D9A84DB01592D67700B163BE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEPLOYMENT_LOCATION = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
+				INSTALL_PATH = $HOME/bin;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_DEFINITION_PLIST = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
+				VALID_ARCHS = x86_64;
+			};
+			name = Debug;
+		};
+		D9A84DB11592D67700B163BE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEPLOYMENT_LOCATION = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "TWODIMENSION=1";
+				INSTALL_PATH = $HOME/bin;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_DEFINITION_PLIST = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
@@ -251,6 +352,15 @@
 			buildConfigurations = (
 				D95B782A15879BE1004590CA /* Debug */,
 				D95B782B15879BE1004590CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D9A84DB21592D67700B163BE /* Build configuration list for PBXNativeTarget "StructureAnalysisCGR" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9A84DB01592D67700B163BE /* Debug */,
+				D9A84DB11592D67700B163BE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

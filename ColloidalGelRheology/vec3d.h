@@ -172,14 +172,15 @@ public:
 		return x*x + y*y + z*z; 
 	}
 	inline double sq_norm_xy(){return x*x + y*y;}
+	inline double sq_norm_xz(){return x*x + z*z;}
 	
     inline double norm(){
         return sqrt(x*x + y*y + z*z);
     }
     
-#ifdef TWODIMENSION
+//#ifdef TWODIMENSION
 	inline double norm_2d(){return sqrt(x*x+z*z);}
-#endif
+//#endif
     
 	inline vec3d division_2d(const double &d){ 
 		double d_tmp = 1.0/d;

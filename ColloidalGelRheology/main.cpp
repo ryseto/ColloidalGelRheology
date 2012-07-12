@@ -27,6 +27,7 @@ int main (int argc, char *const argv[])
 #else
     cerr << "3D simulation\n";
 #endif
+    
     if (sy.simulation == 't'){
         testParameters(argc, argv, sy);
 	} else {

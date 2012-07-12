@@ -88,8 +88,8 @@ public:
     }
     
     inline void infinitesimalRotation(vec3d & dw){
-        q[0] += 0.5*(          - dw.x * q[1] - dw.y * q[2] - dw.z * q[3]);
-        q[1] += 0.5*(dw.x * q[0]             - dw.z * q[2] + dw.y * q[3]);
+        q[0] += 0.5*(            - dw.x * q[1] - dw.y * q[2] - dw.z * q[3]);
+        q[1] += 0.5*(dw.x * q[0]               - dw.z * q[2] + dw.y * q[3]);
         q[2] += 0.5*(dw.y * q[0] + dw.z * q[1]             - dw.x * q[3]);
         q[3] += 0.5*(dw.z * q[0] - dw.y * q[1] + dw.x * q[2]            );
     }

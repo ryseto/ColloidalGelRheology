@@ -521,7 +521,7 @@ void System::initGrid(){
 		exit(1); 
 	}	
 	double cell_h = 2.2;
-	grid->init(n_particle, lx, ly, lz_init, cell_h, simulation);
+	grid->init(n_particle, lx, ly, lz_init, cell_h);
 }
 
 void System::setWallStress(double value_x, double value_y,  double value_z){

@@ -119,7 +119,7 @@ public:
     void x_shift( double dx );
 	inline vec3d pos(){return p;}	
 	void setInitial(int disk_number_);
-	void setPosition(const vec3d &position);
+//	void setPosition(const vec3d &position);
 	inline double distOverlap(const vec3d &pp){
 		return dist(p, pp) - 2.0; // ro = 2a = 1.0
 	}

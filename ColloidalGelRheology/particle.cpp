@@ -12,7 +12,8 @@ Particle::Particle(int particle_number_, const vec3d &position,
                    const int _i_cluster, System &sy_){
 	sy = &sy_;
     setInitial(particle_number_);
-	setPosition(position);
+    p = position;		
+//	setPosition(position);
     init_cluster = _i_cluster;
 	setVelocityZero();
     orientation.set(1., 0., 0., 0.);
@@ -38,9 +39,9 @@ void Particle::setInitial(int particle_number_){
 	cn_size = 0;
 }
 
-void Particle::setPosition(const vec3d & position){
-	p = position;		
-}
+//void Particle::setPosition(const vec3d & position){
+//	
+//}
 
 void  Particle::makeNeighbor(){
 	vector< vector<int> *> neighbor_cells;

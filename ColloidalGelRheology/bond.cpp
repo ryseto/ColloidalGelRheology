@@ -12,12 +12,12 @@
 #include "bond.h"
 
 Bond::Bond(int d0, int d1, System &sy_){
-	sy = &sy_;	
-    status = 1;    
+	sy = &sy_;
+    status = 1;
     initial_bond = sy->initialprocess;
     cnt_regeneration = 0;
-	bond_number = sy->n_bond ++; 
-	d[0] = d0, d[1] = d1;  
+	bond_number = sy->n_bond ++;
+	d[0] = d0, d[1] = d1;
 	sy->ct->on_connect( d[0], d[1] );
 	p_particle0 = sy->particle[d[0]];
 	p_particle1 = sy->particle[d[1]];

@@ -2,22 +2,22 @@
 //  grid.cpp
 //  ColloidalGelRheology
 //
-//  Created by Ryohei SETO on 6/12/12.
+//  Created by Ryohei SETO on 6/23/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #include <iostream>
-
-#include "grid.h"
+#include "grid2.h"
 #include <algorithm>
 //extern vector<Particle *> particle;
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 
-Grid::Grid(void){
+Grid2::Grid2(void){
     std::cerr << "grid object is created" << std::endl;    
 }
 
-Grid::~Grid(void){
+Grid2::~Grid2(void){
+    std::cerr << "grid object is deleted" << std::endl;    
 	for (int gx = 0; gx < gx_max; gx++){
 		for (int gy = 0; gy < gy_max ; gy++){
 			DELETE(vcell[gx][gy]);				
@@ -27,7 +27,7 @@ Grid::~Grid(void){
 	DELETE(vcell);
 }
 
-void Grid::init (const int num_of_particle, const double lx_, const double ly_, const double lz_,
+void Grid2::init (const int num_of_particle, const double lx_, const double ly_, const double lz_,
                  const double grid_size)
 {
 	numberOfParticle = num_of_particle;
@@ -106,68 +106,8 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 #endif
 }
 
-void Grid::remake(vector<Particle *> &particle){
-#ifndef TWODIMENSION
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
-	}	
-	for (int i = 0; i < numberOfParticle; i++ ){
-		gl[i] = p_to_grid( *particle[i]->p_pos() );
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
-	}
-#else
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vcell[gl[i].x][0][gl[i].z].clear();
-	}	
-	for (int i = 0; i < numberOfParticle; i++ ){
-		gl[i] = p_to_grid( *particle[i]->p_pos() );
-		vcell[gl[i].x][0][gl[i].z].push_back(i);
-	}
-#endif
-}
 
-void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &particle){
-	/*
-	 * zbot and ztop are not position of wall.
-	 * Particles locating at z < zbot and z > ztop are 
-     * marked as near-wall particles.
-	 */
-    for (int i = 0; i < numberOfParticle; i++ ){
-        vcell[gl[i].x][gl[i].y][gl[i].z].clear();
-    }	
-	vcell_wall[0].clear();
-	vcell_wall[1].clear();
-	for (int i = 0; i < numberOfParticle; i++ ){		
-		gl[i] = p_to_grid( *particle[i]->p_pos() );        
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);        
-        if (particle[i]->wall == false) {
-			if ( particle[i]->p.z < zbot ) {
-                vcell_wall[0].push_back(i);
-			} else if ( particle[i]->p.z > ztop ) {
-				vcell_wall[1].push_back(i);
-			}
-		}
-	}
-}
-
-void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
-	}	
-	vcell_wall[0].clear();
-	for (int i = 0; i < numberOfParticle; i++ ){		
-		gl[i] = p_to_grid( *particle[i]->p_pos() );
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
-		if (particle[i]->wall ==false) {
-			if ( particle[i]->p.z < zbot ) {
-				vcell_wall[0].push_back(i);
-			} 
-		}
-	}
-}
-
-
-GridPoint Grid::p_to_grid(const vec3d &p){    
+GridPoint Grid2::p_to_grid(const vec3d &p){    
     /* 3D */
 	gp_tmp.x = (int)(p.x/h);
     if (gp_tmp.x == gx_max ){
@@ -188,8 +128,10 @@ GridPoint Grid::p_to_grid(const vec3d &p){
 	return gp_tmp;  
 }
 
-void Grid::entry(vec3d &p, int i){
+void Grid2::entry(vec3d &p, int i){
 	GridPoint gp = p_to_grid(p);
+    p.cerr();
+    cerr << gp.x << ' ' << gp.y << ' ' << gp.z << endl;
 #ifndef TWODIMENSION
 	vcell[gp.x][gp.y][gp.z].push_back(i);
 #else
@@ -199,17 +141,18 @@ void Grid::entry(vec3d &p, int i){
 }
 
 
-void Grid::get_neighbor_list(const vec3d &p, vector<int> &neighbor){
+void Grid2::get_neighbor_list(const vec3d &p, vector<int> &neighbor){
 	//GridPoint gp;
     gp_tmp = p_to_grid(p);
     foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
+//        cerr <<"cell:" << (*gp).x << ' ' << (*gp).y << ' ' << (*gp).z << endl;
 		foreach(vector<int>, vcell[(*gp).x][(*gp).y][(*gp).z], iter){
 			neighbor.push_back( *iter );
 		}
 	}
 }
 
-void Grid::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor){
+void Grid2::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor){
 	p_neighbor.clear();
     gp_tmp = p_to_grid(p);
 	foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
@@ -217,15 +160,15 @@ void Grid::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbo
 	}
 }
 
-vector<int> * Grid::get_neighbor_list_pointer_top(){
+vector<int> * Grid2::get_neighbor_list_pointer_top(){
 	return &(vcell_wall[1]);
 }
 
-vector<int> * Grid::get_neighbor_list_pointer_bot(){
+vector<int> * Grid2::get_neighbor_list_pointer_bot(){
 	return &(vcell_wall[0]);
 }
 
-bool Grid::near_boundary_xy(const vec3d &p){
+bool Grid2::near_boundary_xy(const vec3d &p){
 #ifndef TWODIMENSION
 	int gx = (int)(p.x/h); // gx = gx_max is possible
     if ( gx == 0 || gx >= gx_max - 1)

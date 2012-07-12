@@ -2,7 +2,7 @@
 //  grid.h
 //  ColloidalGelRheology
 //
-//  Created by Ryohei SETO on 6/12/12.
+//  Created by Ryohei SETO on 6/23/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
@@ -15,12 +15,12 @@
 #include <algorithm>
 #include "common.h"
 #include "vec3d.h"
-#include "particle.h"
+//#include "particle.h"
 using namespace std;
 const int max_number_point = 20000;
 class Particle;
 
-class Grid{
+class Grid2{
 	double h;
 	vector<GridPoint> gl;
 	vector<int> ***vcell;
@@ -32,15 +32,15 @@ class Grid{
 	int gy_max;
 	int gz_max;
 public:
-	Grid(void);
-	~Grid(void);
+	Grid2(void);
+	~Grid2(void);
     
 	void init(const int num_of_particle, const double lx_, const double ly_, const double lz_,
               const double grid_size);
 	
-	void remake(vector<Particle *> &particle);
-	void remake_with_walls(double, double,vector<Particle *> &particle);
-	void remake_with_bottom(double, vector<Particle *> &particle);
+//	void remake(vector<Particle *> &particle);
+//	void remake_with_walls(double, double,vector<Particle *> &particle);
+//	void remake_with_bottom(double, vector<Particle *> &particle);
 	void entry(vec3d &p, int i);
 	GridPoint p_to_grid(const vec3d &p);
 #ifndef TWODIMENSION
@@ -68,7 +68,6 @@ public:
 	bool near_boundary_xy(const vec3d &p);
 	
 };
-
 
 
 #endif
