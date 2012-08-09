@@ -25,12 +25,12 @@ ConTable::~ConTable(){
 void ConTable::set(int particleNumber){
 	allocate = true;
 	n = particleNumber;
-    
+	
 	tbl = new bool* [n+2];
 	for (int i=0; i < n+2; i++){
 		tbl[i] = new bool[n+2];
 	}
-    
+	
 	for (int i=0; i < n+2; i++){
 		for (int j=0; j < i; j++){
 			tbl[i][j] = false;

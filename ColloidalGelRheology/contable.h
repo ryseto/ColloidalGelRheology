@@ -23,10 +23,10 @@ public:
 	inline bool connect(int i, int j){
 		return tbl[i][j];
 	}
-    
+	
 	void set(int particleNumber);
 	void reset();
 	void on_connect(int i, int j);
-	void off_connect(int i, int j);	
+	void off_connect(int i, int j);
 };
 #endif

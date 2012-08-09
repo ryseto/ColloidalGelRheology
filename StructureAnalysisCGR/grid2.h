@@ -26,7 +26,7 @@ class Grid2{
 	vector<int> ***vcell;
 	vector<int> vcell_wall[2];
 	vector<GridPoint> ***neighbor_cell;
-	int numberOfParticle;
+	unsigned long numberOfParticle;
 	GridPoint gp_tmp;
 	int gx_max;
 	int gy_max;
@@ -34,13 +34,13 @@ class Grid2{
 public:
 	Grid2(void);
 	~Grid2(void);
-    
-	void init(const int num_of_particle, const double lx_, const double ly_, const double lz_,
-              const double grid_size);
 	
-//	void remake(vector<Particle *> &particle);
-//	void remake_with_walls(double, double,vector<Particle *> &particle);
-//	void remake_with_bottom(double, vector<Particle *> &particle);
+	void init(const unsigned long num_of_particle, const double lx_, const double ly_, const double lz_,
+			  const double grid_size);
+	
+	//	void remake(vector<Particle *> &particle);
+	//	void remake_with_walls(double, double,vector<Particle *> &particle);
+	//	void remake_with_bottom(double, vector<Particle *> &particle);
 	void entry(vec3d &p, int i);
 	GridPoint p_to_grid(const vec3d &p);
 #ifndef TWODIMENSION
@@ -59,7 +59,7 @@ public:
 	inline int min_gy(int gy){ return ( gy >= 0 ? gy : 0 ) ; }
 	inline int max_gy(int gy){ return ( gy <= gy_max ? gy : gy_max ); }
 	int gy(int i){ return gl[i].y;}
-	int size(int x, int y, int z) { return vcell[x][y][z].size(); }
+	unsigned long size(int x, int y, int z) { return vcell[x][y][z].size(); }
 	void gl_resize(int n){ gl.resize(n); }
 	void get_neighbor_list(const vec3d &p, vector<int> &neighbor);
 	void get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor);

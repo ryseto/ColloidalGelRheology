@@ -29,15 +29,15 @@ enum WallType {top, bot};
 class Wall{
 private:
 	System *sy;
-	int objectID; 
-	WallType walltype;	
+	int objectID;
+	WallType walltype;
 	vec3d u;
 	vector<int> neighbor;
-    vector <Particle*> wall_particle;
-    
-    
+	vector <Particle*> wall_particle;
+	
+	
 	vec3d force;
-    double stress_sc;
+	double stress_sc;
 	vec3d a_velocity;
 	vec3d a_velocity_1st;
 	vec3d velocity_1st;
@@ -53,16 +53,16 @@ public:
 	bool x_movable;
 	bool y_movable;
 	vec3d velocity;
-    vector <int> wall_group;
-	int numConnectParticle(){
+	vector <int> wall_group;
+	unsigned long numConnectParticle(){
 		return wall_particle.size();
 	}
-    void getParticles(vector<int> &particles_list);
-    bool markWallConnected();
-    
+	void getParticles(vector<int> &particles_list);
+	bool markWallConnected();
+	
 	void addNewContact(vector<Particle *> &particle_active);
-    void initWallParticle(int i);
-    
+	void initWallParticle(int i);
+	
 	void makeNeighbor();
 	void addNeighbor( int neighbor_particle ){
 		neighbor.push_back( neighbor_particle );
@@ -77,10 +77,10 @@ public:
 	void output(ofstream &fout);
 	inline vec3d *pu(){return &u;}
 	void velocityLimit(){ velocity = velocity_1st;}
-    void compactionStrainControl(double velocity);
-    void shearingStrainControl(double velocity);
-    double stressSensor_z();
-    double stressSensor_x();
-    
+	void compactionStrainControl(double velocity);
+	void shearingStrainControl(double velocity);
+	double stressSensor_z();
+	double stressSensor_x();
+	
 };
 #endif

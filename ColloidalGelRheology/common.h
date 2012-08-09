@@ -27,10 +27,10 @@ inline double sq(double x){ return x*x;}
 for(a::iterator c=(b).begin();(c)!=(b).end(); ++ (c))
 
 #define ForAllBond \
-for(vector<Bond *>::iterator bond_iter=(bond).begin();(bond_iter)!=(bond).end(); ++(bond_iter)) 
+for(vector<Bond *>::iterator bond_iter=(bond).begin();(bond_iter)!=(bond).end(); ++(bond_iter))
 
 #define ForAllParticle \
-for(vector<Particle *>::iterator p_iter=(particle).begin();(p_iter)!=(particle).end(); ++(p_iter)) 
+for(vector<Particle *>::iterator p_iter=(particle).begin();(p_iter)!=(particle).end(); ++(p_iter))
 
 
 #define fout_pos_c(X,Y,Z) \
@@ -81,25 +81,25 @@ struct GridPoint {
 
 struct BondParameter {
 	double kn;
-    double ks;
-    double kb;
-    double kt;
-    double kn3;
-    double c_norm;
-    double c_slid;
-    double c_bend;
-    double c_tort;
-    
-    double fnc;
-    double fsc;
-    double mbc;
-    double mtc;
-    double n_max;
-    double s_max;
-    double b_max;
-    double t_max;
-    double reinforce_factor;
-    
+	double ks;
+	double kb;
+	double kt;
+	double kn3;
+	double c_norm;
+	double c_slid;
+	double c_bend;
+	double c_tort;
+	
+	double fnc;
+	double fsc;
+	double mbc;
+	double mtc;
+	double n_max;
+	double s_max;
+	double b_max;
+	double t_max;
+	double reinforce_factor;
+	
 };
 
 
