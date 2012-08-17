@@ -27,8 +27,7 @@ System::~System(){
 	delete grid;
 }
 
-void System::TimeDevStrainControlCompactionEuler(vector<Particle *> &particle_active,
-												 vector<Bond *> &bond_active){
+void System::TimeDevStrainControlCompactionEuler(){
 	if(prog_strain){
 		wl[0]->compactionStrainControl( wall_velocity ); // bot
 		wl[1]->compactionStrainControl(-wall_velocity ); // top
@@ -42,10 +41,10 @@ void System::TimeDevStrainControlCompactionEuler(vector<Particle *> &particle_ac
 	foreach( vector<Particle *>, particle_active, it_particle){
 		(*it_particle)->move_Euler();
 	}
+	time += dt;
 }
 
-void System::TimeDevStrainControlShearEuler(vector<Particle *> &particle_active,
-											vector<Bond *> &bond_active){
+void System::TimeDevStrainControlShearEuler(){
 	if(prog_strain){
 		wl[0]->shearingStrainControl(-wall_velocity ); // bot
 		wl[1]->shearingStrainControl(+wall_velocity ); // top
@@ -59,6 +58,7 @@ void System::TimeDevStrainControlShearEuler(vector<Particle *> &particle_active,
 	foreach( vector<Particle *>, particle_active, it_particle){
 		(*it_particle)->move_Euler();
 	}
+	time += dt;
 }
 
 bool System::mechanicalEquilibrium(){
@@ -107,6 +107,129 @@ bool System::mechanicalEquilibrium(){
 	return mechanical_equilibrium;
 }
 
+void System::preProcesses(){
+	initialprocess = true;
+	setSimulationViscosity();
+	preparationOutput();
+	setBondGenerationDistance(2.0);
+	setWall();
+	initGrid();
+	//outputParameter(sy, fout_yap);
+	initDEM();
+	makeInitialBond(2.0001);
+	initialprocess = false;
+	checkActiveElements();
+	calcVolumeFraction();
+	outputConfiguration('n');
+	while(checkPercolation() == false){
+		shiftForPercolation();
+		makeNeighbor();
+		generateBond();
+	}
+	dt = dt_max;
+	setFirstTarget();
+	checkState();
+	outputData();
+	outputConfiguration('e');
+}
+
+void System::timeEvolution(){
+	double t_next = time + interval_convergence_check*dt_max;
+	int calc_count = 0;
+	counter_relax_for_restructuring = 0;
+	while ( time < t_next ){
+		/* Proceed applying strain when
+		 * (1) the strain does not reach to the target value.
+		 * (2) it is not relaxation process after bond breaking.
+		 */
+		if (reachStrainTarget() ||
+			counter_relax_for_restructuring < relax_for_restructuring){
+			prog_strain = false;
+		} else {
+			prog_strain = true;
+		}
+		/* Main time evolution */
+		if (simulation == 'c') {
+			TimeDevStrainControlCompactionEuler();
+		} else {
+			TimeDevStrainControlShearEuler();
+		}
+		/* Breakup of bonds */
+		if (counter_relax_for_restructuring++ >= relax_for_restructuring){
+			checkBondFailure();
+			if (!regeneration_bond.empty()){
+				//sy.outputRestructuring();
+				regeneration_onebyone();
+				counter_relax_for_restructuring = 0;
+			}
+			if (!rupture_bond.empty()){
+				//sy.outputRestructuring();
+				rupture();
+				counter_relax_for_restructuring = 0;
+			}
+		}
+		/* Bond generation */
+		if ( calc_count++ % interval_makeNeighbor == 0 ){
+			makeNeighbor();
+		}
+		generateBond();
+		wl[0]->addNewContact(particle_active);
+		wl[1]->addNewContact(particle_active);
+	}
+	if (simulation == 'c'){
+		calcVolumeFraction();
+	}
+}
+
+void System::middleProcedures(){
+	simuAdjustment();
+	if (simulation == 's'){
+		calcShearStress();
+	} else {
+		calcStress();
+	}
+	checkState();
+	checkStressDiff();
+	makeNeighbor();
+	optimalTimeStep();
+	if ( checkOutputStrain(1.0) ){
+		outputConfiguration('n');
+	}
+	output_log();
+}
+
+void System::strainControlSimulation(){
+	preProcesses();
+	while(true){
+		timeEvolution();
+		middleProcedures();
+		outlog();
+		if ( reachStrainTarget() ){
+			if (mechanicalEquilibrium()){
+				cerr <<"Equilibrium!"<< endl;
+				/*  Output */
+				outputData();
+				outputConfiguration('e');
+				monitorDeformation('e');
+				/*  Prepare next step */
+				setTarget();
+				if (checkEndCondition()){
+					break;
+				}
+			}
+		}
+	}
+	return;
+}
+
+void System::outlog(){
+	if (simulation=='s'){
+		cerr << strain_x << " --> " << strain_target  << endl;
+	} else {
+		cerr << volume_fraction << " --> " << vf_target  << endl;
+	}
+}
+
 bool System::reachStrainTarget(){
 	if (simulation=='s'){
 		// shear
@@ -123,6 +246,72 @@ bool System::reachStrainTarget(){
 			return false;
 		}
 	}
+}
+
+void System::setTarget(){
+	if (simulation=='s'){
+		strain_target += step_strain_x;
+	} else {
+		vf_target *= volumefraction_increment;
+	}
+}
+
+void System::setFirstTarget(){
+	if (simulation == 's'){
+		strain_target = step_strain_x;
+	} else {
+		vf_target = volume_fraction / initial_compaction;
+	}
+}
+
+bool System::checkEndCondition(){
+	bool end_simulation = false;
+	if (simulation =='s' ){
+		if (strain_x > max_strain_x){
+			end_simulation = true;
+		}
+	} else {
+		if (volume_fraction > max_volume_fraction){
+			end_simulation = true;
+		}
+	}
+	return end_simulation;
+}
+
+void System::checkStressDiff(){
+	if (simulation == 's'){
+		if (diff_stress_x == 0){
+			stress_x_change = 0;
+			stress_z_change = 0;
+		} else {
+			stress_x_change = abs(stress_x - stress_x_before)/stress_x;
+			stress_z_change = abs(stress_z - stress_z_before)/stress_z;
+		}
+		strain_x = abs( wl[0]->x - wl[1]->x )/lz;
+		strain_z = (lz_init - lz)/lz_init;
+		
+	} else {
+		stress_z_change = abs(stress_z - stress_z_before)/stress_z;
+		stress_x_change = abs(stress_x - stress_x_before)/stress_x;
+		strain_z = (lz_init - lz)/lz_init;
+	}
+	stress_z_before = stress_z;
+	stress_x_before = stress_x;
+}
+
+bool System::checkOutputStrain(double diff){
+	if (simulation == 's'){
+		if (strain_x > strain_x_last_output + diff){
+			lz_last_output = lz;
+			return true;
+		}
+	} else {
+		if ( lz < lz_last_output - 1.0 ){
+			lz_last_output = lz;
+			return true;
+		}
+	}
+	return false;
 }
 
 void System::setParameterFile(char *parameters_file_)
@@ -214,7 +403,7 @@ void System::setBondGenerationDistance(double distance)
 	sq_dist_generate = sq(distance);
 }
 
-void System::generateBond(vector<Bond *> &bond_active){
+void System::generateBond(){
 	int bond_number_before = n_bond;
 	for (int i=0; i < n_particle; i++){
 		particle[i]->generateBond();
@@ -228,7 +417,7 @@ void System::generateBond(vector<Bond *> &bond_active){
 	return;
 }
 
-void System::generateBond(){
+void System::generateBondAll(){
 	for (int i=0; i < n_particle; i++){
 		particle[i]->generateBond();
 	}
@@ -538,7 +727,7 @@ void System::shiftCenterOfMass(vector<vec3d> &p)
  *
  *
  */
-void System::check_active(vector<Particle *> &particle_active, vector<Bond *> &bond_active){
+void System::checkActiveElements(){
 	for (int i=0; i < n_bond; i++){
 		if (bond[i]->status){
 			bond_active.push_back( bond[i] );
@@ -652,7 +841,7 @@ void System::outputData(){
 	static int rup_bend_previous = 0;
 	static int rup_torsion_previous = 0;
 	static double strain_previous = 0;
-	double del_strain;
+	double del_strain = 0;
 	
 	if ( firsttime ){
 		firsttime = false;
@@ -676,8 +865,6 @@ void System::outputData(){
 		fout_data << "#15 average_contact_number\n";
 		fout_data << "#16 del_strain\n";
 	}
-	//double previous_volume_fraction = volume_fraction_equilibrium.back() ;
-	//double compressive_strain = (volume_fraction - previous_volume_fraction)/previous_volume_fraction;
 	
 	if (simulation == 'c'){
 		del_strain = (strain_z - strain_previous);
@@ -686,7 +873,6 @@ void System::outputData(){
 		del_strain = (strain_x - strain_previous);
 		strain_previous = strain_x;
 	}
-	cerr << del_strain << endl;
 	double rate_rup_normal, rate_rup_shear, rate_rup_bend, rate_rup_torsion;
 	if (del_strain == 0){
 		rate_rup_normal = 0;
@@ -879,59 +1065,6 @@ void System::monitorDeformation(char equilibrium){
 		}
 	}
 }
-
-//double partialSphereVolume(double lack_z){
-//double volume = M_PI*(4.0/3 + lack_z*lack_z*lack_z/3 - lack_z*lack_z);
-//return volume;
-//}
-//
-//double partialDiskArea(double lack_z){
-//double area = 0.5*(M_PI + 2.*(1. - lack_z)*sqrt(lack_z*(2.-lack_z))  \
-// + 2.*asin(1.-lack_z));
-//return area;
-//}
-
-
-//void System::calcModifiedVolumeFraction(){
-///* Due to the implimentation of non-slip walls,
-// * the lower dencity aound wall should be removed.
-// * However, I stop to modify in the main simulation.
-// */
-//int n_inside = 0;
-//double partial_volume = 0.;
-//#ifdef TWODIMENSION
-//double partial_area = 0.;
-//#endif
-//double margin_cutoff = 3.;
-//double botlevel = wl[0]->z + margin_cutoff;
-//double toplevel = wl[1]->z - margin_cutoff;
-//double lack_z;
-//for (int i = 0; i < n_particle ; i++){
-//double z = particle[i]->p.z;
-//if ( z > botlevel + 1 && z < toplevel - 1){
-//n_inside ++;
-//} else if ( z > botlevel - 1 && z < botlevel +1){
-//lack_z = botlevel + 1 - z;
-//partial_volume += partialSphereVolume(lack_z);
-//#ifdef TWODIMENSION
-//partial_area += partialDiskArea(lack_z);
-//#endif
-//} else if ( z < toplevel + 1 && z > toplevel -1){
-//lack_z = z - (toplevel - 1);
-//partial_volume += partialSphereVolume(lack_z);
-//#ifdef TWODIMENSION
-//partial_area += partialDiskArea(lack_z);
-//#endif
-//}
-//}
-//double solid_volume = n_inside*M_PI*4.0/3 + partial_volume;
-//modified_volume_fraction = solid_volume / (lx*ly*(toplevel-botlevel));
-//#ifdef TWODIMENSION
-//double solid_area = n_inside*M_PI + partial_area;
-//modified_area_fraction = solid_area / (lx * (toplevel-botlevel));
-//#endif
-//}
-
 void System::calcVolumeFraction(){
 	double volume = lx*ly*lz;
 	static const double volume1 = (4.0/3.0)*M_PI;
@@ -950,8 +1083,8 @@ void System::calcVolumeFraction(){
  *  - Because the force from wall is not added here,
  *  - The force is calculated for only active particles (not contact to the walls.)
  */
-void System::checkState(vector <Particle *> &particle_active,
-						vector <Bond *> &bond_active){
+void System::checkState(){
+	
 	unsigned long n_particle_active = particle_active.size();
 	int sum_num_of_contacts_for_active_particle = 0;
 	for (int i=0; i < n_particle_active; i++){
@@ -1123,7 +1256,7 @@ void System::regeneration_onebyone(){
 	regeneration_bond.clear();
 }
 
-void System::rupture(vector<Bond *> &bond_active){
+void System::rupture(){
 	int most_stressed_bond = rupture_bond[0] ;
 	double D_max = bond[most_stressed_bond]->D_function;
 	unsigned long n_rupture_bond = rupture_bond.size();
@@ -1148,7 +1281,7 @@ void System::makeInitialBond(double generation_distance){
 	double tmp = sq_dist_generate;
 	sq_dist_generate = sq(generation_distance);
 	makeNeighbor();
-	generateBond();
+	generateBondAll();
 	/* z 方向の周期境界条件で生成した初期配置。
 	 * 粒子の中心座標は z
 	 */
@@ -1179,7 +1312,7 @@ void System::makeInitialBond(double generation_distance){
 	sq_dist_generate = tmp;
 }
 
-void System::checkBondFailure(vector<Bond *> &bond_active){
+void System::checkBondFailure(){
 	foreach( vector<Bond *>, bond_active, it_bond){
 		(*it_bond)->cheackBondStress();	
 	}
@@ -1197,8 +1330,6 @@ void System::outputRestructuring(){
 	for (int i = 0; i < rupture_bond.size(); i++){
 		bond[rupture_bond[i]]->outputRuptureMark();
 	} 
-	
-	
 	cout << endl;
 }
 

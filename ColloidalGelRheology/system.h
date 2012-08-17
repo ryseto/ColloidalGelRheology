@@ -8,7 +8,6 @@
 
 #ifndef ColloidalGelRheology_system_h
 #define ColloidalGelRheology_system_h
-
 #include "common.h"
 #include "particle.h"
 #include "grid.h"
@@ -21,61 +20,128 @@ using namespace std;
 class Grid;
 class Bond;
 class Wall;
-class ConTable;
-
+//class ConTable;
 
 class System {
 protected:
-	void shiftCenterOfMass(vector<vec3d> &p);
+	/*
+	 * Given parameters for simulation
+	 */
+	double dt_max;
+	double max_move_step;
+	double lz_init;
+	double wall_velocity;
+	double stress_change_convergence; // The change of stress during the interval_convergence_check.
+	double stress_minimum;
+	double initial_compaction;
+	double max_volume_fraction;
+	double step_strain_x;
+	double max_strain_x;
+	double dist_generate;
+	double max_velocity_convergence;
+	double max_ang_velocity_convergence;
+	double diff_stress_convergence;
+	int interval_convergence_check;
+	int interval_makeNeighbor;
+	int relax_for_restructuring;
+	
+	/*
+	 * State parameters of system
+	 */
+	int n_particle; // Total number of particles
+	vec3d force_wall;
+	double time;
+	double volume_fraction;
+	double area_fraction;
+	double strain_x;
+	double stress_x;
+	double strain_z;
+	double stress_z;
+	double stress_y;
+	double kinetic_energy;
+	int counterBreak;
+	int counterRegenerate;
+	double ave_force;
+	double ave_bondforce;
+	double max_force;
+	double max_velocity;
+	double max_ang_velocity;
+	double r_min;
+	double r_max;
+	double sliding_disp_max;
+	double bending_angle_max;
+	double torsional_angle_max;
+	double force_max;
+	double average_contact_number;
+		
+	/*
+	 * Simulation parameters
+	 */
+	double eta_factor; // relative viscosity used in simulation
+	double diff_stress_x;
+	double diff_stress_z;
+	double stress_z_before;
+	double stress_x_before;
+	double stress_x_change;
+	double stress_z_change;
+	int counterRegenerate_before;
+
+	/*
+	 * variables for simulations
+	 */
+	
+	bool prog_strain;
+	int counter_relax_for_restructuring;
+	double volumefraction_increment;
+	double strain_target; // next equilibrium for shear
+	double vf_target;// next equilibrium for compaction
+	double lz_last_output;
+	double strain_x_last_output;
+
+	string bond0_file;
+	string bond1_file;
+	char fn_common[64];   // 192 // 128 + 64
+	char parameters_file[128];
+	char parameters[32];
+	char init_cluster_file[128]; //256
+	char init_cluster[32]; //256
+	char version[3];
 	ofstream fout_data;
 	ofstream fout_log;
 	ofstream fout_yap;
 	ofstream fout_conf;
 	ofstream fout_deform;
-	string bond0_file;
-	string bond1_file;
-	double eta_factor;
-	double kinetic_energy;
 	
-public:
-	System();
-	~System();
-	void importPositions();
+private:
+	void preProcesses();
+	void timeEvolution();
+	void middleProcedures();
+	void shiftCenterOfMass(vector<vec3d> &p);
 	void setRod(int m);
 	void setWall();
-	void initDEM();
-	
-	void readParameterFile();
-	void readParameter(const string &codeword, const string &value);
-	void readBondParameter();
-	void setParameterFile(char *);
-	void setInitClusterFile(char *);
-	void setVersion(char *);
 	void setBondGenerationDistance(double);
-	void generateBond(vector<Bond *> &bond_active);
 	void generateBond();
+	void generateBondAll();
 	void makeInitialBond(double generation_distance);
-	
-	void checkState(vector <Particle *> &particle_active, vector <Bond *> &bond_active);
-	void checkBondFailure(vector<Bond *> &bond_active);
-	
+	void checkState();
+	void checkBondFailure();
 	void regeneration();
 	void regeneration_onebyone();
-	void rupture(vector<Bond *> &bond_active);
-	void TimeDevStrainControlCompactionEuler(vector<Particle *> &particle_active,
-											 vector<Bond *> &bond_active);
-	
-	void TimeDevStrainControlShearEuler(vector<Particle *> &particle_active,
-										vector<Bond *> &bond_active);
-	
+	void rupture();
+	void TimeDevStrainControlCompactionEuler();
+	void TimeDevStrainControlShearEuler();
 	bool mechanicalEquilibrium();
-	
 	bool reachStrainTarget();
-	void check_active(vector<Particle *> &particle_active, vector<Bond *> &bond_active);
+	void setTarget();
+	void setFirstTarget();
+	bool checkEndCondition();
+	void checkActiveElements();
 	bool checkPercolation();
 	void shiftForPercolation();
 	void calcStress();
 	void calcShearStress();
+	void checkStressDiff();
+	bool checkOutputStrain(double);
 	void simuAdjustment();
 	void setSimulationViscosity();
 	void preparationOutput();
@@ -95,148 +161,65 @@ public:
 	void outputYaplot();
 	void outputConfiguration(char equilibrium);
 	void outputRestructuring();
-	
-	
-	//	void recordEquibiruimVolumeFraction(){
-	//		volume_fraction_equilibrium.push_back(volume_fraction);
-	//	}
+	void outlog();
+
+public:
+	System();
+	~System();
+	void importPositions();
+	void initDEM();
+	void readParameterFile();
+	void readParameter(const string &codeword, const string &value);
+	void readBondParameter();
+	void setParameterFile(char *);
+	void setInitClusterFile(char *);
+	void setVersion(char *);
+	void strainControlSimulation();
 	/*
-	 * System parameter
-	 *
-	 *
+	 * Objects
 	 */
-	ConTable *ct;
-	vector<Bond *> bond;
 	vector<Particle *> particle;
-	vector<Wall *> wl;
-	Wall *wl_top;
-	Wall *wl_bot;
+	vector <Particle *> particle_active;
+	vector<Bond *> bond;
+	vector <Bond *> bond_active;
+	vector <Wall *> wl;
+	/*
+	 * Objects for simulation
+	 */
 	Grid *grid;
+	ConTable *ct;
 	vector<int> regeneration_bond;
 	vector<int> rupture_bond;
-	vector <double> volume_fraction_equilibrium;// It should be removed.
-	// number of particle
-	char simulation;
-	int n_particle; //4
-	BondParameter bond0;
-	BondParameter bond1;
 	/*
-	 * For distinguish initial bond generation.
+	 * System parameters
 	 */
-	bool initialprocess;
-	char fn_common[64];   // 192 // 128 + 64
-	char parameters_file[128];
-	char parameters[32];
-	char init_cluster_file[128]; //256
-	char init_cluster[32]; //256
-	char version[3];
-	/*
-	 * State variables
-	 *
-	 *
-	 */
-	double time;
-	double volume_fraction;
-	double area_fraction;
-	//double modified_volume_fraction;
-	int calc_count;
-	int n_bond; // The total number of bond including breakup bond
-	int counterBreak;
-	int counterRegenerate;   // 4
-	int counterRegenerate_before;
-	int rup_normal;
-	int rup_shear;
-	int rup_bend;
-	int rup_torsion;
-	double ave_force;
-	double ave_bondforce;
-	double max_force;
-	double max_velocity;
-	double max_ang_velocity;
-	double r_min;
-	double r_max;
-	double sliding_disp_max;
-	double bending_angle_max;
-	double torsional_angle_max;
-	double force_max;
-	double average_contact_number;
-	char string_L[3];
-	double lx;
-	double ly;
-	double lz;
-	double lx0;
-	double ly0;
-	double lz0;
-	
-	//double init_aggregate_radius;
-	/*
-	 * calucuration parameters
-	 */
-	double dt;
-	double dt_max;
-	double max_move_step;
-	
+	double lx, ly, lz;
+	double dt; // Time step to integrate equatino of motion.
 	double eta;
 	double eta_rot;
-	double dist_generate;
-	double sq_dist_generate;
-	//double cp_aggregate_radius;
+
 	/*
-	 * compression
+	 * State of system
 	 */
+
+	int n_bond; // The total number of bond including breakup bond
+	bool percolation;
+	int rup_normal; // Counters for rupture events
+	int rup_shear;
+	int rup_bend;	
+	int rup_torsion;
+	
+	/*
+	 * Simulation parameters
+	 */
+	char simulation;
+	bool initialprocess; // To prepare initial bonds and so on.
+	double lx0, ly0, lz0; // = (lx/2, ly/2, lz/2)
 	int n_top;
 	int n_bot;
-	double lz_init;
-	bool percolation;
-	vec3d force_wall;
-	double wall_velocity;
-	
-	double strain_x;
-	double stress_x;
-	double strain_z;
-	double stress_z;
-	double stress_z_before;
-	double stress_x_before;
-
-	double stress_z_initial;
-	double stress_z_increment_ratio;
-	double stress_x_initial;
-	double stress_x_increment_ratio;
-	double stress_y;
-	// The diffrece of stresses between the top and bottom.
-	double diff_stress_x;
-	double diff_stress_z;
-	// The change of stress during the interval_convergence_check.
-	double stress_x_change;
-	double stress_z_change;
-	double stress_change_convergence;
-	double stress_minimum;
-	double initial_compaction;
-	double max_volume_fraction;
-	double step_strain_x;
-	double max_strain_x;
-	
-	int relax_for_restructuring;
-	int counter_relax_for_restructuring;
-	
-	bool prog_strain;
-	
-	double volumefraction_increment;
-	double max_velocity_convergence;
-	double max_ang_velocity_convergence;
-	double diff_stress_convergence;
-	int interval_convergence_check;
-	int interval_makeNeighbor;
-	double strain_x_change;
-	double strain_z_change;
-	double dLz_outputconfig;
-	
-	double strain_target; // next equilibrium for shear
-	double vf_target;// next equilibrium for compaction
-	
-	double lz_last_output;
-	double strain_x_last_output;
-	
+	BondParameter bond0;
+	BondParameter bond1;
+	double sq_dist_generate;
 };
 
 #endif
