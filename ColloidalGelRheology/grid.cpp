@@ -138,7 +138,12 @@ void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &parti
 	vcell_wall[0].clear();
 	vcell_wall[1].clear();
 	for (int i = 0; i < numberOfParticle; i++ ){
+		vec3d ppp = *particle[i]->p_pos();
+//		cerr << "i= " << i << ' ' ;
+//		ppp.cerr();
+//		cerr << endl;
 		gl[i] = p_to_grid( *particle[i]->p_pos() );
+	
 		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
 		if (particle[i]->wall == false) {
 			if ( particle[i]->p.z < zbot ) {

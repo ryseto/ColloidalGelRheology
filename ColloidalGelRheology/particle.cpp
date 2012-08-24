@@ -13,7 +13,6 @@ Particle::Particle(int particle_number_, const vec3d &position,
 	sy = &sy_;
 	setInitial(particle_number_);
 	p = position;
-	//	setPosition(position);
 	init_cluster = _i_cluster;
 	setVelocityZero();
 	orientation.set(1., 0., 0., 0.);
@@ -38,10 +37,6 @@ void Particle::setInitial(int particle_number_){
 	particle_number = particle_number_;
 	cn_size = 0;
 }
-
-//void Particle::setPosition(const vec3d & position){
-//
-//}
 
 void  Particle::makeNeighbor(){
 	vector< vector<int> *> neighbor_cells;
@@ -91,7 +86,6 @@ void Particle::generateBond(){
 				neighbor.pop_back();
 				n_neighbor --;
 				i--; // because neighbor[i] must be checked again.
-				
 			}
 		}
 	} else {
@@ -134,7 +128,10 @@ void Particle::move_Euler(){
 	omega += a_omega*sy->dt;
 	p += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
+	
 	orientation.infinitesimalRotation( d_rotation );
+	
+	
 	for (int i = 0; i < cn_size ; i++){
 		cn[i].u.rotateInfinitesimal( d_rotation );
 #ifndef TWODIMENSION

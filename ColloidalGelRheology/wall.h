@@ -74,6 +74,7 @@ public:
 		force += force_;
 	}
 	void move();
+	void z_shift(double dz);
 	void output(ofstream &fout);
 	inline vec3d *pu(){return &u;}
 	void velocityLimit(){ velocity = velocity_1st;}
@@ -81,6 +82,7 @@ public:
 	void shearingStrainControl(double velocity);
 	double stressSensor_z();
 	double stressSensor_x();
+	void stressSensor(double &stress_x, double &stress_z);
 	
 };
 #endif

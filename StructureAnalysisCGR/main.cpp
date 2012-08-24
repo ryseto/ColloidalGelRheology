@@ -20,40 +20,41 @@
 #include "grid2.h"
 using namespace std;
 
-bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz){
-	int num_particle;
+bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz,
+					   bool back_bone){
+	unsigned long num_particle;
 	char buf[10];
 	double info[13];
 	char buf_line[512];
 	fin >> buf ;
-	cerr << buf << endl;
 	if (buf[0] != '#'){
 		cerr << "stop: " << buf << endl;
 		exit(1);
 	}
 	fin >> buf;
-	cerr << buf << endl;
 	bool equilibrium = false;
 	if (buf[0] == 'e')
 		equilibrium  = true;
 	int num_infomation = 10;
-	for(int i=0;i<num_infomation; i++){
+	for(int i=0;i < num_infomation; i++){
 		fin >> info[i];
-		cerr << info[i] << ' ';
 	}
-	cerr << endl;
-	double z_bot = info[3];
-	double z_top = info[4];
+	double vf = info[0];
+	fin.getline(buf_line, 1000);
+
+	double z_bot = info[5];
+	double z_top = info[6];
+	
 	lz = z_top-z_bot;
-	cerr << "lz="<< lz << endl;
+	
 	fin >> buf >> num_particle;
-	cerr << "N = " << num_particle << endl;
 	double x, y, z;
-	p.resize(num_particle);
+	vector< vec3d > p_import;
+	p_import.resize(num_particle);
 	//int tmp;
 	for (int i = 0; i < num_particle ; i++){
 		fin >> x >> y >> z ;
-		p[i].set(x+lx/2, y, z - z_bot);
+		p_import[i].set(x+lx/2, y, z - z_bot);
 		
 		if (  z - z_bot < 0){
 			cerr << "t" << z_top << endl;
@@ -67,11 +68,94 @@ bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz){
 	}
 	int num_bond;
 	fin >> buf >> num_bond;
+
+//	fout_conf << i_p0 << ' ' << i_p1 << ' '; //1,2
+//	fout_conf << initial_bond << ' ' << (*bond_iter)->status << ' '; //3,4
+//	fout_conf << (*bond_iter)->val_F_norm() << ' ';//5
+//	fout_conf << (*bond_iter)->val_F_slid() << ' ';//6
+//	fout_conf << (*bond_iter)->val_M_bend() << ' ';//7
+//#ifndef TWODIMENSION
+//	fout_conf << (*bond_iter)->val_M_tors() << ' ';//8
+//#else
+//	fout_conf << 0 << ' ';                         //8
+//#endif
+//	fout_conf << (*bond_iter)->cnt_regeneration     // 9
+
+	int p1, p2;
+	int init_bond;
+	int bond_status;
+	double f_norm;
+	double f_slid;
+	double M_bend;
+	double M_tors;
+	int cnt_regeneration;
+	vector<int> bb_check;
+	bb_check.resize(num_particle);
+	
+	
+	vector <int> bond_p1;
+	vector <int> bond_p2;
+	vector <double> bond_stress;
+	bond_p1.resize(num_bond);
+	bond_p2.resize(num_bond);
+	bond_stress.resize(num_bond);
+	double sum_stress = 0;
+	int count = 0;
 	for (int i = 0; i < num_bond ; i++){
-		fin.getline(buf_line, 512);
-		//cerr << buf_line << endl;
+		fin >> p1 >> p2 ;
+		bond_p1[i]=p1;
+		bond_p2[i]=p2;
+		fin >> init_bond >> bond_status;
+		fin >> f_norm >> f_slid >> M_bend >> M_tors;
+		fin >> cnt_regeneration;
+
+		bond_stress[i] = f_norm;
+		if (abs(f_norm) > 1e-6 ){
+			sum_stress += abs(f_norm);
+			count ++;
+		}
 	}
 	fin.getline(buf_line, 512);
+	double average_stress = sum_stress / count;
+	if (count > 0)
+		cout << vf << ' '<< average_stress << endl;
+	if (back_bone){
+		for (int i=0; i< num_particle; i++){
+			bb_check[i] = 0;
+		}
+		
+		for (int i = 0; i < num_bond ; i++){
+			if (bond_stress[i] > 0.1*average_stress){
+				bb_check[ bond_p1[i] ] = 1;
+				bb_check[ bond_p2[i] ] = 1;
+			}
+		}
+	}
+	p.clear();
+	if (back_bone){
+		for (int i=0; i< num_particle; i++){
+			if (bb_check[i] == 1){
+				p.push_back(p_import[i]);
+			}
+		}
+//		cerr << "BB"  << num_particle << endl;
+	} else {
+		for (int i=0; i< num_particle; i++){
+			p.push_back(p_import[i]);
+		}
+	}
+	
+	if (equilibrium){
+		cerr << "N : Nbb = " << num_particle << ' ' << p.size() << endl;
+		cerr << "average_stress =" << average_stress << endl;
+		
+	}
+	
+	num_particle = p.size();
+//	if ( num_particle > 0 ){
+//		cerr << num_particle << endl;
+//		exit(1);
+//	}
 	return equilibrium;
 }
 
@@ -81,13 +165,11 @@ bool import_shear(vector <vec3d> &p, ifstream &fin, double lx, double lz, double
 	double info[13];
 	char buf_line[512];
 	fin >> buf ;
-	cerr << buf << endl;
 	if (buf[0] != '#'){
 		cerr << "stop: " << buf << endl;
 		exit(1);
 	}
 	fin >> buf;
-	cerr << buf << endl;
 	bool equilibrium = false;
 	if (buf[0] == 'e')
 		equilibrium  = true;
@@ -104,6 +186,7 @@ bool import_shear(vector <vec3d> &p, ifstream &fin, double lx, double lz, double
 	cerr << "lz="<< lz << endl;
 	
 	fin >> buf >> num_particle;
+	
 	cerr << "N = " << num_particle << endl;
 	double x, y, z;
 	p.resize(num_particle);
@@ -155,8 +238,7 @@ void densityDensityCorrelationFunction(
 									   int resolution,
 									   double **ddc,
 									   vector <vec3d> &p,
-									   double lx, double lz,
-									   ofstream &fout){
+									   double lx, double lz){
 	Grid2 grid;
 	double cell_h = 2;
 	unsigned long num_particle = p.size();
@@ -165,7 +247,7 @@ void densityDensityCorrelationFunction(
 	for (int i=0; i < num_particle; i++){
 		grid.entry(p[i], i);
 	}
-	cerr << "------" << endl;
+//	cerr << "------" << endl;
 	srand(14235);
 	if (r_max > lx/2)
 		r_max = lx/2;
@@ -174,7 +256,7 @@ void densityDensityCorrelationFunction(
 	vec3d p1,p0;
 	for (int k=0; k<resolution; k++){
 		double r = r_min*exp(k*d_logr );
-		cerr << "r = " << r << endl;
+//		cerr << "r = " << r << endl;
 		int count_p0_inside = 0;
 		int count_p1_inside = 0;
 		for (int m=0; m < mmax; m++){
@@ -214,43 +296,69 @@ int main(int argc, const char * argv[])
 {
 	char datatype = argv[1][0];
 	string path = argv[2];
-	//srand48(1243);
 	double lx, lz;
 	double r_min = 1;
 	double r_max;
+	bool back_bone = false;
 	int resolution = 100;
 	
 	/* import_type
 	 *  0: x z clusterid
 	 *  1:
 	 */
-	int import_type;
-	char simu_name[128];
+//	int import_type;
+	char simu_name[256];
 	if (datatype =='i'){
 		unsigned long i0 = path.find_first_of("2D_W*H*");
 		if (i0 != 1){
-			import_type = 0;
-			unsigned long i1 = path.find_first_of("W") + 1;
+			//import_type = 0;
+			unsigned long i1 = path.find_first_of("W",i0+1)+1 ;
 			unsigned long i2 = path.find_first_of("H",i1);
 			unsigned long i3 = path.find_first_of("_",i2);
+//			cerr << i1 << ' ' << i2 << endl;
 			char width_str[4];
 			char height_str[4];
 			sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
 			sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
 			lx = atof(width_str);
 			lz = atof(height_str);
-			cerr << lx << ' ' << lz << endl;
 		}
+		unsigned long i5 = path.find_last_of(".dat");
+		sprintf(simu_name, "%s", path.substr(0,i5-3).c_str());
 		
 	} else if (datatype =='c'){
-		lx = atof(argv[3]);
-		import_type = 1;
+
+
+		if (argc == 4 && argv[3][0]=='b'){
+			back_bone = true;
+		} else {
+			back_bone = false ;
+		}
+		unsigned long i0 = path.find_first_of("D");
+		if (i0 != 1){
+			//import_type = 0;
+			unsigned long i1 = path.find_first_of("W",i0)+1 ;
+			unsigned long i2 = path.find_first_of("H",i1);
+			unsigned long i3 = path.find_first_of("_",i2);
+//			cerr << i1 << ' ' << i2 << endl;
+			char width_str[4];
+			char height_str[4];
+			sprintf(width_str, "%s", (path.substr(i1, i2-i1)).c_str());
+			sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
+
+			lx = atof(width_str);
+			lz = atof(height_str);
+		}
+		//lx = atof(argv[3]);
+		//		import_type = 1;
+//		cerr << "lx,lz = " << lx << ' ' << lz << endl;
+		
 		unsigned long i4 = path.find_first_of("conf_");
 		unsigned long i5 = path.find_last_of(".dat");
 		sprintf(simu_name, "%s", (path.substr(i4+5,(i5-3)-(i4+5))).c_str());
 		
 	} else if (datatype =='s'){
-		import_type = 0;
+		//		import_type = 0;
 		unsigned long i1 = path.find_first_of("W") + 1;
 		unsigned long i2 = path.find_first_of("H",i1);
 		unsigned long i3 = path.find_first_of("_",i2);
@@ -270,39 +378,67 @@ int main(int argc, const char * argv[])
 		//conf_simu1_floc16_sed_L200_R1_H300_1.dat
 		//cerr << lx << ' ' << lz << endl;
 	}
-	
-	
+		
 	ifstream fin;
 	fin.open( path.c_str());
 	
-	ofstream fout;
-	string simu_name_str = simu_name;
-	string outpuffile = "dcf_" + simu_name_str + ".dat";
-	cerr << outpuffile << endl;
-	fout.open( outpuffile.c_str());
 	
-	//if (! fin.is_open() ){
-	//  cerr << "no initial file" << endl;
-	//exit(1);
-	//}
-	//int num_particle;
+
 	vector <vec3d> p;
 	if (datatype == 'i'){
+		ofstream fout;
+		string simu_name_str = simu_name;
+		string outpuffile = "dcf_" + simu_name_str + ".dat";
+		cerr << outpuffile << endl;
+		
+		fout.open( outpuffile.c_str());
 		double x, z;
 		int tmp;
 		while(!fin.eof()){
 			fin >> x >> z >> tmp;
+			cerr << x << ' ' << z << endl;
 			p.push_back(vec3d(x,0,z));
 		}
 		p.pop_back();
+
+		double **ddc;
+		ddc = new double* [resolution];
+		for (int k=0; k < resolution; k++){
+			ddc[k] = new double [2];
+		}
+		r_max = lz/2;
+
+		densityDensityCorrelationFunction(r_min, r_max,
+										  resolution, ddc,
+										  p, lx,lz);
 		
+//		ofstream fout;
+//		ostringstream ddc_filename;
+//		ddc_filename << simu_name <<  ".dat";
+//		fout.open((ddc_filename.str()).c_str());
+		if(fout.is_open()){
+			cerr << " opened successfully"  << endl;
+			for (int k=0; k< resolution; k++){
+				fout << ddc[k][0] << ' ';
+				fout << ddc[k][1] << endl;
+				cerr << ddc[k][1] << endl;
+			}
+		} else {
+			cerr << " fail to open" <<  outpuffile << endl;
+		}
+		fout.close();
+		
+		for (int k=0; k < resolution; k++){
+			delete [] ddc[k];
+		}
+		delete [] ddc;
 		//densityDensityCorrelationFunction(p, lx, lz);
-		//  densityDensityCorrelationFunction2(p, lx,lz, fout);
-		
+		// densityDensityCorrelationFunction2(p, lx,lz, fout);
+		fout.close();
 	} else if (datatype == 'c'){
 		struct stat st;
 		if (stat(simu_name, &st) == 0) {
-			printf("%s already exists\n", simu_name);
+			//printf("%s already exists\n", simu_name);
 		} else {
 			//if (mkdir(mydir, S_IRWXU|S_IRWXG|S_IRGRP|S_IXGRP) != 0) {
 			if (mkdir(simu_name, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
@@ -310,21 +446,17 @@ int main(int argc, const char * argv[])
 				exit(1);
 			}
 		}
-		printf("%s successfully created\n", simu_name);
+		//printf("%s successfully created\n", simu_name);
 		
-		bool initialdata = true;
+//		bool initialdata = true;
 		int i = 0;
 		while (true){
-			bool equilibrium = import_compaction(p, fin, lx, lz);
-			if (i==0){
+			bool equilibrium = import_compaction(p, fin, lx, lz, back_bone);
+			if (i == 0){
 				equilibrium = true;
-				initialdata = false;
 			}
-			//vector< double[2]> ddc;
 			r_max = lz/2;
 			cerr << r_min << ' ' << r_max << endl;
-			
-			
 			if (equilibrium){
 				double **ddc;
 				ddc = new double* [resolution];
@@ -332,24 +464,28 @@ int main(int argc, const char * argv[])
 					ddc[k] = new double [2];
 				}
 				densityDensityCorrelationFunction(r_min, r_max, resolution, ddc,
-												  p, lx,lz, fout);
+												  p, lx, lz);
 				
 				double area_fraction = (M_PI*p.size())/(lx*lz);
 				ofstream fout;
 				ostringstream ddc_filename;
-				ddc_filename << simu_name <<  "/ddc" << i << ".dat";
+				if (back_bone){
+					ddc_filename << simu_name <<  "/bb_ddc" << i << ".dat";
+				} else {
+					ddc_filename << simu_name <<  "/ddc" << i << ".dat";
+					
+				}
 				fout.open(ddc_filename.str().c_str());
 				fout << "# " << area_fraction << endl;
 				for (int k=0; k< resolution; k++){
 					fout << ddc[k][0] << ' ';
 					fout << ddc[k][1] << endl;
-					
 				}
 				fout.close();
 				for (int k=0; k < resolution; k++){
 					delete [] ddc[k];
 				}
-				delete [] *ddc;
+				delete [] ddc;
 				i++;
 			}
 		}
@@ -383,7 +519,7 @@ int main(int argc, const char * argv[])
 				double area_fraction = (M_PI*p.size())/(lx*lz);
 				densityDensityCorrelationFunction(r_min, r_max, resolution, 
 												  ddc, 
-												  p, lx,lz, fout);
+												  p, lx,lz);
 				ofstream fout;
 				ostringstream ddc_filename;
 				ddc_filename << simu_name << "/ddc" << i << ".dat";
@@ -407,8 +543,8 @@ int main(int argc, const char * argv[])
 	
 	
 	
-	fin.close();
-	fout.close();
+	//fin.close();
+//	fout.close();
 	
 	return 0;
 }

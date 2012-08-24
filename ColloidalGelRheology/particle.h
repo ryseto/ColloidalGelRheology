@@ -8,17 +8,12 @@
 
 #ifndef ColloidalGelRheology_particle_h
 #define ColloidalGelRheology_particle_h
-
 #include "common.h"
-//#include "grid.h"
 #include "bond.h"
 #include "vec3d.h"
 #include "quaternion.h"
-//class Grid;
 class Bond;
 class System;
-//extern Grid grid;
-
 class Particle{
 private:
 	int cn_size;
@@ -55,7 +50,7 @@ public:
 	int particle_number;
 	vec3d p;
 	quaternion orientation;
-	
+
 	int init_cluster;
 	int wall_connected;
 	bool wall;

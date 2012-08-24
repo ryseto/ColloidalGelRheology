@@ -13,7 +13,7 @@ System::System()
 {
 	n_particle = 0;
 	n_bond = 0;
-	sprintf(version ,"0");
+	version="0";
 	ct = new ConTable;
 	grid = new Grid;
 }
@@ -121,11 +121,19 @@ void System::preProcesses(){
 	checkActiveElements();
 	calcVolumeFraction();
 	outputConfiguration('n');
+//	cerr << "@@@@@@@@@" << endl;
+
 	while(checkPercolation() == false){
+		cerr << "not percolation" << endl;
 		shiftForPercolation();
 		makeNeighbor();
+		int bond_number_before = n_bond;
 		generateBond();
+		if ( bond_number_before == n_bond){
+			break;
+		}
 	}
+
 	dt = dt_max;
 	setFirstTarget();
 	checkState();
@@ -158,12 +166,12 @@ void System::timeEvolution(){
 		if (counter_relax_for_restructuring++ >= relax_for_restructuring){
 			checkBondFailure();
 			if (!regeneration_bond.empty()){
-				//sy.outputRestructuring();
+				//outputRestructuring();
 				regeneration_onebyone();
 				counter_relax_for_restructuring = 0;
 			}
 			if (!rupture_bond.empty()){
-				//sy.outputRestructuring();
+				//outputRestructuring();
 				rupture();
 				counter_relax_for_restructuring = 0;
 			}
@@ -183,11 +191,8 @@ void System::timeEvolution(){
 
 void System::middleProcedures(){
 	simuAdjustment();
-	if (simulation == 's'){
-		calcShearStress();
-	} else {
-		calcStress();
-	}
+	calcStress();
+
 	checkState();
 	checkStressDiff();
 	makeNeighbor();
@@ -207,6 +212,7 @@ void System::strainControlSimulation(){
 		if ( reachStrainTarget() ){
 			if (mechanicalEquilibrium()){
 				cerr <<"Equilibrium!"<< endl;
+				calcStress();
 				/*  Output */
 				outputData();
 				outputConfiguration('e');
@@ -306,7 +312,7 @@ bool System::checkOutputStrain(double diff){
 			return true;
 		}
 	} else {
-		if ( lz < lz_last_output - 1.0 ){
+		if ( lz < lz_last_output - diff ){
 			lz_last_output = lz;
 			return true;
 		}
@@ -354,13 +360,15 @@ void System::preparationOutput(){
 	char name_string[128];
 	if(simulation == 'c'|| simulation == 's'){
 		sprintf(name_string, "%s_%s_%s",
-				parameters, init_cluster, version);
+				parameters, init_cluster, version.c_str());
 	} else if(simulation == 't'){
 		sprintf(name_string, "doublet");
 	}
-	
+
 	string fn_common = (string)name_string ;
-	
+	cerr << version << endl;
+	cerr << fn_common.c_str() << endl;
+
 	sprintf(fn_data, "data_%s.dat", fn_common.c_str());
 	sprintf(fn_log, "log_%s.dat", fn_common.c_str());
 	sprintf(fn_conf, "conf_%s.dat", fn_common.c_str());
@@ -376,9 +384,9 @@ void System::preparationOutput(){
 	fout_deform.open(fn_deform);
 }
 
-void System::setInitClusterFile(char *init_cluster_file_)
+void System::setInitClusterFile(string init_cluster_file_)
 {
-	sprintf(init_cluster_file, "%s", init_cluster_file_);
+	sprintf(init_cluster_file, "%s", init_cluster_file_.c_str());
 	string s_init_cluster_file = init_cluster_file;
 	unsigned long i_backslash = s_init_cluster_file.find_last_of( "/") + 1;
 	unsigned long i_extention = s_init_cluster_file.find( ".dat" );
@@ -392,9 +400,10 @@ void System::setInitClusterFile(char *init_cluster_file_)
  * "***" is given by command argument.
  * Default: version = 0
  */
-void System::setVersion(char *version_)
+void System::setVersion(string version_)
 {
-	sprintf(version, "%s", version_);
+	//sprintf(version, "%s", version_);
+	version = version_;
 }
 
 void System::setBondGenerationDistance(double distance)
@@ -447,25 +456,22 @@ void System::optimalTimeStep(){
 }
 
 void System::calcStress(){
-	double stress_z_bot = wl[0]->stressSensor_z();
-	double stress_z_top = wl[1]->stressSensor_z();
-	stress_z = 0.5*(abs(stress_z_bot)+abs(stress_z_top));
+	double stress_z_bot;// = wl[0]->stressSensor_z();
+	double stress_z_top;// = wl[1]->stressSensor_z();
+	double stress_x_bot;// = wl[0]->stressSensor_x();
+	double stress_x_top;// = wl[1]->stressSensor_x();
+	wl[0]->stressSensor(stress_x_bot, stress_z_bot);
+	wl[1]->stressSensor(stress_x_top, stress_z_top);
+	stress_z = 0.5*(abs(stress_z_top-stress_z_bot));
 	diff_stress_z = abs( stress_z_bot + stress_z_top )/stress_z;
-}
-
-void System::calcShearStress(){
-	double stress_x_bot = wl[0]->stressSensor_x();
-	double stress_x_top = wl[1]->stressSensor_x();
-	stress_x = 0.5*(abs(stress_x_bot) + abs(stress_x_top));
-	if (stress_x < 1e-8){
-		diff_stress_x = 0;
-	}else{
-		diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
-	}
-	double stress_z_bot = wl[0]->stressSensor_z();
-	double stress_z_top = wl[1]->stressSensor_z();
-	stress_z = 0.5*(abs(stress_z_bot)+abs(stress_z_top));
-	diff_stress_z = abs( stress_z_bot + stress_z_top )/stress_z;
+	stress_x = 0.5*(stress_x_top - stress_x_bot);
+	diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
+//	if (stress_x < 1e-8){
+//		diff_stress_x = 0;
+//	}else{
+//		diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
+//	}
+	
 }
 
 
@@ -640,13 +646,15 @@ void System::importPositions()
 	ifstream fin;
 	string path = init_cluster_file;
 	string s_parameters_file = parameters_file;
-	unsigned long i1 = path.find_first_of("W") + 1;
+	unsigned long i0 = path.find_first_of("D");
+	unsigned long i1 = path.find_first_of("W",i0)+1;
 	unsigned long i2 = path.find_first_of("H",i1);
 	unsigned long i3 = path.find_first_of("_",i2);
 	char width_str[4];
 	char height_str[4];
 	sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
 	sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
+
 	fin.open( path.c_str());
 	if (! fin.is_open() ){
 		cerr << "no initial file" << endl;
@@ -655,13 +663,15 @@ void System::importPositions()
 	
 	lx = atof(width_str);
 	lz_init = atof(height_str);
+
 #ifdef TWODIMENSION
-	ly = 2.;
+	ly = 0;
+	ly0 = 0;
 #else
 	ly = lx;
+	ly0 = ly/2;
 #endif
 	lx0 = lx/2;
-	ly0 = ly/2;
 	lz0 = lz_init/2;
 	
 	double x, y, z;
@@ -670,13 +680,18 @@ void System::importPositions()
 		do{
 #ifdef TWODIMENSION
 			fin >> x >> z >> i_cluster ;
-			y = 1.0;
 #else
 			fin >> x >> y >> z;
 #endif
+			cerr << x << ' '<< z << endl;
+#ifdef TWODIMENSION
 			vec3d new_p(x, y, z);
+#else
+			vec3d new_p(x, 0, z);
+#endif
 			init_aggregate.push_back(new_p);
 			init_aggregate_cluster.push_back(i_cluster);
+			
 		}while (!fin.eof());
 	}
 	init_aggregate.pop_back();
@@ -718,7 +733,9 @@ void System::shiftCenterOfMass(vector<vec3d> &p)
 	foreach( vector<vec3d>, p, p_iter){
 		*p_iter -= cm;
 		p_iter->x += lx/2;
+#ifdef TWODIMENSION
 		p_iter->y += ly/2;
+#endif
 		p_iter->z += lz/2;
 	}
 }
@@ -785,44 +802,51 @@ void System::initGrid(){
 	grid->init(n_particle, lx, ly, lz_init, cell_h);
 }
 
-void System::setWallStress(double value_x, double value_y,  double value_z){
-	if (value_x == -1){
-		wl[0]->x_movable = false;
-		wl[1]->x_movable = false;
-		stress_x = 0;
-	} else {
-		wl[0]->x_movable = true;
-		wl[1]->x_movable = true;
-		stress_x = value_x;
-	}
-	if (value_y == -1){
-		wl[0]->y_movable = false;
-		wl[1]->y_movable = false;
-		stress_y = 0;
-	} else {
-		wl[0]->y_movable = true;
-		wl[1]->y_movable = true;
-		stress_y = value_y;
-	}
-	
-	if (value_z == -1){
-		wl[0]->z_movable = false;
-		wl[1]->z_movable = false;
-		stress_z = 0;
-	} else {
-		wl[0]->z_movable = true;
-		wl[1]->z_movable = true;
-		stress_z = value_z;
-	}
-	
-	double fx_wall = stress_x*lx*ly;
-	double fy_wall = stress_y*lx*ly;
-	double fz_wall = stress_z*lx*ly;
-	force_wall.set(-fx_wall, -fy_wall, fz_wall);
-	cerr << "stress = " << stress_z << ',' << stress_x << " Pa ";
-	cerr << " Fwall=" << fz_wall << ',' << fx_wall << " N" << endl;
-	
-}
+//void System::setWallStress(double value_x, double value_y,  double value_z){
+//	if (value_x == -1){
+//		wl[0]->x_movable = false;
+//		wl[1]->x_movable = false;
+//		stress_x = 0;
+//	} else {
+//		wl[0]->x_movable = true;
+//		wl[1]->x_movable = true;
+//		stress_x = value_x;
+//	}
+//	if (value_y == -1){
+//		wl[0]->y_movable = false;
+//		wl[1]->y_movable = false;
+//		stress_y = 0;
+//	} else {
+//		wl[0]->y_movable = true;
+//		wl[1]->y_movable = true;
+//		stress_y = value_y;
+//	}
+//	
+//	if (value_z == -1){
+//		wl[0]->z_movable = false;
+//		wl[1]->z_movable = false;
+//		stress_z = 0;
+//	} else {
+//		wl[0]->z_movable = true;
+//		wl[1]->z_movable = true;
+//		stress_z = value_z;
+//	}
+//
+//#ifndef TWODIMENSION
+//	double fx_wall = stress_x*lx*ly;
+//	double fy_wall = stress_y*lx*ly;
+//	double fz_wall = stress_z*lx*ly;
+//#else
+//	double fx_wall = stress_x*lx*2;
+//	double fy_wall = stress_y*lx*2;
+//	double fz_wall = stress_z*lx*2;
+//#endif
+//	
+//	force_wall.set(-fx_wall, -fy_wall, fz_wall);
+//	cerr << "stress = " << stress_z << ',' << stress_x << " Pa ";
+//	cerr << " Fwall=" << fz_wall << ',' << fx_wall << " N" << endl;
+//	
+//}
 
 void System::renew_Lz(){
 	lz = wl[1]->z - wl[0]->z;
@@ -850,20 +874,19 @@ void System::outputData(){
 		fout_data << "#3 stress_x\n";
 		fout_data << "#4 strain_z\n";
 		fout_data << "#5 strain_x\n";
-		fout_data << "#6 area_fraction\n";
 		fout_data << "######  rupture: total number \n";
-		fout_data << "#7  rup_normal(total number)\n";
-		fout_data << "#8  rup_shear(total number)\n";
-		fout_data << "#9  rup_bend(total number)\n";
-		fout_data << "#10 rup_torsion(total number)\n";
+		fout_data << "#6  rup_normal(total number)\n";
+		fout_data << "#7  rup_shear(total number)\n";
+		fout_data << "#8  rup_bend(total number)\n";
+		fout_data << "#9 rup_torsion(total number)\n";
 		fout_data << "######  rupture: rate\n";
-		fout_data << "#11 rate_rup_normal\n";
-		fout_data << "#12 rate_rup_shear\n";
-		fout_data << "#13 rate_rup_bend\n";
-		fout_data << "#14 rate_rup_torsion\n";
+		fout_data << "#10 rate_rup_normal\n";
+		fout_data << "#11 rate_rup_shear\n";
+		fout_data << "#12 rate_rup_bend\n";
+		fout_data << "#13 rate_rup_torsion\n";
 		fout_data << "###### \n";
-		fout_data << "#15 average_contact_number\n";
-		fout_data << "#16 del_strain\n";
+		fout_data << "#14 average_contact_number\n";
+		fout_data << "#15 del_strain\n";
 	}
 	
 	if (simulation == 'c'){
@@ -890,20 +913,19 @@ void System::outputData(){
 	fout_data << stress_x << ' ' ; // 3
 	fout_data << strain_z << ' ' ; // 4
 	fout_data << strain_x << ' ' ; // 5
-	fout_data << area_fraction << ' '; // 6
 	///////////////////////////////////////
-	fout_data << rup_normal << ' '; //7
-	fout_data << rup_shear << ' ';  //8
-	fout_data << rup_bend << ' ';   //9
-	fout_data << rup_torsion << ' ';//10
+	fout_data << rup_normal << ' '; //6
+	fout_data << rup_shear << ' ';  //7
+	fout_data << rup_bend << ' ';   //8
+	fout_data << rup_torsion << ' ';//9
 	///////////////////////////////////////
-	fout_data << rate_rup_normal << ' '; //11
-	fout_data << rate_rup_shear << ' ';  //12
-	fout_data << rate_rup_bend << ' ';   //13
-	fout_data << rate_rup_torsion << ' ';//14
+	fout_data << rate_rup_normal << ' '; //10
+	fout_data << rate_rup_shear << ' ';  //11
+	fout_data << rate_rup_bend << ' ';   //12
+	fout_data << rate_rup_torsion << ' ';//13
 	///////////////////////////////////////
-	fout_data << average_contact_number << ' '; //15
-	fout_data << del_strain << ' '; // 16
+	fout_data << average_contact_number << ' '; //14
+	fout_data << del_strain << ' '; // 15
 	fout_data << endl;
 	rup_normal_previous = rup_normal;
 	rup_shear_previous = rup_shear;
@@ -978,7 +1000,6 @@ void System::outputConfiguration(char equilibrium){
 	lz0 = (wl[1]->z + wl[0]->z) / 2;
 	fout_conf << "# " << equilibrium;
 	fout_conf << ' ' << volume_fraction;
-	fout_conf << ' ' << area_fraction;
 	fout_conf << ' ' << stress_z;
 	fout_conf << ' ' << stress_x;
 	fout_conf << ' ' << strain_z;
@@ -1006,11 +1027,17 @@ void System::outputConfiguration(char equilibrium){
 		fout_conf << (*p_iter)->orientation.q[2] << ' ';
 		fout_conf << (*p_iter)->orientation.q[3] << ' ';
 		fout_conf << (*p_iter)->init_cluster << ' ' ;
-		fout_conf << (*p_iter)->wall << ' ';
+		if ((*p_iter)->wall){
+			fout_conf << 1 << ' ';
+		} else {
+			fout_conf << 0 << ' ';
+		}
 		fout_conf << (*p_iter)->valCn_size() << endl;
 	}
 	int number_of_live_bonds = n_bond - counterBreak ;
 	fout_conf << "B " << number_of_live_bonds << endl;
+	
+
 	ForAllBond{
 		if( (*bond_iter)->status ){
 			int i_p0, i_p1;
@@ -1043,7 +1070,6 @@ void System::monitorDeformation(char equilibrium){
 	fout_deform << ' ' << stress_z ;
 	fout_deform << ' ' << stress_x ;
 	fout_deform << ' ' << volume_fraction;
-	fout_deform << ' ' << area_fraction;
 	fout_deform << ' ' << wl[0]->z - lz0;
 	fout_deform << ' ' << wl[1]->z - lz0;
 	fout_deform << ' ' << rup_normal;
@@ -1066,13 +1092,13 @@ void System::monitorDeformation(char equilibrium){
 	}
 }
 void System::calcVolumeFraction(){
+#ifndef TWODIMENSION
 	double volume = lx*ly*lz;
 	static const double volume1 = (4.0/3.0)*M_PI;
 	volume_fraction = n_particle*volume1 / volume;
-#ifdef TWODIMENSION
-	area_fraction = n_particle* M_PI / (lx * lz);
+#else 
+	volume_fraction = n_particle* M_PI / (lx * lz);
 #endif
-	
 }
 
 /*
@@ -1152,7 +1178,8 @@ void System::shiftForPercolation(){
 	 * If not, we have to consider all particles
 	 * for the possible collision.
 	 */
-	double del_x_min = 1000;
+	double lambda_min = 1000;
+	vec3d shift(0,0,-1);
 	cerr << "wall groups:  " ;
 	cerr << wl[0]->wall_group.size() << ' ' << wl[1]->wall_group.size() << endl;
 	for (int i = 0; i < wl[1]->wall_group.size(); i++){
@@ -1161,24 +1188,43 @@ void System::shiftForPercolation(){
 		for (int j = 0; j < wl[0]->wall_group.size(); j++){
 			int i_lower = wl[0]->wall_group[j];
 			vec3d p_lo = particle[i_lower]->p;
-			if (p_lo.x < p_up.x){
-				p_lo.x += lx;
-			}
+//			if (p_up.x > p_lo.x){
+//				p_up.x -= lx;
+//			}
 			// p1.x - p0.x > 0
-			double yy_zz = sq(p_lo.y - p_up.y) + sq(p_lo.z - p_up.z);
-			if (4 - yy_zz > 0){
-				double del_x = p_lo.x - p_up.x - sqrt( 4 - yy_zz);
-				if ( del_x < del_x_min){
-					del_x_min = del_x;
+			vec3d dp = p_up - p_lo;
+			double dot_d_dp = dot(shift, dp );
+			double discriminant = dot_d_dp*dot_d_dp - (dp.sq_norm() - 4);
+
+			if (discriminant > 0 ){
+				double lambda1 = - dot_d_dp + sqrt(discriminant );
+				double lambda2 = - dot_d_dp - sqrt(discriminant );
+				if (lambda1>0 && lambda_min > lambda1){
+					lambda_min = lambda1;
+				}
+				if (lambda2>0 && lambda_min > lambda2){
+					lambda_min = lambda2;
 				}
 			}
 		}
 	}
-	for (int i = 0; i < wl[1]->wall_group.size(); i++){
-		int k = wl[1]->wall_group[i];
-		particle[k]->x_shift(del_x_min+0.0001);
+
+	if ( lambda_min != 1000){
+		for (int i = 0; i < wl[1]->wall_group.size(); i++){
+			int k = wl[1]->wall_group[i];
+			particle[k]->p += lambda_min*shift;
+			if (particle[k]->p.x > lx){
+				particle[k]->p.x -= lx;
+			}
+			
+		}
+		
+		wl[1]->z_shift(-lambda_min);
+		
+		cerr << " lambda_min : " << lambda_min << endl;
 	}
-	cerr << " del_x_min : " << del_x_min << endl;
+
+	
 }
 
 /*

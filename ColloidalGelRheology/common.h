@@ -48,7 +48,6 @@ out << ' ' << X << ' ' << Y  << ' ' << Z << ' ';
 #define o_pos(O,X,Y,Z) \
 O << ' ' << X << ' ' << Y << ' ' << Z << ' ';
 
-
 #define cout_pos(X,Y,Z) \
 cout << ' ' << X << ' ' << Y  << ' ' << Z << ' ';
 

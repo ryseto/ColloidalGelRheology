@@ -7,8 +7,6 @@
 //
 
 #include <iostream>
-
-
 #include "bond.h"
 
 Bond::Bond(int d0, int d1, System &sy_){
@@ -44,6 +42,8 @@ Bond::Bond(int d0, int d1, System &sy_){
 #else
 	// 2D
 	r = r_vec.norm_2d();
+	
+
 	e_normal = r_vec.division_2d(r);
 #endif
 	if (r < 1.5){
@@ -56,8 +56,10 @@ Bond::Bond(int d0, int d1, System &sy_){
 	pu[1] = (*p_particle1).pu_back();
 	(*pu[0]) = e_normal;
 	(*pu[1]) = - e_normal;
+
 	u_vector[0] = (*p_particle0).orientation.ori_backward(*pu[0]);
 	u_vector[1] = (*p_particle1).orientation.ori_backward(*pu[1]);
+
 	if (initial_bond){
 		u_vector_initial[0] = u_vector[0];
 		u_vector_initial[1] = u_vector[1];
@@ -112,7 +114,10 @@ void Bond::calcForce(){
 	r = r_vec.norm_2d();
 	e_normal = r_vec.division_2d(r);
 #endif
+	
+
 	q = r - 2.;
+	
 	if ( central_force ){
 		if ( q < 0.){
 			/* compression --> negative */
@@ -155,13 +160,16 @@ void Bond::calcForce(){
 	}
 	/* 3D and 2D */
 	force_sliding = para.ks*d_slid + (para.c_slid/sy->dt)*(d_slid-d_slid_old);
+
 	moment_bending = para.kb*ang_bend + (para.c_bend/sy->dt)*(ang_bend-ang_bend_old);
+	
 #ifndef TWODIMENSION
 	/* 3D */
 	moment_torsion = para.kt*ang_tort + (para.c_tort/sy->dt)*(ang_tort-ang_tort_old);
 #endif
 	/* 3D and 2D */
 	force0 = force_normal*e_normal + force_sliding;
+
 #ifndef TWODIMENSION
 	/* 3D */
 	moment_sliding = cross(e_normal, force_sliding);
@@ -183,6 +191,17 @@ void Bond::calcForce(){
 	/* 3D */
 	ang_tort_old = ang_tort;
 #endif
+//	if (abs(torque0) > 0.1
+//		|| abs(torque1) > 0.1
+//		|| force0.norm() > 0.1
+//		){
+//		
+//		cerr << torque0 << ' ' << torque1 << endl;
+//		cerr << r << endl;
+//		cerr << force0.norm() << endl;
+//		exit(1);
+//	}
+	
 	return;
 }
 
@@ -397,7 +416,11 @@ void Bond::monitor_state(ofstream &out){
 	double dot_prod = dot( u_init[0], - u_init[1]);
 	double rolling_angle;
 	if ( dot_prod > 0.9 ){
+#ifndef TWODIMENSION
 		double cross_prod = (cross( u_init[0], - u_init[1])).norm();
+#else
+		double cross_prod = abs( cross_2d( u_init[0], - u_init[1]));
+#endif
 		rolling_angle = asin(cross_prod);
 	}else{
 		rolling_angle = acos(dot_prod);

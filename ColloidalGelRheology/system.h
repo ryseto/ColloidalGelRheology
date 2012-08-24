@@ -20,7 +20,6 @@ using namespace std;
 class Grid;
 class Bond;
 class Wall;
-//class ConTable;
 
 class System {
 protected:
@@ -44,7 +43,6 @@ protected:
 	int interval_convergence_check;
 	int interval_makeNeighbor;
 	int relax_for_restructuring;
-	
 	/*
 	 * State parameters of system
 	 */
@@ -52,7 +50,7 @@ protected:
 	vec3d force_wall;
 	double time;
 	double volume_fraction;
-	double area_fraction;
+//	double area_fraction;
 	double strain_x;
 	double stress_x;
 	double strain_z;
@@ -73,7 +71,6 @@ protected:
 	double torsional_angle_max;
 	double force_max;
 	double average_contact_number;
-		
 	/*
 	 * Simulation parameters
 	 */
@@ -85,11 +82,9 @@ protected:
 	double stress_x_change;
 	double stress_z_change;
 	int counterRegenerate_before;
-
 	/*
 	 * variables for simulations
 	 */
-	
 	bool prog_strain;
 	int counter_relax_for_restructuring;
 	double volumefraction_increment;
@@ -97,15 +92,14 @@ protected:
 	double vf_target;// next equilibrium for compaction
 	double lz_last_output;
 	double strain_x_last_output;
-
 	string bond0_file;
 	string bond1_file;
 	char fn_common[64];   // 192 // 128 + 64
 	char parameters_file[128];
 	char parameters[32];
-	char init_cluster_file[128]; //256
-	char init_cluster[32]; //256
-	char version[3];
+	char init_cluster_file[256]; //256
+	char init_cluster[256]; //256
+	string version;
 	ofstream fout_data;
 	ofstream fout_log;
 	ofstream fout_yap;
@@ -148,7 +142,7 @@ private:
 	void calcVolumeFraction();
 	void calcLocalStrains();
 	void setUnitForce(double);
-	void setWallStress(double, double, double);
+//	void setWallStress(double, double, double);
 	void setGravityConstant(double);
 	void renew_Lz();
 	void optimalTimeStep();
@@ -172,8 +166,8 @@ public:
 	void readParameter(const string &codeword, const string &value);
 	void readBondParameter();
 	void setParameterFile(char *);
-	void setInitClusterFile(char *);
-	void setVersion(char *);
+	void setInitClusterFile(string);
+	void setVersion(string );
 	void strainControlSimulation();
 	/*
 	 * Objects
@@ -197,18 +191,15 @@ public:
 	double dt; // Time step to integrate equatino of motion.
 	double eta;
 	double eta_rot;
-
 	/*
 	 * State of system
 	 */
-
 	int n_bond; // The total number of bond including breakup bond
 	bool percolation;
 	int rup_normal; // Counters for rupture events
 	int rup_shear;
 	int rup_bend;	
 	int rup_torsion;
-	
 	/*
 	 * Simulation parameters
 	 */
@@ -223,4 +214,3 @@ public:
 };
 
 #endif
-

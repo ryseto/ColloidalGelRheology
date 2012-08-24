@@ -39,7 +39,6 @@ void Wall::makeNeighbor(){
 }
 
 void Wall::addNewContact(vector<Particle *> &particle_active){
-	
 	bool generated = false;
 	unsigned long n_neighbor = neighbor.size();
 	for(int j=0; j < n_neighbor; j++){
@@ -75,8 +74,6 @@ void Wall::initWallParticle(int i){
 	}
 }
 
-
-
 void Wall::compactionStrainControl(double velocity){
 	double dz = velocity*sy->dt;
 	z += dz;
@@ -90,6 +87,18 @@ void Wall::compactionStrainControl(double velocity){
 	}
 }
 
+void Wall::z_shift(double dz){
+	z += dz;
+	//foreach( vector <Particle* >, wall_particle, iter_p){
+	//		(*iter_p)->p.z += dz;
+	//	}
+
+	sy->lz += dz;
+	
+}
+
+
+
 void Wall::shearingStrainControl(double velocity){
 	double dx = velocity*sy->dt;
 	x += dx;
@@ -101,6 +110,33 @@ void Wall::shearingStrainControl(double velocity){
 			(*iter_p)->p.x -=  sy->lx;
 	}
 }
+
+
+void Wall::stressSensor(double &stress_x, double &stress_z){
+	foreach( vector <Particle* >, wall_particle, iter_p){
+		(*iter_p)->resetForce();
+	}
+	foreach( vector <Particle* >, wall_particle, iter_p){
+		(*iter_p)->calc_stack_Force();
+	}
+	double force_z = 0;
+	double force_x = 0;
+	foreach( vector <Particle* >, wall_particle, iter_p){
+		force_z += ((*iter_p)->vectorForce()).z ;
+		force_x += ((*iter_p)->vectorForce()).x ;
+	}
+	foreach( vector <Particle* >, wall_particle, iter_p){
+		(*iter_p)->resetForce();
+	}
+#ifndef TWODIMENSION
+	stress_x = force_x / (sy->lx*sy->ly);
+	stress_z = force_z / (sy->lx*sy->ly);
+#else
+	stress_x = force_x / (sy->lx*2.0);
+	stress_z = force_z / (sy->lx*2.0);
+#endif
+}
+
 
 double Wall::stressSensor_z(){
 	foreach( vector <Particle* >, wall_particle, iter_p){
@@ -116,7 +152,11 @@ double Wall::stressSensor_z(){
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->resetForce();
 	}
+#ifndef TWODIMENSION
 	stress_sc = force_z / (sy->lx*sy->ly);
+#else
+	stress_sc = force_z / (sy->lx*2.0);
+#endif
 	return stress_sc;
 }
 
@@ -124,7 +164,6 @@ double Wall::stressSensor_x(){
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->resetForce();
 	}
-	
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->calc_stack_Force();
 	}
@@ -136,7 +175,11 @@ double Wall::stressSensor_x(){
 		(*iter_p)->resetForce();
 	}
 	//cerr << force_x << endl;
+#ifndef TWODIMENSION
 	stress_sc = force_x / (sy->lx*sy->ly);
+#else
+	stress_sc = force_x / (sy->lx*2.0);
+#endif
 	return stress_sc;
 }
 

@@ -19,15 +19,26 @@ public:
 	double y;
 	double z;
 	/* constructor/destructor */
-	inline vec3d (void){}
+
+	inline vec3d (void): x(0), y(0), z(0){}
+#ifndef TWODIMENSION
 	inline vec3d (const double &_x,
 				  const double &_y,
 				  const double &_z): x(_x), y(_y), z(_z) {}
+#else
+	inline vec3d (const double &_x,
+				  const double &_y,
+				  const double &_z): x(_x), y(0), z(_z) {}
+#endif
 	inline ~vec3d(void){}
 	
 	/* operators */
 	inline vec3d& operator = (const vec3d& v){
+#ifndef TWODIMENSION
 		x = v.x, y = v.y, z = v.z;
+#else
+		x = v.x, z = v.z;
+#endif
 		return *this;
 	}
 	
@@ -53,7 +64,11 @@ public:
 	}
 	
 	inline friend vec3d operator + (const vec3d &a1, const vec3d &a2){
+#ifndef TWODIMENSION
 		return vec3d( a1.x + a2.x, a1.y + a2.y, a1.z + a2.z);
+#else
+		return vec3d( a1.x + a2.x, 0, a1.z + a2.z);
+#endif
 		
 	}
 	inline friend vec3d operator + (const vec3d &v){
@@ -62,15 +77,28 @@ public:
 	
 	/* subtraction */
 	inline friend vec3d operator - (const vec3d &a1, const vec3d &a2){
+#ifndef TWODIMENSION
 		return vec3d( a1.x - a2.x, a1.y - a2.y, a1.z - a2.z);
+#else
+		return vec3d( a1.x - a2.x, 0 , a1.z - a2.z);
+#endif
 	}
 	inline friend vec3d operator - (const vec3d &v){
+#ifndef TWODIMENSION
 		return vec3d( -v.x, -v.y, -v.z);
+#else
+		return vec3d( -v.x, 0 , -v.z);
+#endif
+		
 	}
 	
 	/* multiplication */
 	inline friend vec3d operator * (const double &d, const vec3d &v){
+#ifndef TWODIMENSION
 		return vec3d( d*v.x, d*v.y, d*v.z);
+#else
+		return vec3d( d*v.x, 0, d*v.z);
+#endif
 	}
 	inline friend vec3d operator * (const vec3d &v, const double &d){
 		return d*v;
@@ -86,7 +114,11 @@ public:
 	
 	/* scalar product */
 	inline friend double dot(const vec3d &a1, const vec3d &a2){
+#ifndef TWODIMENSION
 		return a1.x*a2.x + a1.y*a2.y + a1.z*a2.z;
+#else
+		return a1.x*a2.x + a1.z*a2.z;
+#endif
 	}
 	inline friend double dot_2d(const vec3d &a1, const vec3d &a2){
 		return a1.x*a2.x + a1.z*a2.z;
@@ -95,9 +127,13 @@ public:
 	
 	/* vector product */
 	inline friend vec3d cross(const vec3d &v1, const vec3d &v2){
+#ifndef TWODIMENSION
 		return vec3d(v1.y*v2.z - v1.z*v2.y,
 					 v1.z*v2.x - v1.x*v2.z,
 					 v1.x*v2.y - v1.y*v2.x);
+#else
+		return vec3d(0, v1.z*v2.x - v1.x*v2.z, 0);
+#endif
 		
 	}
 	inline friend double cross_2d(const vec3d &v1, const vec3d &v2){
@@ -114,47 +150,69 @@ public:
 		return d_tmp*v;
 	}
 	
-	
 	// assign operator
 	inline vec3d& operator +=(const vec3d &v){
+#ifndef TWODIMENSION
 		x += v.x, y += v.y, z += v.z;
+#else
+		x += v.x, z += v.z;
+#endif
 		return *this;
 	}
 	inline vec3d& operator -=(const vec3d &v){
+#ifndef TWODIMENSION
 		x -= v.x, y -= v.y, z -= v.z;
+#else
+		x -= v.x, z -= v.z;
+#endif
 		return *this;
 	}
 	inline vec3d& operator *=(const double & d){
-		
+#ifndef TWODIMENSION
 		x *= d, y *= d, z *= d;
+#else
+		x *= d, z *= d;
+#endif
 		return *this;
 	}
 	inline vec3d& operator *=(const int & i){
 		double d_tmp = (double)i;
+#ifndef TWODIMENSION
 		x *= d_tmp, y *= d_tmp, z *= d_tmp;
+#else
+		x *= d_tmp, z *= d_tmp;
+#endif
 		return *this;
 	}
 	inline vec3d& operator /=(const double & d){
 		double d_tmp = 1.0/d;
-		
+#ifndef TWODIMENSION
 		x *= d_tmp, y *= d_tmp, z *= d_tmp;
+#else
+		x *= d_tmp, z *= d_tmp;
+#endif
 		return 	*this;
 	}
 	inline vec3d& operator /=(const int & i){
 		double d_tmp = 1.0/i;
+#ifndef TWODIMENSION
 		x *= d_tmp, y *= d_tmp, z *= d_tmp;
+#else
+		x *= d_tmp, z *= d_tmp;
+#endif
 		return *this;
 	}
 	
 	/* utility */
+
 	inline void set(const double &_x, const double &_y, const double &_z){x=_x, y=_y, z=_z;}
 	inline void reset(){ x = y = z = 0.;}
-	
-	inline bool eq_zero(){
-		if ( x==0 && y==0 && z==0 )
-			return true;
-		return false;
-	}
+
+//	inline bool eq_zero(){
+//		if ( x==0 && y==0 && z==0 )
+//			return true;
+//		return false;
+//	}
 	
 #ifndef TWODIMENSION
 	//3D
@@ -169,13 +227,21 @@ public:
 	
 	inline void sign_reverse(){ (*this) = -(*this);}
 	inline double sq_norm(){
+#ifndef TWODIMENSION
 		return x*x + y*y + z*z;
+#else
+		return x*x + z*z;
+#endif
 	}
 	inline double sq_norm_xy(){return x*x + y*y;}
 	inline double sq_norm_xz(){return x*x + z*z;}
 	
 	inline double norm(){
+#ifndef TWODIMENSION
 		return sqrt(x*x + y*y + z*z);
+#else
+		return sqrt(x*x + z*z);
+#endif
 	}
 	
 	//#ifdef TWODIMENSION
@@ -195,8 +261,8 @@ public:
 	}
 	inline friend double sq_dist_2d(const vec3d &a1, const vec3d &a2){
 		double dx = a1.x-a2.x;
-		double dy = a1.z-a2.z;
-		return dx*dx+ dy*dy;
+		double dz = a1.z-a2.z;
+		return dx*dx + dz*dz;
 	}
 	
 #ifndef TWODIMENSION
@@ -217,10 +283,6 @@ public:
 
 
 #endif
-
-
-
-
 
 
 

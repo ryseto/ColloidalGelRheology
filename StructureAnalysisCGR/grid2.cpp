@@ -27,7 +27,8 @@ Grid2::~Grid2(void){
 	DELETE(vcell);
 }
 
-void Grid2::init (const unsigned long num_of_particle, const double lx_, const double ly_, const double lz_,
+void Grid2::init (const unsigned long num_of_particle,
+				  const double lx_, const double ly_, const double lz_,
 				  const double grid_size)
 {
 	numberOfParticle = num_of_particle;
@@ -130,8 +131,6 @@ GridPoint Grid2::p_to_grid(const vec3d &p){
 
 void Grid2::entry(vec3d &p, int i){
 	GridPoint gp = p_to_grid(p);
-	p.cerr();
-	cerr << gp.x << ' ' << gp.y << ' ' << gp.z << endl;
 #ifndef TWODIMENSION
 	vcell[gp.x][gp.y][gp.z].push_back(i);
 #else
