@@ -171,10 +171,10 @@
 			isa = PBXGroup;
 			children = (
 				D998AC4A15DE5A1800A88A2E /* main.cpp */,
-				D9A52A0C15DE62D0003C8FD8 /* vec2d.cpp */,
 				D9D2544815E25CDA00782067 /* Floc.h */,
 				D9D2544915E25CE500782067 /* Floc.cpp */,
 				D9A52A0D15DE62D0003C8FD8 /* vec2d.h */,
+				D9A52A0C15DE62D0003C8FD8 /* vec2d.cpp */,
 				D998AC5615DE5F4500A88A2E /* twodim.h */,
 				D998AC5715DE5F8000A88A2E /* threedim.h */,
 				D998AC5815DE5FB800A88A2E /* tools.h */,
@@ -337,6 +337,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -357,6 +358,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};

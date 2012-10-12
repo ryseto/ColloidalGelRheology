@@ -18,6 +18,7 @@
 using namespace std;
 void cerr_command_usage();
 void rheologyTest(int argc, char *const argv[], System &sy);
+void bendingLinearChain(int argc, char *const argv[], System &sy);
 //void testParameters(int argc, char *const argv[], System &sy);
 void rod_bending(int argc, char *const argv[], System &sy);
 
@@ -27,6 +28,8 @@ int main (int argc, char *const argv[])
 	sy.simulation = argv[1][0];
 	if (sy.simulation == 't'){
 		//testParameters(argc, argv, sy);
+	} else if (sy.simulation == 'b'){
+		bendingLinearChain(argc, argv, sy);
 	} else {
 		rheologyTest(argc, argv, sy);
 	}
@@ -65,6 +68,31 @@ void rheologyTest(int argc, char *const argv[], System &sy){
 	sy.strainControlSimulation();
 	return;
 }
+
+void bendingLinearChain(int argc, char *const argv[], System &sy){
+	sy.setParameterFile(argv[2]);
+	/* read files */
+	sy.readParameterFile();
+	sy.readBondParameter();
+	
+	sy.lx = 50;
+	sy.ly = 0;
+	sy.lz_init = 50;
+	sy.lz = sy.lz_init;
+	
+	sy.setLinearChain(11);
+	sy.setExternalforce(atof(argv[3]));
+	//	sy.importPositions();
+#ifndef TWODIMENSION
+	cerr <<  "3D simulation" << endl;
+#else
+	cerr <<  "2D simulation" << endl;
+#endif
+	//	sy.strainControlSimulation();
+	sy.bendingSimulation();
+	return;
+}
+
 
 //void testParameters(int argc, char *const argv[], System &sy){
 //	sy.setParameterFile(argv[2]);

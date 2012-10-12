@@ -17,7 +17,7 @@ private:
 	vector<vec2d> positions;
 	
 	double Lx;
-	double Ly;
+	double Lz_pd;
 
 	
 protected:
@@ -31,9 +31,9 @@ public:
 	
 	vec2d p_center;
 	int parent;
-	void setSystemSize(double Lx_, double Ly_){
+	void setSystemSize(double Lx_, double Lz_pd_){
 		Lx = Lx_;
-		Ly = Ly_;
+		Lz_pd = Lz_pd_;
 	}
 
 	void setPosition(vector<vec2d> &pos);
@@ -42,19 +42,16 @@ public:
 	}
 	vector<int> connect;
 	void move(vec2d translation){
-		//		for (int i=0; i < floc_size; i++){
-		//			positions[i] += translation;
-		//		}
 		p_center += translation;
-		if (p_center.x() < 0){
+		if (p_center.x() <= 0){
 			p_center.shift( Lx, 0);
 		}else if (p_center.x() > Lx){
 			p_center.shift(-Lx, 0);
 		}
-		if (p_center.y() < 0){
-			p_center.shift(0, Ly);
-		} else if (p_center.y() > Ly){
-			p_center.shift(0, -Ly);
+		if (p_center.z() <= 0){
+			p_center.shift(0, Lz_pd);
+		} else if (p_center.z() > Lz_pd){
+			p_center.shift(0, -Lz_pd);
 		}
 	}
 	
@@ -69,10 +66,10 @@ public:
 		}else if (p.x() > Lx){
 			p.shift(-Lx, 0);
 		}
-		if (p.y() < 0){
-			p.shift(0, Ly);
-		}else if (p.y() > Ly){
-			p.shift(0, -Ly);
+		if (p.z() < 0){
+			p.shift(0, Lz_pd);
+		} else if (p.z() > Lz_pd){
+			p.shift(0, -Lz_pd);
 		}
 		return p;
 	}

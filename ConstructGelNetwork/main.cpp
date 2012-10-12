@@ -11,7 +11,7 @@
 using namespace std;
 double r;
 int n;
-double L; // box size
+double Lx; // box size
 double Lz; // box size
 double Lz_pd; // for periodic boundary: Lz_pd = Lz -2;
 
@@ -26,7 +26,7 @@ int main (int argc, const char * argv[])
     int filling = atoi(argv[2]);
     /* box size L*Lz
      */
-    L = atof(argv[3]);
+    Lx = atof(argv[3]);
     Lz = atof(argv[4]);
     /* periodic boundary condition:
      * 0 < x < L
@@ -37,7 +37,7 @@ int main (int argc, const char * argv[])
 	int rsd = atoi(argv[6]);
 	double vol_frac = atof( argv[7]);
     
-//	int total_number = 10000;
+	//	int total_number = 10000;
     //int m = (int)(log(total_number)/log(2))+1;
     switch (dimension) {
         case 2:

@@ -86,6 +86,17 @@ Bond::Bond(int d0, int d1, System &sy_){
 	ang_bend_old = 0;
 #endif
 	
+	
+
+	force_normal=0;
+	force_sliding.reset();
+#ifndef TWODIMENSION
+	moment_bending.reset()
+	moment_torsion = 0;
+#else
+	moment_bending = 0;
+#endif
+	
 }
 
 Bond::~Bond(){
@@ -114,15 +125,12 @@ void Bond::calcForce(){
 	r = r_vec.norm_2d();
 	e_normal = r_vec.division_2d(r);
 #endif
-	
-
 	q = r - 2.;
-	
 	if ( central_force ){
 		if ( q < 0.){
 			/* compression --> negative */
 			kn_compression = para.kn + para.kn3*q*q;
-			force_normal = kn_compression*q + (2.*sqrt(kn_compression)/sy->dt)*(q-q_old);
+			force_normal = kn_compression*q; //+ (2.*sqrt(kn_compression)/sy->dt)*(q-q_old);
 		} else {
 			force_normal = 0;
 		}
@@ -153,23 +161,21 @@ void Bond::calcForce(){
 		/* compression --> negative */
 		kn_compression = para.kn + para.kn3*q*q;
 		//force_normal = kn_compression*q + (2.*sqrt(kn_compression)/sy->dt)*(q-q_old);
-		force_normal = kn_compression*q + (para.c_norm/sy->dt)*(q-q_old);
+		force_normal = kn_compression*q;// + (para.c_norm/sy->dt)*(q-q_old);
 	} else {
 		/* traction --> positive */
-		force_normal =  para.kn*q + (para.c_norm/sy->dt)*(q-q_old);
+		force_normal =  para.kn*q;// +     (para.c_norm/sy->dt)*(q-q_old);
 	}
 	/* 3D and 2D */
-	force_sliding = para.ks*d_slid + (para.c_slid/sy->dt)*(d_slid-d_slid_old);
-
-	moment_bending = para.kb*ang_bend + (para.c_bend/sy->dt)*(ang_bend-ang_bend_old);
-	
+	force_sliding  = para.ks*d_slid;//   + (para.c_slid/sy->dt)*(d_slid-d_slid_old);
+	moment_bending = para.kb*ang_bend;// + (para.c_bend/sy->dt)*(ang_bend-ang_bend_old);
 #ifndef TWODIMENSION
 	/* 3D */
-	moment_torsion = para.kt*ang_tort + (para.c_tort/sy->dt)*(ang_tort-ang_tort_old);
+	moment_torsion = para.kt*ang_tort;// + (para.c_tort/sy->dt)*(ang_tort-ang_tort_old);
 #endif
 	/* 3D and 2D */
-	force0 = force_normal*e_normal + force_sliding;
 
+	force0 = force_normal*e_normal + force_sliding;
 #ifndef TWODIMENSION
 	/* 3D */
 	moment_sliding = cross(e_normal, force_sliding);
@@ -184,24 +190,13 @@ void Bond::calcForce(){
 	torque1 = moment_sliding - moment_bending;
 #endif
 	/* This is for dampers*/
-	q_old = q;
-	d_slid_old = d_slid;
-	ang_bend_old = ang_bend;
-#ifndef TWODIMENSION
-	/* 3D */
-	ang_tort_old = ang_tort;
-#endif
-//	if (abs(torque0) > 0.1
-//		|| abs(torque1) > 0.1
-//		|| force0.norm() > 0.1
-//		){
-//		
-//		cerr << torque0 << ' ' << torque1 << endl;
-//		cerr << r << endl;
-//		cerr << force0.norm() << endl;
-//		exit(1);
-//	}
-	
+//	q_old = q;
+//	d_slid_old = d_slid;
+//	ang_bend_old = ang_bend;
+//#ifndef TWODIMENSION
+//	/* 3D */
+//	ang_tort_old = ang_tort;
+//#endif
 	return;
 }
 
@@ -361,35 +356,55 @@ void Bond::cheackBondStress(){
 	des[2] = sq(moment_bending)/sq_mbc;
 	D_function = des[0] + des[1] + des[2];
 #endif
-	if ( D_function >= 1 ){
-		if ( q >= 0 ){
-			sy->rupture_bond.push_back(bond_number);
-			sy->rup_normal ++;
-		} else {
-			sy->regeneration_bond.push_back(bond_number);
-#ifndef TWODIMENSION
-			if ( des[1] > des[2] ){
-				if (des[1] > des[3]){
-					sy->rup_shear ++; // 1 > 2 && 1 > 3
-				} else {
-					sy->rup_torsion ++; // 3 > 1 > 2
-				}
-			} else {
-				if (des[2] > des[3]){
-					sy->rup_bend ++; // 2 > 1 && 2 > 3
-				} else {
-					sy->rup_torsion ++;// 3 > 2 > 1
-				}
-			}
-#else
-			if (des[1] > des[2]){
-				sy->rup_shear ++;
-			} else {
-				sy->rup_bend ++;
-			}
-#endif
-		}
+	
+	if (des[0] > 1){
+		sy->rupture_bond.push_back(bond_number);
+		sy->rup_normal ++;
 	}
+	if (des[1] > 1){
+		sy->regeneration_bond.push_back(bond_number);
+		sy->rup_shear ++;
+	}
+	
+	if (des[2] > 1){
+		sy->regeneration_bond.push_back(bond_number);
+		sy->rup_bend ++;
+	}
+#ifndef TWODIMENSION
+	if (des[3] > 1){
+		sy->regeneration_bond.push_back(bond_number);
+		sy->rup_torsion ++;
+	}
+#endif
+//	if ( D_function >= 1 ){
+//		if ( q >= 0 ){
+//			sy->rupture_bond.push_back(bond_number);
+//			sy->rup_normal ++;
+//		} else {
+//			sy->regeneration_bond.push_back(bond_number);
+//#ifndef TWODIMENSION
+//			if ( des[1] > des[2] ){
+//				if (des[1] > des[3]){
+//					sy->rup_shear ++; // 1 > 2 && 1 > 3
+//				} else {
+//					sy->rup_torsion ++; // 3 > 1 > 2
+//				}
+//			} else {
+//				if (des[2] > des[3]){
+//					sy->rup_bend ++; // 2 > 1 && 2 > 3
+//				} else {
+//					sy->rup_torsion ++;// 3 > 2 > 1
+//				}
+//			}
+//#else
+//			if (des[1] > des[2]){
+//				sy->rup_shear ++;
+//			} else {
+//				sy->rup_bend ++;
+//			}
+//#endif
+//		}
+//	}
 	return;
 }
 

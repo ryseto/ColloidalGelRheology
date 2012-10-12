@@ -7,13 +7,14 @@
 //
 
 #include "particle.h"
-
 Particle::Particle(int particle_number_, const vec3d &position,
 				   const int _i_cluster, System &sy_){
 	sy = &sy_;
 	setInitial(particle_number_);
 	p = position;
 	init_cluster = _i_cluster;
+	if (init_cluster != 0)
+		exit(1);
 	setVelocityZero();
 	orientation.set(1., 0., 0., 0.);
 	resetForce();
@@ -23,6 +24,7 @@ Particle::Particle(int particle_number_, const vec3d &position,
 #else
 	cn = new ConnectPoint [12];
 #endif
+	wall_connected = 0;
 }
 
 Particle::Particle(int particle_number_){
@@ -114,11 +116,13 @@ void Particle::delConnectPoint(int bond_number){
 	return;
 }
 
-void Particle::checkNearBoundary(){
+void Particle::checkNearBoundary()
+{
 	near_boundary = sy->grid->near_boundary_xy(p);
 }
 
-void Particle::move_Euler(){
+void Particle::move_Euler()
+{
 	/*
 	 * The effect of eta should be checked.
 	 */
@@ -128,10 +132,7 @@ void Particle::move_Euler(){
 	omega += a_omega*sy->dt;
 	p += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
-	
 	orientation.infinitesimalRotation( d_rotation );
-	
-	
 	for (int i = 0; i < cn_size ; i++){
 		cn[i].u.rotateInfinitesimal( d_rotation );
 #ifndef TWODIMENSION
@@ -248,6 +249,8 @@ bool Particle::percolate(vector<int> perco_path){
 }
 
 void Particle::markWallConnected(int wt, vector<int> &wall_group){
+	// wt : 2 // top
+	// wt : 1 // bot
 	if ( wall_connected == -1 ){
 		wall_group.push_back(particle_number);
 		wall_connected = wt;

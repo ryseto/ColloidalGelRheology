@@ -21,18 +21,13 @@
 #include <string>
 extern double r;
 extern int n;
-extern double L;
+extern double Lx;
 extern double Lz;
 extern double Lz_pd;
 double sq_max_cluster_distance;
 double max_cluster_size;
 
-//void sediment_make2dNetwork(int rank, int m, int rsd);
-//void buildSpaceFillingNetwork2D(int filling, int rank, int m,
-//								int rsd, double );
-
 int ipow(int p, int q);
-//void twodim_prepare_fout(int filling, ofstream &fout, int rank, int total_number, int rsd);
 void twodim_prepare_fout(int filling, ofstream &fout,
 						 int rank, int rsd, double phi,
 						 string val_str
@@ -59,32 +54,32 @@ void monitor( Floc *floc,
 		for (int k = 0; k < floc_size ; k++){
 			vec2d p = floc[i].pos(k);
 			p.shift(0, 1);
-			cout << "c " << p.x() - L/2<< ' ' << 0 <<  ' ' <<  p.y() - Lz/2 << endl;
+			cout << "c " << p.x() - Lx/2<< ' ' << 0 <<  ' ' <<  p.z() - Lz/2 << endl;
 			if ( p.x() < 1){
 				cout << "@ 3 " << endl;
-				cout << "c " << p.x() + L - L/2<< ' ' << 0 <<  ' ' <<  p.y() - Lz/2 << endl;
+				cout << "c " << p.x() + Lx - Lx/2<< ' ' << 0 <<  ' ' <<  p.z() - Lz/2 << endl;
 				cout << "@ 0 " << endl;
-			} else if ( p.x() > L - 1){
+			} else if ( p.x() > Lx - 1){
 				cout << "@ 3 " << endl;
-				cout << "c " << p.x() - L - L/2<< ' ' << 0 <<  ' ' <<  p.y() - Lz/2 << endl;
+				cout << "c " << p.x() - Lx - Lx/2<< ' ' << 0 <<  ' ' <<  p.z() - Lz/2 << endl;
 				cout << "@ 0 " << endl;
 			}
-			if ( p.y() < 2){
+			if ( p.z() < 2){
 				cout << "@ 3 " << endl;
-				cout << "c " << p.x() - L/2<< ' ' << 0 <<  ' ' <<  p.y() + Lz_pd - Lz/2 << endl;
+				cout << "c " << p.x() - Lx/2<< ' ' << 0 <<  ' ' <<  p.z() + Lz_pd - Lz/2 << endl;
 				cout << "@ 0 " << endl;
-			} else if ( p.y() > Lz_pd - 1){
+			} else if ( p.z() > Lz_pd - 1){
 				cout << "@ 3 " << endl;
-				cout << "c " << p.x() - L/2<< ' ' << 0 <<  ' ' <<  p.y() - Lz_pd - Lz/2 << endl;
+				cout << "c " << p.x() - Lx/2<< ' ' << 0 <<  ' ' <<  p.z() - Lz_pd - Lz/2 << endl;
 				cout << "@ 0 " << endl;
 			}
 		}
 	}
 	
-    cout << "l " << -L/2 << ' ' << 0 << ' ' << -Lz/2 << ' ';
-    cout << L/2 << ' ' << 0 << ' ' << -Lz/2 << endl;
-    cout << "l " << -L/2 << ' ' << 0 << ' ' << Lz/2 << ' ';
-    cout << L/2 << ' ' << 0 << ' ' << Lz/2 << endl;
+    cout << "l " << -Lx/2 << ' ' << 0 << ' ' << -Lz/2 << ' ';
+    cout << Lx/2 << ' ' << 0 << ' ' << -Lz/2 << endl;
+    cout << "l " << -Lx/2 << ' ' << 0 << ' ' << Lz/2 << ' ';
+    cout << Lx/2 << ' ' << 0 << ' ' << Lz/2 << endl;
 	//	cerr << "N = " << floc_size*number_of_floc_for_vf << endl;
 	cout << endl;
 	
@@ -95,7 +90,6 @@ void twodim_output_flocs(ofstream &fout,
 						 int number_of_floc_for_vf,
 						 int floc_size){
 
-
 	for (int i = 0; i < number_of_floc_for_vf; i++){
 		for (int k = 0; k < floc_size ; k++){
 			vec2d p1 = floc[i].pos(k);
@@ -104,19 +98,7 @@ void twodim_output_flocs(ofstream &fout,
 					if (i != j || k != l ){
 						vec2d p2 = floc[j].pos(l);
 						vec2d dp = p2-p1;
-					
-						if (dp.x() > 10){
-							dp.shift(-L, 0);
-						} else if (dp.x() < -10){
-							dp.shift(L, 0);
-						}
-						if (dp.y() > 10){
-							dp.shift(0, -Lz_pd);
-						} else if (dp.y() < -10){
-							dp.shift(0, +Lz_pd);
-						}
-
-						if ( dp.sq_norm() < 3.999){
+						if ( sq_dist_pd(p1, p2) < 3.99){
 							cerr << i << ": " <<  k << endl;
 							cerr << j << ": " <<  l << endl;
 							cerr <<  dp.sq_norm()  << endl;
@@ -126,13 +108,8 @@ void twodim_output_flocs(ofstream &fout,
 					}
 				}
 			}
-			
-			
 		}
 	}
-
-	
-	
 	
 	for (int i = 0; i < number_of_floc_for_vf; i++){
 		for (int k = 0; k < floc_size ; k++){
@@ -143,70 +120,46 @@ void twodim_output_flocs(ofstream &fout,
 			//p[i + j*fo_size].cout();
 			//p[i + j*fo_size].out_data();
 			fout << setprecision(15);
-			fout << p.x() << ' ' <<  p.y() << ' ' << 0 << endl;
+			fout << p.x() << ' ' <<  p.z() << ' ' << 0 << endl;
 		}
 	}
-	
-
-	
-	
 }
 
-bool checkCollision(Floc &floc1, Floc &floc2){
-	vec2d periodic_boundary_shift(0,0);
-	if (floc1.p_center.x() < max_cluster_size
-		&& floc2.p_center.x() > L - max_cluster_size){
-		
-		periodic_boundary_shift.shift(-L,0);
-	} else if (floc2.p_center.x() < max_cluster_size
-			   && floc1.p_center.x() > L - max_cluster_size){
-		periodic_boundary_shift.shift(L,0);
-	}
-	
-	if (floc1.p_center.y() < max_cluster_size
-		&& floc2.p_center.y() > Lz_pd - max_cluster_size){
-		periodic_boundary_shift.shift(0,-Lz_pd);
-	} else if (floc2.p_center.y() < max_cluster_size
-			   && floc1.p_center.y() > Lz_pd - max_cluster_size){
-		periodic_boundary_shift.shift(0,Lz_pd);
-	}
-	
-	vec2d diff_centers = floc1.p_center - (floc2.p_center + periodic_boundary_shift);
-	
-	
-	if ( diff_centers.sq_norm() > sq_max_cluster_distance){
-		return false;
-	}
-	
+bool checkCollision(Floc &floc1, Floc &floc2){	
 	for (int i = 0; i < floc1.size(); i++){
 		for (int j = 0; j < floc2.size(); j++){
-			
-			vec2d diff_vec = floc1.pos(i) - floc2.pos(j);
-			
-			if ( diff_vec.x() > 10){
-				diff_vec.shift(-L, 0);
-			}else if (  diff_vec.x() < -10){
-				diff_vec.shift( L, 0);
-			}
-			if ( diff_vec.y() > 10){
-				diff_vec.shift(0, -Lz_pd);
-			}else if (  diff_vec.y() < -10){
-				diff_vec.shift( L, Lz_pd);
-			}
-			if (diff_vec.sq_norm() <= 4.0)
+			if (sq_dist_pd(floc1.pos(i), floc2.pos(j) ) < 4.05)
 				return true;
 		}
 	}
 	return false;
 }
 
+
+//void forDebug(Floc *floc, string message){
+//	int f1 =5;
+//	int f2 = 11;
+//	int i1 = 51;
+//	int i2 = 12;
+//	vec2d tmp1 = floc[5].pos(51);
+//	vec2d tmp2 = floc[11].pos(12);
+//	if ( sq_dist_pd(tmp1, tmp2) < 3.9999){
+//		cerr << message << endl;
+//		cerr << f1 << "(" << i1 << ")" << endl;
+//		cerr << f2 << "(" << i2 << ")" << endl;
+//		tmp1.cerr();
+//		tmp2.cerr();
+//		if (message != "N")
+//			exit(1);
+//	}
+//}
+
 bool checkCollision(Floc *floc,
 					int f1, int f2,
 					vector <int> &f1_col,
 					vector <int> &f2_col
-					//					vector <int> &p1_col,
-					//					vector <int> &p2_col
 					){
+	
 	unsigned long floc_size = floc[0].size();
 	for (int i1_connect = 0; i1_connect < floc[f1].connect.size(); i1_connect++){
 		int i1_floc = floc[f1].connect[i1_connect];
@@ -215,27 +168,10 @@ bool checkCollision(Floc *floc,
 			for (int i2_connect = 0; i2_connect < floc[f2].connect.size(); i2_connect++){
 				int i2_floc = floc[f2].connect[i2_connect];
 				for (int j = 0; j < floc_size; j++){
-					
 					vec2d p2 = floc[i2_floc].pos(j);
-					if (abs(p1.x() - p2.x()) > 10){
-						if (p1.x() < p2.x()){
-							p2.shift(-L, 0);
-						} else {
-							p2.shift( L, 0);
-						}
-					}
-					
-					if (abs(p1.y() - p2.y()) > 10){
-						if (p1.y() < p2.y()){
-							p2.shift(0, -Lz_pd);
-						} else {
-							p2.shift(0,  Lz_pd);
-						}
-					}
-					if ((p1 - p2).sq_norm() <= 4.2){
+					if (sq_dist_pd(p1, p2) <= 4.3){
 						f1_col.push_back(i1_floc);
 						f2_col.push_back(i2_floc);
-						return true;
 					}
 				}
 			}
@@ -243,7 +179,6 @@ bool checkCollision(Floc *floc,
 	}
 	return false;
 }
-
 
 void solveCollision(Floc *floc,
 					int moving_floc,
@@ -256,213 +191,171 @@ void solveCollision(Floc *floc,
 	unsigned long floc_size = floc[0].size();
 		
 	for (int k=0; k < floc[moving_floc].connect.size(); k++){
+		
 		int ii = floc[moving_floc].connect[k];
+		
 		for (int m=0; m < floc_size ; m++){
 			vec2d p1 = floc[ii].pos(m);
-			
 			for (int kk = 0; kk < floc[collided_floc].connect.size(); kk ++){
 				int jj = floc[collided_floc].connect[kk];
-				
 				for (int mm=0; mm < floc_size ; mm++){
-					vec2d p2 = floc[jj].pos(mm);
-					vec2d dp = p1 - p2;
-					if ( dp.x() > 10){
-						dp.shift(-L, 0);
-					} else if ( dp.x() < -10){
-						dp.shift( L, 0);
-					}
-					if ( dp.y() > 10){
-						dp.shift( 0, -Lz_pd);
-					} else if ( dp.y() < -10){
-						dp.shift( 0, Lz_pd);
-					}
-					
+					vec2d dp = diff_pd(p1, floc[jj].pos(mm));
 					double dpdv = dot(dp, direction);
-					double lamda1 = (1.0/direction.sq_norm()) \
-					*(- dpdv - sqrt(dpdv*dpdv - direction.sq_norm()*(dp.sq_norm() - 4.0)));
-					double lamda2 = (1.0/direction.sq_norm()) \
-					*(- dpdv + sqrt(dpdv*dpdv - direction.sq_norm()*(dp.sq_norm() - 4.0)));
-
-					
-					if (lamda1 > 0 && lamda_min >= lamda1){
-						lamda_min = lamda1;
-						if (floc[ii].parent != -1)
-							col_f1 = floc[ii].parent;
-						else {
-							col_f1 = ii;
+					double disc = dpdv*dpdv - (dp.sq_norm() - 4.0);
+					if (disc > 0){
+						double sq_disc = sqrt(disc);
+						double lamda1 = - dpdv - sq_disc;
+						double lamda2 = - dpdv + sq_disc;
+						if (lamda1 > 0
+							&& lamda_min > lamda1){
+							lamda_min = lamda1;
+							if (floc[ii].parent != -1){
+								col_f1 = floc[ii].parent;
+							}else {
+								col_f1 = ii;
+							}
+							if (floc[jj].parent != -1){
+								col_f2 = floc[jj].parent;
+							}else {
+								col_f2 = jj;
+							}
 						}
-						if (floc[jj].parent != -1)
-							col_f2 = floc[jj].parent;
-						else {
-							col_f2 = jj;
+						if (lamda2 > 0
+							&& lamda_min > lamda2){
+							lamda_min = lamda2;
+							if (floc[ii].parent != -1)
+								col_f1 = floc[ii].parent;
+							else {
+								col_f1 = ii;
+							}
+							if (floc[jj].parent != -1)
+								col_f2 = floc[jj].parent;
+							else {
+								col_f2 = jj;
+							}
 						}
 					}
-					if (lamda2 > 0 && lamda_min >= lamda2){
-						lamda_min = lamda2;
-						if (floc[ii].parent != -1)
-							col_f1 = floc[ii].parent;
-						else {
-							col_f1 = ii;
-						}
-						if (floc[jj].parent != -1)
-							col_f2 = floc[jj].parent;
-						else {
-							col_f2 = jj;
-						}
-						
-					}
-					
 				}
 			}
 		}
 	}
-	
-	
 }
 
-//				if (lamda2 > 0 && lamda_min >= lamda2){
-//					lamda_min = lamda2;
-//					col_f1 = f1_col[l];
-//					col_f2 = f2_col[l];
-//				}
 
-
-void forDebug(Floc *floc){
-	vec2d tmp1 = floc[0].pos(21);
-	vec2d tmp2 = floc[25].pos(11);
-	vec2d dp = tmp1 - tmp2;
-	
-	if ( dp.sq_norm() < 3.9999){
-		tmp1.cerr();
-		tmp2.cerr();
-		cerr << "****" << dp.sq_norm() << endl;
-		exit(1);
-	}
-}
 
 void moveRandom(Floc *floc, int floc_size, int num_of_floc){
+	vector<int> cluster_list;
 	for (int j = 0; j < num_of_floc; j++){
 		floc[j].parent = -1;
+		cluster_list.push_back(j);
 	}
 	
 	vector <int> f1_col;
 	vector <int> f2_col;
-	//	vector <int> p1_col;
-	//	vector <int> p2_col;
+
+	
+	
+	
 	
 	while (true){
-		int i = lrand48() % num_of_floc;
-		
-		if (floc[i].parent != -1){
-			i = floc[i].parent;
-			if (floc[i].parent != -1){
-				cerr << i << "-->" << floc[i].parent << endl;
-				exit(1);
-			}
-		}
+		int num_cluster = cluster_list.size();
+		int i = cluster_list[ lrand48() % num_cluster ];
+		//		if (floc[i].parent != -1){
+		//			i = floc[i].parent;
+		//		}
 		double theta = 2*M_PI*drand48();
 		vec2d direction(cos(theta),sin(theta));
-		//floc[i].move(translation);
 		for (int k=0; k < floc[i].connect.size(); k++){
 			int ii = floc[i].connect[k];
 			floc[ii].move(direction);
 		}
-		
-		for (int j = 0; j < num_of_floc; j++){
+		for (int jj = 0; jj < num_cluster; jj++){
+			int j = cluster_list[jj];
 			if (i != j){
-				if ( floc[j].parent == -1 ){
-					checkCollision(floc, i, j,
-								   f1_col, f2_col);
-				}
+				checkCollision(floc, i, j,
+							   f1_col, f2_col);
 			}
+
 		}
+
 		if (f1_col.size() > 0 ){
 			int col_f1, col_f2;
 			for (int k=0; k < floc[i].connect.size(); k++){
 				int ii = floc[i].connect[k];
 				floc[ii].move(-direction);
+				cerr << ii  << ":" << ' ';
 			}
+			cerr << endl;
 			double lamda_min = 1;
-			for (int ii=0; ii < f1_col.size() ; ii++){
-				for (int jj=0; jj < f2_col.size() ; jj++){
-					cerr <<f1_col[ii] << ' ' << f2_col[jj] << endl;
-					solveCollision(floc, f1_col[ii] , f2_col[jj] ,
-								   direction, lamda_min,
-								   col_f1, col_f2 );
-				}
+			for (int ii=0	; ii < f1_col.size() ; ii++){
+				solveCollision(floc, f1_col[ii] , f2_col[ii] ,
+							   direction, lamda_min,
+							   col_f1, col_f2 );
 			}
-		
-		
-			forDebug(floc);
+			f1_col.clear();
+			f2_col.clear();
 
 			for (int k=0; k < floc[i].connect.size(); k++){
 				int ii = floc[i].connect[k];
-				floc[ii].move( lamda_min*direction);
+				floc[ii].move(lamda_min*direction);
 			}
-			forDebug(floc);
-			
-			if (lamda_min < 1){
-				if (floc[col_f1].parent != -1){
-					col_f1 = floc[col_f1].parent;
-				}
-				if (floc[col_f2].parent != -1){
-					col_f2 = floc[col_f2].parent;
-				}
+//			cerr << lamda_min << endl;
+//			forDebug(floc, "here");
 				
+
+			if (lamda_min < 1){
 				if (col_f1 < col_f2){
+					
 					for (int k = 0; k < floc[col_f2].connect.size(); k++){
 						floc[col_f1].connect.push_back(floc[col_f2].connect[k]);
 						floc[floc[col_f2].connect[k]].parent = col_f1;
 					}
+					cluster_list.erase(remove(cluster_list.begin(), cluster_list.end(), col_f2),
+									   cluster_list.end());
+
+					
 				} else {
 					for (int k = 0; k < floc[col_f1].connect.size(); k++){
 						floc[col_f2].connect.push_back(floc[col_f1].connect[k]);
 						floc[floc[col_f1].connect[k]].parent = col_f2;
 					}
+					cluster_list.erase(remove(cluster_list.begin(), cluster_list.end(), col_f1),
+									   cluster_list.end());
 				}
 				
-				f1_col.clear();
-				f2_col.clear();
+				monitor(floc, floc_size, num_of_floc);
+				cerr <<  "num_cluster = " << num_cluster << endl;
+
 			}
 		}
-		
-//		monitor(floc, floc_size, num_of_floc);
-
 		if(floc[0].connect.size() == num_of_floc){
 			break;
 		}
 	}
-	//cerr << "floc growth: "<< floc[0].connect.size() << endl;
 }
 
 void putRandom(Floc *floc, int floc_size, int num_of_floc){
 	for (int i = 0; i < num_of_floc; i++){
-		bool colloid;
+		bool collide;
 		int cnt = 0;
 		do {
-			colloid = false;
-			vec2d p_center_trial(L*drand48(), Lz_pd*drand48());
+			collide = false;
+			vec2d p_center_trial(Lx*drand48(), Lz_pd*drand48());
 			floc[i].setCenterPosition(p_center_trial);
 			for (int j = 0; j < i ; j ++){
-				if (checkCollision(floc[i], floc[j]) == true){
-					colloid = true;
+				if (checkCollision(floc[i], floc[j])){
+					collide = true;
 					break;
 				}
 			}
 			cnt ++;
-		}while( colloid );
-		cerr << cnt << endl;
+		}while( collide );
 	}
+	
 	for (int i = 0; i < num_of_floc; i++){
 		floc[i].connect.push_back(i);
 	}
-	
-	
-	
 }
-
-
-
 //        p_tmp.periodic_range_xy(L, Lz_pd);
 //		for( int j = 0; j < i_first ; j++){
 //			for (int pb = 0; pb < 4 ; pb++){
@@ -478,7 +371,7 @@ void putRandom(Floc *floc, int floc_size, int num_of_floc){
 //							p_depl.shift( L,0);
 //						break;
 //					case 2:
-//						if (p_depl.y() > 0.5*Lz_pd)
+//						if (p_depl.z() > 0.5*Lz_pd)
 //							p_depl.shift(0, -Lz_pd);
 //						else
 //							p_depl.shift(0,  Lz_pd);
@@ -489,7 +382,7 @@ void putRandom(Floc *floc, int floc_size, int num_of_floc){
 //						else
 //							p_depl.shift( L,0);
 //
-//						if (p_depl.y() > 0.5*Lz_pd)
+//						if (p_depl.z() > 0.5*Lz_pd)
 //							p_depl.shift(0, -Lz_pd);
 //						else
 //							p_depl.shift(0,  Lz_pd);
@@ -514,11 +407,11 @@ void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac)
 		exit(1);
 	}
 	//int total_number = 10000;
-	int k = 14; // number of particle 2^k
+	int k = 16; // number of particle 2^k
 	srand48(rsd);
 	int floc_size = ipow(2, rank);
 	cerr << "fractal size = " << floc_size << endl;
-	int number_of_particle_for_vf = vol_frac*L*Lz / M_PI;
+	int number_of_particle_for_vf = vol_frac*Lx*Lz / M_PI;
 	double dbl_number_of_floc_for_vf = (double)number_of_particle_for_vf / floc_size;
 	int number_of_floc_for_vf;
 	cerr << "number_of_particle_for_vf = " << number_of_particle_for_vf << endl;
@@ -566,33 +459,27 @@ void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac)
 			}
 		}
 		
-		floc[i].setSystemSize( L, Lz_pd);
+		floc[i].setSystemSize( Lx, Lz_pd);
 		floc[i].setPosition(floc_pos);
 	}
 	cerr << sq_r_max << endl;
 	max_cluster_size = sqrt(sq_r_max);
 	sq_max_cluster_distance = 4*sq_r_max;
 	//	int total_number;
-	
+
 	ofstream fout;
     if (filling == 1){
 		//fo_random_fall(p, fo_size);
     } else if (filling == 2){
 		//n = twodim_fo_random_put(p, floc_size, number_of_floc_for_vf);
 		putRandom(floc, floc_size, number_of_floc_for_vf);
-		
-		
 		twodim_prepare_fout(filling, fout, rank, rsd, vol_frac, "d");
 		//	twodim_output_result(fout, p, number_of_floc_for_vf, floc_size);
 		twodim_output_flocs(fout, floc,
 							number_of_floc_for_vf,
 							floc_size);
 		fout.close();
-		
-		
 		moveRandom(floc, floc_size, number_of_floc_for_vf);
-		
-		
 	}
 	
 	
@@ -613,7 +500,7 @@ void twodim_prepare_fout(int filling, ofstream &fout,
 	char name_string[64];
     int floc_size = ipow(2, rank);
 	sprintf(name_string, "W%dH%d_cca%d_phi%1.2f_rand%d_%s",
-			(int)(L), (int)(Lz), floc_size, phi, rsd, val_str.c_str() ) ;
+			(int)(Lx), (int)(Lz), floc_size, phi, rsd, val_str.c_str() ) ;
     string fn_fout;
     if (filling == 1){
         fn_fout = "BalVSed_2D_" + (string)name_string + ".dat";
@@ -629,7 +516,7 @@ double twodim_collision_value(vec2d const &po, vec2d const &p,
 	double l1, l2;
 	double A, B;
     
-	A = (p.x()-po.x())*cos(theta)+(p.y()-po.y())*sin(theta);
+	A = (p.x()-po.x())*cos(theta)+(p.z()-po.z())*sin(theta);
 	//B = sq_dist_pd(p, po) - 4*r*r;
 	B = sq_dist(p, po) - 4*r*r;
 	if ( A*A - B < 0){
@@ -679,7 +566,7 @@ void twodim_make_fractal_object(int m, vector<vec2d> &p){
 
 double twodim_collision_height(vec2d po, vec2d p){
 	double h, A, B;
-	A = p.y() - po.y();
+	A = p.z() - po.z();
 	//B = sq_dist(p, po) - 4*r*r;
 	B = sq_dist_pd(p, po) - 4*r*r;
 	if (A*A-B < 0){
@@ -687,7 +574,7 @@ double twodim_collision_height(vec2d po, vec2d p){
 	}
 	h = - A + sqrt( A*A-B );
     
-	if (h < -p.y())
+	if (h < -p.z())
 		return -1;
     
 	return h;
@@ -695,26 +582,26 @@ double twodim_collision_height(vec2d po, vec2d p){
 
 void twodim_put_first_fo(vector<vec2d> &p, int fo_size){
 	//double x_rand = L*drand48();
-	double x_mid = L*drand48(); //@@@@@@@@@@@ one fractal
-	double y_mid = Lz_pd*drand48();
+	double x_mid = Lx*drand48(); //@@@@@@@@@@@ one fractal
+	double z_mid = Lz_pd*drand48();
 	for (int i=0; i < fo_size ; i++){
-		p[i].shift(x_mid, y_mid);
+		p[i].shift(x_mid, z_mid);
 	}
     for (int i=0; i < fo_size ; i++){
-        p[i].periodic_range_xy(L, Lz_pd);
+        p[i].periodic_range_xz(Lx, Lz_pd);
     }
 }
 
 void twodim_drop_fo(vector<vec2d> &p, int i_premier, int fo_size){
 	int i_dernier = i_premier + fo_size;
-	double x_rand = L*drand48();
+	double x_rand = Lx*drand48();
 	double h_max = -1;
 	double y_min = 0;
 	for (int i= i_premier ; i < i_dernier; i++){
 		p[i].shift( x_rand, 0);
-		p[i].periodic_range(L);
-		if (y_min > p[i].y()){
-			y_min = p[i].y();
+		p[i].periodic_range(Lx);
+		if (y_min > p[i].z()){
+			y_min = p[i].z();
 		}
 		for(int i_stacked = 0; i_stacked<i_premier; i_stacked++){
 			double h = twodim_collision_height(p[i_stacked], p[i]);
@@ -731,8 +618,8 @@ void twodim_drop_fo(vector<vec2d> &p, int i_premier, int fo_size){
 		double y_min = 0;
 		for (int i=i_premier; i < i_dernier ; i++){
 			p[i].shift(0, h_max);
-			if (p[i].y() < y_min){
-				y_min = p[i].y();
+			if (p[i].z() < y_min){
+				y_min = p[i].z();
 			}
 		}
 		if (y_min < 0 ){
@@ -766,8 +653,8 @@ void twodim_set_initial_pairs(vector<vec2d> &p){
 double twodim_calc_y_max(vector<vec2d> &p){
 	double y_max = 0;
 	for (int j=0; j < n; j++){
-		if( p[j].y() > y_max ){
-			y_max = p[j].y();
+		if( p[j].z() > y_max ){
+			y_max = p[j].z();
 		}
 	}
 	return y_max;
@@ -776,27 +663,6 @@ double twodim_calc_y_max(vector<vec2d> &p){
 
 void twodim_output_result(ofstream &fout, vector<vec2d> &p,
 						  int number_of_floc_for_vf, int fo_size){
-	//double y_max = calc_y_max(p);
-	//	double lowestY = 1.0;
-	//    double y_min = 999;
-	//    double y_max = 0;
-	//    for (int i=0; i < n; i++){
-	//        if (y_min > p[i].y()){
-	//            y_min = p[i].y();
-	//        }
-	//        if (y_max < p[i].y()){
-	//            y_max = p[i].y();
-	//        }
-	//    }
-	//	cerr << y_min << "  " << y_max << endl;
-	//    int col = 2;
-	//    for (int j=0; j < n/fo_size; j++){
-	//      if (col++ > 10)
-    //        col = 5;
-	//	for (int i=0; i < fo_size ; i++){
-	
-	//		int k = i + j*fo_size;
-	//int m  = (int)total_number/fo_size;
 	for (int k = 0; k < fo_size*number_of_floc_for_vf; k++){
 		//p[k].shift(0, -y_max/2);
 		p[k].shift(0, 1);
@@ -805,26 +671,26 @@ void twodim_output_result(ofstream &fout, vector<vec2d> &p,
 		//p[i + j*fo_size].out_data();
 		cout << "@ 0 " << endl;
 		fout << setprecision(15);
-		//		fout << p[k].x() << ' ' <<  p[k].y() << ' ' << 0 << endl;
+		//		fout << p[k].x() << ' ' <<  p[k].z() << ' ' << 0 << endl;
 		//            cout << "@ " << col << endl;
-		cout << "c " << p[k].x() - L/2<< ' ' << 0 <<  ' ' <<  p[k].y() - Lz/2 << endl;
+		cout << "c " << p[k].x() - Lx/2<< ' ' << 0 <<  ' ' <<  p[k].z() - Lz/2 << endl;
 		cout << "@ 3 " << endl;
 		
 		if ( p[k].x() < 1)
-			cout << "c " << p[k].x() + L - L/2<< ' ' << 0 <<  ' ' <<  p[k].y() - Lz/2 << endl;
-		else if ( p[k].x() > L - 1)
-			cout << "c " << p[k].x() - L - L/2<< ' ' << 0 <<  ' ' <<  p[k].y() - Lz/2 << endl;
-		if ( p[k].y() < 2)
-			cout << "c " << p[k].x() - L/2<< ' ' << 0 <<  ' ' <<  p[k].y() + Lz_pd - Lz/2 << endl;
-		else if ( p[k].y() > Lz_pd - 1)
-			cout << "c " << p[k].x() - L/2<< ' ' << 0 <<  ' ' <<  p[k].y() - Lz_pd - Lz/2 << endl;
+			cout << "c " << p[k].x() + Lx - Lx/2<< ' ' << 0 <<  ' ' <<  p[k].z() - Lz/2 << endl;
+		else if ( p[k].x() > Lx - 1)
+			cout << "c " << p[k].x() - Lx - Lx/2<< ' ' << 0 <<  ' ' <<  p[k].z() - Lz/2 << endl;
+		if ( p[k].z() < 2)
+			cout << "c " << p[k].x() - Lx/2<< ' ' << 0 <<  ' ' <<  p[k].z() + Lz_pd - Lz/2 << endl;
+		else if ( p[k].z() > Lz_pd - 1)
+			cout << "c " << p[k].x() - Lx/2<< ' ' << 0 <<  ' ' <<  p[k].z() - Lz_pd - Lz/2 << endl;
 		
 	}
 	
-    cout << "l " << -L/2 << ' ' << 0 << ' ' << -Lz/2 << ' ';
-    cout << L/2 << ' ' << 0 << ' ' << -Lz/2 << endl;
-    cout << "l " << -L/2 << ' ' << 0 << ' ' << Lz/2 << ' ';
-    cout << L/2 << ' ' << 0 << ' ' << Lz/2 << endl;
+    cout << "l " << -Lx/2 << ' ' << 0 << ' ' << -Lz/2 << ' ';
+    cout << Lx/2 << ' ' << 0 << ' ' << -Lz/2 << endl;
+    cout << "l " << -Lx/2 << ' ' << 0 << ' ' << Lz/2 << ' ';
+    cout << Lx/2 << ' ' << 0 << ' ' << Lz/2 << endl;
 	cerr << "N = " << fo_size*number_of_floc_for_vf << endl;
 	
 	
@@ -837,12 +703,10 @@ int twodim_put_fo(vector<vec2d> &p, int i_first, int fo_size){
 	int count = 0;
 	
 try_again1:
-	double x_rand = L*drand48();
+	double x_rand = Lx*drand48();
 	double y_rand = Lz_pd*drand48();
-    
 	for (int i = i_first ; i < i_last; i++){
 		p_tmp = p[i].plus(x_rand, y_rand);
-		//        p_tmp.periodic_range_xy(L, Lz_pd);
 		for( int j = 0; j < i_first ; j++){
             for (int pb = 0; pb < 4 ; pb++){
                 vec2d p_depl;
@@ -851,31 +715,31 @@ try_again1:
                     case 0:
                         break;
                     case 1:
-                        if (p_depl.x() > 0.5*L)
-                            p_depl.shift(-L,0);
+                        if (p_depl.x() > 0.5*Lx)
+                            p_depl.shift(-Lx,0);
                         else
-                            p_depl.shift( L,0);
+                            p_depl.shift( Lx,0);
                         break;
                     case 2:
-                        if (p_depl.y() > 0.5*Lz_pd)
+                        if (p_depl.z() > 0.5*Lz_pd)
                             p_depl.shift(0, -Lz_pd);
                         else
                             p_depl.shift(0,  Lz_pd);
                         break;
                     case 3:
-                        if (p_depl.x() > 0.5*L)
-                            p_depl.shift(-L,0);
+                        if (p_depl.x() > 0.5*Lx)
+                            p_depl.shift(-Lx,0);
                         else
-                            p_depl.shift( L,0);
+                            p_depl.shift( Lx,0);
 						
-                        if (p_depl.y() > 0.5*Lz_pd)
+                        if (p_depl.z() > 0.5*Lz_pd)
                             p_depl.shift(0, -Lz_pd);
                         else
                             p_depl.shift(0,  Lz_pd);
 						
                         break;
                 }
-                if ( sq_dist(p_tmp, p_depl) <= 4.){
+                if ( sq_dist_pd(p_tmp, p_depl) <= 4.){
                     count ++;
                     if ( count > max_trial){
                         return 1;
@@ -903,24 +767,24 @@ try_again1:
                     case 0:
                         break;
                     case 1:
-                        if (p_depl.x() > 0.5*L)
-                            p_depl.shift(-L,0);
+                        if (p_depl.x() > 0.5*Lx)
+                            p_depl.shift(-Lx,0);
                         else
-                            p_depl.shift( L,0);
+                            p_depl.shift( Lx,0);
                         break;
                     case 2:
-                        if (p_depl.y() > 0.5*Lz_pd)
+                        if (p_depl.z() > 0.5*Lz_pd)
                             p_depl.shift(0, -Lz_pd);
                         else
                             p_depl.shift(0,  Lz_pd);
                         break;
                     case 3:
-                        if (p_depl.x() > 0.5*L)
-                            p_depl.shift(-L,0);
+                        if (p_depl.x() > 0.5*Lx)
+                            p_depl.shift(-Lx,0);
                         else
-                            p_depl.shift( L,0);
+                            p_depl.shift( Lx,0);
                         
-                        if (p_depl.y() > 0.5*Lz_pd)
+                        if (p_depl.z() > 0.5*Lz_pd)
                             p_depl.shift(0, -Lz_pd);
                         else
                             p_depl.shift(0,  Lz_pd);
@@ -942,7 +806,7 @@ try_again1:
             }
         }
 	}
-    cerr << lambda << endl;
+
 	if ( lambda == 100){
 		goto try_again1;
     }
@@ -950,7 +814,7 @@ try_again1:
 	for (int i = i_first; i < i_last; i++){
 		p[i].shift(x_rand, y_rand);
 		//p[i] += lambda*v;
-        p[i].periodic_range_xy(L, Lz_pd);
+        p[i].periodic_range_xz(Lx, Lz_pd);
     }
 	
 	return 0;

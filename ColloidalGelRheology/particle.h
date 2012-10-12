@@ -52,7 +52,7 @@ public:
 	quaternion orientation;
 
 	int init_cluster;
-	int wall_connected;
+	int wall_connected; //
 	bool wall;
 	bool near_boundary;
 	double sq_force;
@@ -125,9 +125,6 @@ public:
 #endif
 	}
 	void delConnectPoint(int bond_number);
-	inline double x(){return p.x;}
-	inline double y(){return p.y;}
-	inline double z(){return p.z;}
 	void z_shift( double dz ){ p.z += dz; }
 	void x_shift( double dx );
 	inline vec3d pos(){return p;}
@@ -144,10 +141,8 @@ public:
 	void output(ofstream &fout);
 	void cerr(){
 		std::cerr << "c " << p.x << ' ' << p.y << ' ' << p.z << std::endl;
-		//fout << particle_number << ' ' << p.x << ' ' << p.y << ' ' << p.z << endl;
 	}
 	double valForce(){ return force.norm(); }
-//	double valTorque(){ return torque.norm(); }
 	double valVelocity(){ return velocity.norm(); }
 #ifndef TWODIMENSION
 	double valOmega(){ return omega.norm(); }

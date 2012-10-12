@@ -28,7 +28,6 @@ protected:
 	 */
 	double dt_max;
 	double max_move_step;
-	double lz_init;
 	double wall_velocity;
 	double stress_change_convergence; // The change of stress during the interval_convergence_check.
 	double stress_minimum;
@@ -105,13 +104,12 @@ protected:
 	ofstream fout_yap;
 	ofstream fout_conf;
 	ofstream fout_deform;
-	
+	vec3d f_ex;
 private:
 	void preProcesses();
 	void timeEvolution();
 	void middleProcedures();
 	void shiftCenterOfMass(vector<vec3d> &p);
-	void setRod(int m);
 	void setWall();
 	void setBondGenerationDistance(double);
 	void generateBond();
@@ -124,6 +122,8 @@ private:
 	void rupture();
 	void TimeDevStrainControlCompactionEuler();
 	void TimeDevStrainControlShearEuler();
+	void TimeDevBendingTest();
+
 	bool mechanicalEquilibrium();
 	bool reachStrainTarget();
 	void setTarget();
@@ -169,6 +169,13 @@ public:
 	void setInitClusterFile(string);
 	void setVersion(string );
 	void strainControlSimulation();
+	void bendingSimulation();
+	void setExternalforce(double fex){
+		f_ex.set(fex,0,0);
+	}
+
+	void setLinearChain(int number_of_particles);
+
 	/*
 	 * Objects
 	 */
@@ -188,6 +195,8 @@ public:
 	 * System parameters
 	 */
 	double lx, ly, lz;
+	double lz_init;
+
 	double dt; // Time step to integrate equatino of motion.
 	double eta;
 	double eta_rot;

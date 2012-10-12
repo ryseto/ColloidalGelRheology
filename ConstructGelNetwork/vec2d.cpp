@@ -12,98 +12,96 @@
 inline double sq(double x){
 	return x*x;
 }
+//
+//double vec2d::x(double L){
+//	if (xvalue < 0)
+//		return xvalue + L;
+//	else if (xvalue > L)
+//		return xvalue - L;
+//	else
+//		return xvalue;
+//}
 
-double vec2d::x(double L){
-	if (xvalue < 0)
-		return xvalue + L;
-	else if (xvalue > L)
-		return xvalue - L;
-	else
-		return xvalue;
+vec2d operator+(const vec2d &a1, const vec2d &a2){
+	return vec2d( a1.xvalue + a2.xvalue, a1.zvalue + a2.zvalue);
 }
 
-vec2d operator+(vec2d a1, vec2d a2){
-	return vec2d( a1.xvalue + a2.xvalue, a1.yvalue + a2.yvalue);
+vec2d operator-(const vec2d &a1, const vec2d &a2){
+	return vec2d( a1.xvalue - a2.xvalue, a1.zvalue - a2.zvalue);
 }
 
-vec2d operator-(vec2d a1, vec2d a2){
-	return vec2d( a1.xvalue - a2.xvalue, a1.yvalue - a2.yvalue);
+vec2d operator-(const vec2d &a){
+	return vec2d( -a.xvalue, -a.zvalue);
 }
 
-vec2d operator-(vec2d a){
-	return vec2d( -a.xvalue, -a.yvalue);
+vec2d operator/(const vec2d &a, double b){
+	return vec2d( a.xvalue/b, a.zvalue/b);
 }
 
-vec2d operator/(vec2d a, double b){
-	return vec2d( a.xvalue/b, a.yvalue/b);
+vec2d operator*(const vec2d &v, double a){
+	return vec2d( a*v.xvalue, a*v.zvalue);
 }
 
-vec2d operator*(vec2d v, double a){
-	return vec2d( a*v.xvalue, a*v.yvalue);
+vec2d operator*(double a, const vec2d &v){
+	return vec2d( a*v.xvalue, a*v.zvalue);                                                                                                                                                                                                                                             
 }
 
-vec2d operator*(double a, vec2d v){
-	return vec2d( a*v.xvalue, a*v.yvalue);
-}
+//double dot(vec2d &a1, vec2d &a2){
+//}
 
-double dot(vec2d a1, vec2d a2){
-	return a1.xvalue*a2.xvalue + a1.yvalue*a2.yvalue;
-}
-
-double angle(vec2d a1, vec2d a2){
-	// ベクトル a1 → a2 の角
-	double xx, yy, phi;
+double angle(const vec2d &a1, const vec2d &a2){
+	double xx, zz, phi;
 	xx = a2.x() - a1.x();
-	yy = a2.y() - a1.y();
+	zz = a2.z() - a1.z();
 	if( xx > 0){
-		if ( yy >= 0) phi = atan( yy / xx );
-		else  phi = 2*M_PI - atan(- yy / xx );
+		if ( zz >= 0) phi = atan( zz / xx );
+		else  phi = 2*M_PI - atan(- zz / xx );
 	}else if ( xx < 0 ) {
-		if ( yy >= 0) phi = M_PI - atan( - yy / xx );
-		else  phi = M_PI + atan(  yy / xx );
+		if ( zz >= 0) phi = M_PI - atan( - zz / xx );
+		else  phi = M_PI + atan(  zz / xx );
 	} else {
-		if ( yy >= 0) phi= M_PI/2;
+		if ( zz >= 0) phi= M_PI/2;
 		else  phi = 3*M_PI/2;
 	}
 	return phi;
 }
 
-void vec2d::periodic_range(double L) {
+void vec2d::periodic_range(double Lx_) {
 	if (xvalue < 0 ){
-		xvalue += L;
-	} else if (xvalue > L){
-		xvalue -= L;
+		xvalue += Lx_;
+	} else if (xvalue > Lx_){
+		xvalue -= Lx_;
 	}
 }
 
-void vec2d::periodic_range_xy(double Lx, double Ly) {
+void vec2d::periodic_range_xz(double Lx_, double Lz_pd_) {
 	if (xvalue < 0 ){
-		xvalue += Lx;
-	} else if (xvalue >= Lx){
-		xvalue -= Lx;
+		xvalue += Lx_;
+	} else if (xvalue >= Lx_){
+		xvalue -= Lx_;
 	}
-	if (yvalue < 0 ){
-		yvalue += Ly;
-	} else if (yvalue >= Ly){
-		yvalue -= Ly;
+	if (zvalue < 0 ){
+		zvalue += Lz_pd_;
+	} else if (zvalue >= Lz_pd_){
+		zvalue -= Lz_pd_;
 	}
 }
 
-bool operator==(vec2d a1, vec2d a2){
-	if (a1.xvalue == a2.xvalue && a1.yvalue == a2.yvalue)
+bool operator==(const vec2d &a1, const vec2d &a2){
+	if (a1.xvalue == a2.xvalue && a1.zvalue == a2.zvalue)
 		return true;
 	return false;
 }
 
-bool operator!=(vec2d a1, vec2d a2){
-	if (a1.xvalue != a2.xvalue || a1.yvalue != a2.yvalue )
+bool operator!=(const vec2d &a1, const vec2d &a2){
+	if (a1.xvalue != a2.xvalue || a1.zvalue != a2.zvalue )
 		return true;
 	return false;
 }
 
-void operator+=(vec2d &a1, vec2d a2){
+void operator+=(vec2d &a1, const vec2d &a2){
 	a1.xvalue += a2.xvalue;
-	a1.yvalue += a2.yvalue;
+	a1.zvalue += a2.zvalue;
 }
 
 vec2d n_vec(vec2d v1, vec2d v2){
@@ -114,32 +112,13 @@ vec2d n_vec(vec2d v1, vec2d v2){
 void vec2d::cout(){
 	//	std::cout << '(' << xvalue << ',' << yvalue << ')' << std::endl;
 	//	std::cout << "r 0.5 " << endl;
-	std::cout << "c " << xvalue << ' '
-	<< 0 << ' ' << yvalue << std::endl;
+	std::cout << "c " << xvalue << ' ' << 0 << ' ' << zvalue << std::endl;
 }
 
 void vec2d::out_data(){
-	std::cout << xvalue << ' ' << yvalue << std::endl;
+	std::cout << xvalue << ' ' << zvalue << std::endl;
 }
 
 double vec2d::abs(){
-	return sqrt(xvalue*xvalue + yvalue*yvalue);
+	return sqrt(xvalue*xvalue + zvalue*zvalue);
 }
-
-double dist(vec2d a1, vec2d a2){
-	return sqrt(sq(a1.xvalue-a2.xvalue) + sq(a1.yvalue-a2.yvalue));
-}
-
-double sq_dist(vec2d a1, vec2d a2){
-	return sq(a1.xvalue-a2.xvalue) + sq(a1.yvalue-a2.yvalue);
-}
-
-double sq_dist_pd(vec2d a1, vec2d a2){
-	double xx = a1.xvalue - a2.xvalue;
-	if ( xx > L_SIZE )
-		xx -= L;
-	else if ( xx < -L_SIZE )
-		xx += L;
-	return sq(xx) + sq(a1.yvalue-a2.yvalue);
-}
-

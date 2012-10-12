@@ -10,8 +10,10 @@
 
 #include "wall.h"
 
-Wall::Wall(int _objectID, double _z, System &sy_) : objectID (_objectID), z(_z){
+Wall::Wall(int _objectID, double _z, System &sy_)
+: objectID (_objectID), z(_z){
 	sy = &sy_;
+
 	if ( objectID == sy->n_top){
 		walltype = top;
 		u.set(0., 0., -1.);
@@ -44,7 +46,9 @@ void Wall::addNewContact(vector<Particle *> &particle_active){
 	for(int j=0; j < n_neighbor; j++){
 		if (  u.z*(sy->particle[neighbor[j]]->p.z - z) <= 1.0 ){
 			if ( sy->particle[ neighbor[j] ]->wall == false){
+
 				wall_particle.push_back( sy->particle[ neighbor[j] ] );
+				
 				sy->particle[ neighbor[j] ]->wall = true;
 				neighbor[j] = neighbor.back();
 				neighbor.pop_back();
@@ -55,6 +59,10 @@ void Wall::addNewContact(vector<Particle *> &particle_active){
 		}
 	}
 	if (generated){
+		/*
+		 * I should use STL algorithm.
+		 */
+		
 		unsigned long n_particle_active = particle_active.size();
 		for (int i=0; i< n_particle_active;  i++){
 			if ( particle_active[i]->wall ){
@@ -87,17 +95,23 @@ void Wall::compactionStrainControl(double velocity){
 	}
 }
 
-void Wall::z_shift(double dz){
-	z += dz;
-	//foreach( vector <Particle* >, wall_particle, iter_p){
-	//		(*iter_p)->p.z += dz;
-	//	}
-
-	sy->lz += dz;
-	
+void Wall::moveWallGroup(vec3d shift){
+	for (int i = 0; i < wall_group.size(); i++){
+		int k = wall_group[i];
+		sy->particle[k]->p += shift;
+		if (sy->particle[k]->p.x > sy->lx){
+			sy->particle[k]->p.x -= sy->lx;
+		}
+	}
+	x += shift.x;
+	y += shift.y;
+	z += shift.z;
+	if ( walltype == top){
+		sy->lz += shift.z;
+	} else {
+		sy->lz -= shift.z;
+	}
 }
-
-
 
 void Wall::shearingStrainControl(double velocity){
 	double dx = velocity*sy->dt;
@@ -194,14 +208,15 @@ void Wall::getParticles(vector<int> &particles_list){
 bool Wall::markWallConnected(){
 	int wt;
 	if (walltype == bot){
-		wt = 1;
+		wt = 1;  // bt
 	} else {
-		wt = 2;
+		wt = 2; // top
 	}
+	bool percolation = false;
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->markWallConnected(wt, wall_group);
 		if ( sy->percolation == true){
-			return true;
+			percolation = true;
 		}
 	}
 	cerr << "wall" << wt << " : "  << wall_group.size() << endl;

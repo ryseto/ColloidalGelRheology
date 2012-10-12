@@ -24,22 +24,33 @@ bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz,
 					   bool back_bone){
 	unsigned long num_particle;
 	char buf[10];
+	char buf2[10];
 	double info[13];
 	char buf_line[512];
-	fin >> buf ;
-	if (buf[0] != '#'){
+	fin >> buf >> buf2;
+	while (buf[0]  != '#'){
+		cerr  << "** " << buf_line << endl;
 		cerr << "stop: " << buf << endl;
 		exit(1);
 	}
-	fin >> buf;
 	bool equilibrium = false;
-	if (buf[0] == 'e')
+	if (buf2[0] == 'e'){
 		equilibrium  = true;
+		cerr << "eq" << endl;
+	} else {
+		cerr << "not eq" << endl;
+	}
+//	exit(1);
 	int num_infomation = 10;
 	for(int i=0;i < num_infomation; i++){
 		fin >> info[i];
 	}
+
 	double vf = info[0];
+	cerr << "vf = " << vf << endl;
+	//	stress_z = force_z / (sy->lx*2.0);
+	double stress = info[1];
+	double wall_force = stress*lx*2.0;
 	fin.getline(buf_line, 1000);
 
 	double z_bot = info[5];
@@ -48,14 +59,16 @@ bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz,
 	lz = z_top-z_bot;
 	
 	fin >> buf >> num_particle;
+	cerr << "num_particle = " << num_particle << endl;
 	double x, y, z;
 	vector< vec3d > p_import;
 	p_import.resize(num_particle);
 	//int tmp;
 	for (int i = 0; i < num_particle ; i++){
 		fin >> x >> y >> z ;
+		//		cerr << x << ' ' <<  y << ' ' << z << endl;
 		p_import[i].set(x+lx/2, y, z - z_bot);
-		
+	
 		if (  z - z_bot < 0){
 			cerr << "t" << z_top << endl;
 			cerr << "b" << z_bot << endl;
@@ -64,10 +77,10 @@ bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz,
 			exit(1);
 		}
 		fin.getline(buf_line, 512);
-		
 	}
 	int num_bond;
 	fin >> buf >> num_bond;
+	cerr << "num_bond " << num_bond << endl;
 
 //	fout_conf << i_p0 << ' ' << i_p1 << ' '; //1,2
 //	fout_conf << initial_bond << ' ' << (*bond_iter)->status << ' '; //3,4
@@ -91,67 +104,78 @@ bool import_compaction(vector <vec3d> &p, ifstream &fin, double lx, double &lz,
 	int cnt_regeneration;
 	vector<int> bb_check;
 	bb_check.resize(num_particle);
-	
-	
 	vector <int> bond_p1;
 	vector <int> bond_p2;
 	vector <double> bond_stress;
 	bond_p1.resize(num_bond);
 	bond_p2.resize(num_bond);
 	bond_stress.resize(num_bond);
-	double sum_stress = 0;
-	int count = 0;
+	//	double sum_stress = 0;
+	//	int count = 0;
+	vector <double> particle_stress;
+	particle_stress.resize(num_particle);
 	for (int i = 0; i < num_bond ; i++){
 		fin >> p1 >> p2 ;
-		bond_p1[i]=p1;
-		bond_p2[i]=p2;
 		fin >> init_bond >> bond_status;
 		fin >> f_norm >> f_slid >> M_bend >> M_tors;
 		fin >> cnt_regeneration;
-
-		bond_stress[i] = f_norm;
-		if (abs(f_norm) > 1e-6 ){
-			sum_stress += abs(f_norm);
-			count ++;
-		}
+		bond_p1[i] = p1;
+		bond_p2[i] = p2;
+//		fin.getline(buf_line, 20);
+//		cerr << buf_line << endl;
+		//particle_stress[p1] += 0.5*(abs(f_norm)+abs(f_slid));
+		//		particle_stress[p2] += 0.5*(abs(f_norm)+abs(f_slid));
+		//		bond_stress[i] = f_norm;
+		//		if (abs(f_norm) > 1e-6 ){
+		//			sum_stress += abs(f_norm);
+		//			count ++;
+		//		}
 	}
 	fin.getline(buf_line, 512);
-	double average_stress = sum_stress / count;
-	if (count > 0)
-		cout << vf << ' '<< average_stress << endl;
+	cerr << buf_line << endl;
+	//	double average_stress = sum_stress / count;
+	//	if (count > 0){
+	//			cout << vf << ' '<< average_stress << endl;
+	//	}
+	//	double lo = 4.0*pow(vf,-0.7);
 	if (back_bone){
-		for (int i=0; i< num_particle; i++){
-			bb_check[i] = 0;
-		}
-		
-		for (int i = 0; i < num_bond ; i++){
-			if (bond_stress[i] > 0.1*average_stress){
-				bb_check[ bond_p1[i] ] = 1;
-				bb_check[ bond_p2[i] ] = 1;
+		for (int i = 0; i < num_particle ; i++){
+			if (particle_stress[i] > 0.05*wall_force ){
+				bb_check[i] = 1;
 			}
 		}
 	}
-	p.clear();
-	if (back_bone){
-		for (int i=0; i< num_particle; i++){
-			if (bb_check[i] == 1){
+
+	if (equilibrium){
+		p.clear();
+		if (back_bone){
+			for (int i=0; i< num_particle; i++){
+				if (bb_check[i] == 1){
+					p.push_back(p_import[i]);
+				//	cout << "@ 3\n";
+				} else {
+				//	cout << "@ 0\n";
+				}
+				//cout << "c " << p_import[i].x - lx/2 << " 0 " << p_import[i].z - lz/2 << endl;
+			}
+			//cout << endl;
+			//		cerr << "BB"  << num_particle << endl;
+		} else {
+			for (int i=0; i< num_particle; i++){
 				p.push_back(p_import[i]);
 			}
 		}
-//		cerr << "BB"  << num_particle << endl;
-	} else {
-		for (int i=0; i< num_particle; i++){
-			p.push_back(p_import[i]);
-		}
-	}
-	
-	if (equilibrium){
-		cerr << "N : Nbb = " << num_particle << ' ' << p.size() << endl;
-		cerr << "average_stress =" << average_stress << endl;
+//		for (int i = 0; i < num_bond ; i++){
+//			cout << bond_stress[i]  << ' ';
+//		}
+//		cout << endl;
+//		cerr << "N : Nbb = " << num_particle << ' ' << p.size() << endl;
+//		cerr << "average_stress =" << average_stress << endl;
 		
 	}
 	
 	num_particle = p.size();
+//	cerr << "num_particle = " << num_particle << endl;
 //	if ( num_particle > 0 ){
 //		cerr << num_particle << endl;
 //		exit(1);
@@ -214,75 +238,105 @@ bool import_shear(vector <vec3d> &p, ifstream &fin, double lx, double lz, double
 	return equilibrium;
 }
 
-double sq_distancePeriodicBoundaries(vec3d p1, vec3d p2,double lx, double lz){
+double sq_distancePeriodicBoundaries(vec3d p1, vec3d p2,double lx, double lz, bool z_pd ){
 	if (abs(p1.x - p2.x) > lx/2){
 		if (p2.x > p1.x)
 			p2.x -= lx;
 		else
 			p2.x += lx;
 	}
-	
-	if (abs(p1.z - p2.z) > lz/2){
-		if (p2.z > p1.z)
-			p2.z -= lz;
-		else
-			p2.z += lz;
+	if (z_pd){
+		if (abs(p1.z - p2.z) > lz/2){
+			if (p2.z > p1.z)
+				p2.z -= lz;
+			else
+				p2.z += lz;
+		}
 	}
 	return (p1 - p2).sq_norm_xz();
 }
 
 
-void densityDensityCorrelationFunction(
-									   double r_min,
+void densityDensityCorrelationFunction(double r_min,
 									   double r_max,
 									   int resolution,
 									   double **ddc,
 									   vector <vec3d> &p,
-									   double lx, double lz){
+									   double lx, double lz,
+									   bool z_pd
+									   ){
 	Grid2 grid;
 	double cell_h = 2;
 	unsigned long num_particle = p.size();
+
 	double ly = 0;
 	grid.init(num_particle, lx, ly, lz, cell_h);
 	for (int i=0; i < num_particle; i++){
 		grid.entry(p[i], i);
 	}
-//	cerr << "------" << endl;
 	srand(14235);
-	if (r_max > lx/2)
+	if (r_max > lx/2){
 		r_max = lx/2;
+	}
+	if (r_max > lz){
+		r_max = lz;
+	}
+	
 	double d_logr = (log(r_max)-log(r_min))/resolution;
 	int  mmax = 100000;
-	vec3d p1,p0;
-	for (int k=0; k<resolution; k++){
+	vec3d p1, p0;
+	vector<int> neighbor;
+	for (int k=0; k < resolution; k++){
 		double r = r_min*exp(k*d_logr );
-//		cerr << "r = " << r << endl;
 		int count_p0_inside = 0;
 		int count_p1_inside = 0;
-		for (int m=0; m < mmax; m++){
+		while ( count_p0_inside < mmax ){
 			p0.set(lx*drand48(), 0, lz*drand48());
-			vector<int> neighbor;
+			neighbor.clear();
 			grid.get_neighbor_list(p0, neighbor);
-			for (int i=0; i<neighbor.size(); i++){
-				double sq_distance = sq_distancePeriodicBoundaries(p0, p[neighbor[i]], lx,lz);
+
+			for (int i=0; i < neighbor.size(); i++){
+				double sq_distance = sq_distancePeriodicBoundaries(p0, p[neighbor[i]], lx, lz, z_pd);
+
 				if (sq_distance <= 1){
 					count_p0_inside ++;
-					double theta = 2*M_PI*drand48();
-					p1.x = p0.x + r*cos(theta);
-					p1.z = p0.z + r*sin(theta);
-					if (p1.x < 0){p1.x += lx;}
-					else if (p1.x >= lx){p1.x -= lx;}
-					if (p1.z < 0){ p1.z += lz;}
-					else if (p1.z >= lz){  p1.z -= lz;  }
+					if (z_pd){
+						double theta = 2*M_PI*drand48();
+						p1.x = p0.x + r*cos(theta);
+						p1.z = p0.z + r*sin(theta);
+						if (p1.z < 0){
+							p1.z += lz;
+						} else if (p1.z >= lz){
+							p1.z -= lz;
+						}
+					} else {
+						do{
+							double theta = 2*M_PI*drand48();
+							
+							p1.x = p0.x + r*cos(theta);
+							p1.z = p0.z + r*sin(theta);
+							
+						} while (p1.z > lz-1 || p1.z < +1);
+
+					}
+					if (p1.x < 0){
+						p1.x += lx;
+					}
+					else if (p1.x >= lx){
+						p1.x -= lx;
+					}
+//					cout << p1.x << ' ' << p1.z << endl;
+					
 					vector<int> neighbor1;
 					grid.get_neighbor_list(p1, neighbor1);
 					for (int j=0; j<neighbor1.size(); j++){
-						double sq_distance1 = sq_distancePeriodicBoundaries(p1, p[neighbor1[j]], lx,lz);
+						double sq_distance1 = sq_distancePeriodicBoundaries(p1, p[neighbor1[j]], lx, lz, z_pd);
 						if (sq_distance1 < 1){
 							count_p1_inside ++;
 							break;
 						}
 					}
+					break;
 				}
 			}
 		}
@@ -297,25 +351,24 @@ int main(int argc, const char * argv[])
 	char datatype = argv[1][0];
 	string path = argv[2];
 	double lx, lz;
+	double phi;
 	double r_min = 1;
 	double r_max;
 	bool back_bone = false;
 	int resolution = 100;
-	
+	bool z_periodic_boundary;
 	/* import_type
 	 *  0: x z clusterid
 	 *  1:
 	 */
-//	int import_type;
 	char simu_name[256];
 	if (datatype =='i'){
+		z_periodic_boundary = true;
 		unsigned long i0 = path.find_first_of("2D_W*H*");
 		if (i0 != 1){
-			//import_type = 0;
 			unsigned long i1 = path.find_first_of("W",i0+1)+1 ;
 			unsigned long i2 = path.find_first_of("H",i1);
 			unsigned long i3 = path.find_first_of("_",i2);
-//			cerr << i1 << ' ' << i2 << endl;
 			char width_str[4];
 			char height_str[4];
 			sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
@@ -327,7 +380,7 @@ int main(int argc, const char * argv[])
 		sprintf(simu_name, "%s", path.substr(0,i5-3).c_str());
 		
 	} else if (datatype =='c'){
-
+		z_periodic_boundary = false;
 
 		if (argc == 4 && argv[3][0]=='b'){
 			back_bone = true;
@@ -336,28 +389,23 @@ int main(int argc, const char * argv[])
 		}
 		unsigned long i0 = path.find_first_of("D");
 		if (i0 != 1){
-			//import_type = 0;
 			unsigned long i1 = path.find_first_of("W",i0)+1 ;
 			unsigned long i2 = path.find_first_of("H",i1);
 			unsigned long i3 = path.find_first_of("_",i2);
-//			cerr << i1 << ' ' << i2 << endl;
 			char width_str[4];
 			char height_str[4];
 			sprintf(width_str, "%s", (path.substr(i1, i2-i1)).c_str());
 			sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
-
 			lx = atof(width_str);
 			lz = atof(height_str);
 		}
-		//lx = atof(argv[3]);
-		//		import_type = 1;
-//		cerr << "lx,lz = " << lx << ' ' << lz << endl;
-		
 		unsigned long i4 = path.find_first_of("conf_");
 		unsigned long i5 = path.find_last_of(".dat");
 		sprintf(simu_name, "%s", (path.substr(i4+5,(i5-3)-(i4+5))).c_str());
 		
 	} else if (datatype =='s'){
+		z_periodic_boundary = false;
+
 		//		import_type = 0;
 		unsigned long i1 = path.find_first_of("W") + 1;
 		unsigned long i2 = path.find_first_of("H",i1);
@@ -400,7 +448,10 @@ int main(int argc, const char * argv[])
 			p.push_back(vec3d(x,0,z));
 		}
 		p.pop_back();
-
+		
+		phi = M_PI*p.size()/(lx*lz);
+		cerr << "phi = " << phi << endl;
+		
 		double **ddc;
 		ddc = new double* [resolution];
 		for (int k=0; k < resolution; k++){
@@ -410,17 +461,13 @@ int main(int argc, const char * argv[])
 
 		densityDensityCorrelationFunction(r_min, r_max,
 										  resolution, ddc,
-										  p, lx,lz);
+										  p, lx, lz, z_periodic_boundary);
 		
-//		ofstream fout;
-//		ostringstream ddc_filename;
-//		ddc_filename << simu_name <<  ".dat";
-//		fout.open((ddc_filename.str()).c_str());
 		if(fout.is_open()){
 			cerr << " opened successfully"  << endl;
 			for (int k=0; k< resolution; k++){
 				fout << ddc[k][0] << ' ';
-				fout << ddc[k][1] << endl;
+				fout << ddc[k][1]/phi << endl;
 				cerr << ddc[k][1] << endl;
 			}
 		} else {
@@ -447,25 +494,26 @@ int main(int argc, const char * argv[])
 			}
 		}
 		//printf("%s successfully created\n", simu_name);
-		
-//		bool initialdata = true;
+		//		bool initialdata = true;
 		int i = 0;
 		while (true){
 			bool equilibrium = import_compaction(p, fin, lx, lz, back_bone);
-			if (i == 0){
-				equilibrium = true;
-			}
+			phi = M_PI*p.size()/(lx*lz);
+			cerr << "n = "  << p.size() << endl;
+			//			if (i == 0){
+			//				equilibrium = true;
+			//			}
 			r_max = lz/2;
-			cerr << r_min << ' ' << r_max << endl;
 			if (equilibrium){
+				cerr << "Equilibrium!" << endl;
 				double **ddc;
 				ddc = new double* [resolution];
 				for (int k=0; k < resolution; k++){
 					ddc[k] = new double [2];
 				}
 				densityDensityCorrelationFunction(r_min, r_max, resolution, ddc,
-												  p, lx, lz);
-				
+												  p, lx, lz, z_periodic_boundary);
+
 				double area_fraction = (M_PI*p.size())/(lx*lz);
 				ofstream fout;
 				ostringstream ddc_filename;
@@ -479,7 +527,7 @@ int main(int argc, const char * argv[])
 				fout << "# " << area_fraction << endl;
 				for (int k=0; k< resolution; k++){
 					fout << ddc[k][0] << ' ';
-					fout << ddc[k][1] << endl;
+					fout << ddc[k][1]/phi << endl;
 				}
 				fout.close();
 				for (int k=0; k < resolution; k++){
@@ -518,8 +566,7 @@ int main(int argc, const char * argv[])
 				
 				double area_fraction = (M_PI*p.size())/(lx*lz);
 				densityDensityCorrelationFunction(r_min, r_max, resolution, 
-												  ddc, 
-												  p, lx,lz);
+												  ddc, p, lx,lz, z_periodic_boundary);
 				ofstream fout;
 				ostringstream ddc_filename;
 				ddc_filename << simu_name << "/ddc" << i << ".dat";

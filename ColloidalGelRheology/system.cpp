@@ -61,6 +61,25 @@ void System::TimeDevStrainControlShearEuler(){
 	time += dt;
 }
 
+void System::TimeDevBendingTest(){
+
+	particle_active[0]->stackForce(-f_ex, 0);
+	particle_active[5]->stackForce(2*f_ex, 0);
+	particle_active[10]->stackForce(-f_ex, 0);
+
+ 	foreach( vector<Bond *>, bond_active, it_bond){
+		(*it_bond)->addContactForce();
+	}
+	
+	//////////////////////////////
+	// calculate
+	// x*_{j+1} and v*_{j+1}
+	foreach( vector<Particle *>, particle_active, it_particle){
+		(*it_particle)->move_Euler();
+	}
+	time += dt;
+}
+
 bool System::mechanicalEquilibrium(){
 	bool mechanical_equilibrium = false;
 	if (simulation == 's'){
@@ -121,19 +140,17 @@ void System::preProcesses(){
 	checkActiveElements();
 	calcVolumeFraction();
 	outputConfiguration('n');
-//	cerr << "@@@@@@@@@" << endl;
-
 	while(checkPercolation() == false){
 		cerr << "not percolation" << endl;
 		shiftForPercolation();
+		outputConfiguration('n');
 		makeNeighbor();
-		int bond_number_before = n_bond;
 		generateBond();
-		if ( bond_number_before == n_bond){
-			break;
-		}
-	}
+		wl[1]->addNewContact(particle_active);
+		wl[0]->addNewContact(particle_active);
 
+	}
+	calcVolumeFraction();
 	dt = dt_max;
 	setFirstTarget();
 	checkState();
@@ -146,10 +163,6 @@ void System::timeEvolution(){
 	int calc_count = 0;
 	counter_relax_for_restructuring = 0;
 	while ( time < t_next ){
-		/* Proceed applying strain when
-		 * (1) the strain does not reach to the target value.
-		 * (2) it is not relaxation process after bond breaking.
-		 */
 		if (reachStrainTarget() ||
 			counter_relax_for_restructuring < relax_for_restructuring){
 			prog_strain = false;
@@ -228,10 +241,86 @@ void System::strainControlSimulation(){
 	return;
 }
 
+void System::bendingSimulation(){
+	initialprocess = true;
+	setSimulationViscosity();
+	preparationOutput();
+	setBondGenerationDistance(2.0);
+	
+	initGrid();
+	//outputParameter(sy, fout_yap);
+	initDEM();
+	makeInitialBond(2.0002);
+	initialprocess = false;
+	checkActiveElements();
+	
+	cerr << "particle_active " << particle_active.size() << endl;
+	cerr << "bond_active " << bond_active.size() << endl;
+	dt = dt_max;
+	checkState();
+	int cnt  = 0 ;
+	double diff_x_previous = 0;
+	double time_interval = 300;
+	double time_max = time_interval;
+	for (int i = 0; i < 2 ; i++){
+		if (i==1){
+			f_ex.set(0,0,0);
+		}
+		
+		while(true){
+			TimeDevBendingTest();
+			checkBondFailure();
+			if (!regeneration_bond.empty()){
+				//outputRestructuring();
+				regeneration_onebyone();
+				counter_relax_for_restructuring = 0;
+			}
+			if (!rupture_bond.empty()){
+				//outputRestructuring();
+				rupture();
+				counter_relax_for_restructuring = 0;
+			}
+			if (cnt++ % 100 ==0){
+				
+				fout_conf << "# " << f_ex.x << endl;
+				foreach( vector<Particle *>, particle_active, it_particle){
+					cout << "c ";
+					cout << (*it_particle)->p.x -0.5*lx << ' ';
+					cout << (*it_particle)->p.y -0.5*ly << ' ';
+					cout << (*it_particle)->p.z -0.5*lz << endl;
+					
+					fout_conf << (*it_particle)->p.x -0.5*lx << ' ';
+					fout_conf << (*it_particle)->p.y -0.5*ly << ' ';
+					fout_conf << (*it_particle)->p.z -0.5*lz << ' ';
+					fout_conf << (*it_particle)->orientation.q[0] << ' ';
+					fout_conf << (*it_particle)->orientation.q[1] << ' ';
+					fout_conf << (*it_particle)->orientation.q[2] << ' ';
+					fout_conf << (*it_particle)->orientation.q[3] << endl;
+				}
+				
+				cout << "l 0 -0.01 -12 0 -0.01 12 \n";
+				cout << "l -12 -0.01 0 12 -0.01 0 \n";
+				
+				cout << endl;
+				double diff_x = particle_active[5]->p.x - particle_active[0]->p.x ;
+				
+				fout_data << time << ' ' << diff_x << ' ' << f_ex.x << ' ' << counterRegenerate << endl;
+				diff_x_previous = diff_x;
+			}
+			if ( time > time_max ){
+				break;
+			}
+		}
+		time_max +=time_interval;
+	}
+	return;
+}
+
+
 void System::outlog(){
 	if (simulation=='s'){
 		cerr << strain_x << " --> " << strain_target  << endl;
-	} else {
+	} else if (simulation=='c'){
 		cerr << volume_fraction << " --> " << vf_target  << endl;
 	}
 }
@@ -276,7 +365,7 @@ bool System::checkEndCondition(){
 		if (strain_x > max_strain_x){
 			end_simulation = true;
 		}
-	} else {
+	} else if (simulation =='c' ){
 		if (volume_fraction > max_volume_fraction){
 			end_simulation = true;
 		}
@@ -361,8 +450,8 @@ void System::preparationOutput(){
 	if(simulation == 'c'|| simulation == 's'){
 		sprintf(name_string, "%s_%s_%s",
 				parameters, init_cluster, version.c_str());
-	} else if(simulation == 't'){
-		sprintf(name_string, "doublet");
+	} else if(simulation == 'b'){
+		sprintf(name_string, "%s_%1.2f", parameters, f_ex.x );
 	}
 
 	string fn_common = (string)name_string ;
@@ -374,7 +463,7 @@ void System::preparationOutput(){
 	sprintf(fn_conf, "conf_%s.dat", fn_common.c_str());
 	sprintf(fn_deform, "deform_%s.dat", fn_common.c_str());
 	
-	if ( simulation == 't'){
+	if ( simulation == 'b'){
 		sprintf(fn_snapshot, "ss_%s.yap", fn_common.c_str());
 		fout_yap.open(fn_snapshot);
 	}
@@ -434,7 +523,7 @@ void System::generateBondAll(){
 
 void System::setSimulationViscosity()
 {
-	eta = eta_factor*bond0.c_bend;
+	eta = eta_factor*bond0.c_norm;
 	eta_rot = (4.0/3.0)*eta;
 }
 
@@ -476,14 +565,16 @@ void System::calcStress(){
 
 
 void prepareBond(BondParameter & _bond){
+	double c = 1;
 	_bond.n_max = _bond.fnc/_bond.kn;
 	_bond.s_max = _bond.fsc/_bond.ks;
 	_bond.b_max = _bond.mbc/_bond.kb;
 	_bond.t_max = _bond.mtc/_bond.kt;
-	_bond.c_norm = 2*sqrt( _bond.kn);
-	_bond.c_slid = 2*sqrt( _bond.ks);
-	_bond.c_bend = 2*sqrt( (2./5.)*_bond.kb);
-	_bond.c_tort = 2*sqrt( (2./5.)*_bond.kt);
+	_bond.c_norm = c*2*sqrt( _bond.kn);
+	_bond.c_slid = c*2*sqrt( _bond.ks);
+	_bond.c_bend = c*2*sqrt( (2./5.)*_bond.kb);
+	_bond.c_tort = c*2*sqrt( (2./5.)*_bond.kt);
+	
 	cerr << "k:" << _bond.kn << ' ' << _bond.ks << ' ' << _bond.kb << ' ' << _bond.kt << endl;
 	cerr << "critical_strain:" << _bond.n_max << ' ' << _bond.s_max << ' ';
 	cerr << _bond.b_max << ' ' << _bond.t_max << endl;
@@ -711,17 +802,25 @@ void System::importPositions()
 	}
 }
 
-void System::setRod(int m){
-	for (int i = 0 ; i < m ; i++){
-		vec3d new_p(0, 0, 2*i - m);
-		particle.push_back(new Particle(i, new_p, 0, *this) );
+void System::setLinearChain(int number_of_particles){
+	int m = number_of_particles;
+	int count_particle_number = 0;
+	for (int i = 0 ; i < m; i++){
+		vec3d new_p(0.5*lx, 0, 2*i - number_of_particles + 1 + 0.5*lz);
+		particle.push_back(new Particle(count_particle_number, new_p,
+										0, *this) );
+		++ count_particle_number;
 	}
-	n_particle = m;
+	n_particle = count_particle_number;
 	if (n_particle == 0){
 		cerr << "failed to import the initial configuration.\n";
 		exit(1);
 	}
+
+	
+	
 }
+
 
 void System::shiftCenterOfMass(vector<vec3d> &p)
 {
@@ -1027,6 +1126,7 @@ void System::outputConfiguration(char equilibrium){
 		fout_conf << (*p_iter)->orientation.q[2] << ' ';
 		fout_conf << (*p_iter)->orientation.q[3] << ' ';
 		fout_conf << (*p_iter)->init_cluster << ' ' ;
+		fout_conf << (*p_iter)->wall_connected << ' ';
 		if ((*p_iter)->wall){
 			fout_conf << 1 << ' ';
 		} else {
@@ -1165,9 +1265,11 @@ bool System::checkPercolation(){
 		particle[i]->wall_connected = -1;
 	}
 	wl[0]->wall_group.clear();
-	wl[1]->wall_group.clear();
 	wl[0]->markWallConnected();
+	
+	wl[1]->wall_group.clear();
 	wl[1]->markWallConnected();
+
 	return percolation;
 }
 
@@ -1175,55 +1277,74 @@ void System::shiftForPercolation(){
 	/* This version can deal only 2D
 	 * This is only for the cases that a percolated cluster is separated by
 	 * top and bottom walls.
-	 * If not, we have to consider all particles
-	 * for the possible collision.
+	 *
+	 * Particles connecting to top wall will be moved.
+	 * The fist collision is considered for all other particles.
+	 *
 	 */
 	double lambda_min = 1000;
-	vec3d shift(0,0,-1);
-	cerr << "wall groups:  " ;
-	cerr << wl[0]->wall_group.size() << ' ' << wl[1]->wall_group.size() << endl;
+	vec3d shift;
+	if (simulation == 's'){
+		shift.set(1,0,0);
+	}else if (simulation == 'c'){
+		shift.set(0,0,-1);
+	}
+//	outputConfiguration('e');
 	for (int i = 0; i < wl[1]->wall_group.size(); i++){
 		int i_uppder = wl[1]->wall_group[i];
 		vec3d p_up = particle[i_uppder]->p;
-		for (int j = 0; j < wl[0]->wall_group.size(); j++){
-			int i_lower = wl[0]->wall_group[j];
-			vec3d p_lo = particle[i_lower]->p;
-//			if (p_up.x > p_lo.x){
-//				p_up.x -= lx;
-//			}
-			// p1.x - p0.x > 0
-			vec3d dp = p_up - p_lo;
-			double dot_d_dp = dot(shift, dp );
-			double discriminant = dot_d_dp*dot_d_dp - (dp.sq_norm() - 4);
-
-			if (discriminant > 0 ){
-				double lambda1 = - dot_d_dp + sqrt(discriminant );
-				double lambda2 = - dot_d_dp - sqrt(discriminant );
-				if (lambda1>0 && lambda_min > lambda1){
-					lambda_min = lambda1;
-				}
-				if (lambda2>0 && lambda_min > lambda2){
-					lambda_min = lambda2;
+		for (int j = 0; j < n_particle ; j++){
+			if (particle[j]->wall_connected != 2){
+				vec3d p_lo = particle[j]->p;
+				vec3d dp = p_up - p_lo;
+				double dot_d_dp = dot(shift, dp );
+				double discriminant = dot_d_dp*dot_d_dp - (dp.sq_norm() - 4);
+				if (discriminant > 0 ){
+					double lambda1 = - dot_d_dp + sqrt(discriminant );
+					double lambda2 = - dot_d_dp - sqrt(discriminant );
+					if (lambda1>0 && lambda_min > lambda1){
+						lambda_min = lambda1;
+					}
+					if (lambda2>0 && lambda_min > lambda2){
+						lambda_min = lambda2;
+					}
 				}
 			}
 		}
 	}
-
-	if ( lambda_min != 1000){
-		for (int i = 0; i < wl[1]->wall_group.size(); i++){
-			int k = wl[1]->wall_group[i];
-			particle[k]->p += lambda_min*shift;
-			if (particle[k]->p.x > lx){
-				particle[k]->p.x -= lx;
+	double z_highest = 0;
+	double z_lowest = 10;
+	int cnt = 0;
+	for (int i = 0; i < particle.size(); i++){
+		if (particle[i]->wall_connected != 2  ){
+			cnt ++;
+			if (particle[i]->p.z > z_highest){
+				cerr << z_highest << endl;
+				z_highest = particle[i]->p.z;
 			}
-			
+		}else {
+			if (particle[i]->p.z < z_lowest){
+				z_lowest = particle[i]->p.z;
+			}
 		}
+	}
+
+	double lambda_wl_top = wl[1]->z - 1 - z_highest;
+	if ( lambda_min > lambda_wl_top){
+		lambda_min = lambda_wl_top  ;
+	}
+
+	double lambda_wl_bot = z_lowest - (wl[0]->z + 1);
+	if ( lambda_min > lambda_wl_bot){
+		lambda_min = lambda_wl_bot  ;
+	}
+	if ( lambda_min != 1000){
+		lambda_min += 1e-5; // This avoid to fail new bond generation.
 		
-		wl[1]->z_shift(-lambda_min);
+		wl[1]->moveWallGroup( lambda_min*shift );
 		
 		cerr << " lambda_min : " << lambda_min << endl;
 	}
-
 	
 }
 
@@ -1259,21 +1380,31 @@ void System::makeNeighbor(){
 
 void System::setWall()
 {
-	//double z_min = 100, z_max = 0;
-	//  ForAllParticle{
-	//if ( (*p_iter)->z() > z_max){z_max = (*p_iter)->z();}
-	//  if ( (*p_iter)->z() < z_min){z_min = (*p_iter)->z();}
-	//}
+	
+	double z_min = lz_init/2;
+	double z_max = lz_init/2;
+	ForAllParticle{
+		if ( (*p_iter)->p.z > z_max){
+			z_max = (*p_iter)->p.z;
+		}
+		if ( (*p_iter)->p.z < z_min){
+			z_min = (*p_iter)->p.z;
+		}
+	}
 	n_bot = n_particle;
 	n_top = n_particle+1;
 	//wl.push_back(new Wall(n_bot, z_min - 1.0, *this)); // wl[0] --> bot
-	wl.push_back(new Wall(n_bot, 0, *this)); // wl[0] --> bot
+	wl.push_back(new Wall(n_bot, z_min-1.0, *this)); // wl[0] --> bot
 	//  cerr << "wall created at z = " << z_min - 1.0 << endl;
 	//wl.push_back(new Wall(n_top, z_max + 1.0, *this)); // wl[1] --> top
-	wl.push_back(new Wall(n_top, lz_init, *this)); // wl[1] --> top
+	wl.push_back(new Wall(n_top, z_max+1.0, *this)); // wl[1] --> top
 	//cerr << "wall created at z = " << z_max + 1.0 << endl;
 	renew_Lz();
-	cerr << "Lz_init = " << lz << endl;
+	
+	cerr << z_min << endl;
+	cerr << z_max << endl;
+	cerr << "Lz = " << lz << endl;
+
 }
 
 void System::regeneration(){
@@ -1316,6 +1447,10 @@ void System::rupture(){
 	}
 	bond[ most_stressed_bond ]->rupture();
 	counterBreak ++;
+
+	/* I shold rewrite STL algorithm.
+	 *
+	 */
 	unsigned long i_bondactive = bond[ most_stressed_bond ]->number_activebond;
 	bond_active[ i_bondactive ] = bond_active.back();
 	bond_active[ i_bondactive ]->number_activebond = i_bondactive;
@@ -1335,24 +1470,20 @@ void System::makeInitialBond(double generation_distance){
 		vector<int> bot_list;
 		vector<int> top_list;
 		for(int i=0; i < n_particle; i++){
-			if ( particle[i]->p.z  <= 3 ){
+			if ( particle[i]->p.z  <= wl[0]->z + 1.01){
 				bot_list.push_back(i);
 			}
-			if ( particle[i]->p.z  >= lz_init - 3){
+			if ( particle[i]->p.z  >=  wl[1]->z - 1.01){
 				top_list.push_back(i);
 			}
 		}
+
 		for (int i = 0; i < bot_list.size(); i++){
-			for (int j = 0; j < top_list.size(); j++){
-				vec3d p_bot = particle[bot_list[i]]->p;
-				vec3d p_top = particle[top_list[j]]->p;
-				p_bot.z += lz_init - 2;
-				vec3d del = p_bot - p_top;
-				if ( del.sq_norm() <= 4.0001 ){
-					wl[0]->initWallParticle(bot_list[i]);
-					wl[1]->initWallParticle(top_list[j]);
-				}
-			}
+			wl[0]->initWallParticle(bot_list[i]);
+		}
+			
+		for (int i = 0; i < top_list.size(); i++){
+			wl[1]->initWallParticle(top_list[i]);
 		}
 	}
 	sq_dist_generate = tmp;
@@ -1378,6 +1509,8 @@ void System::outputRestructuring(){
 	} 
 	cout << endl;
 }
+
+
 
 
 

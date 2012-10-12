@@ -34,14 +34,12 @@ private:
 	vec3d u;
 	vector<int> neighbor;
 	vector <Particle*> wall_particle;
-	
-	
 	vec3d force;
-	double stress_sc;
 	vec3d a_velocity;
 	vec3d a_velocity_1st;
 	vec3d velocity_1st;
 	int cn_size;
+	double stress_sc;
 public:
 	Wall(int, double zInit, System &sy);
 	~Wall(){
@@ -74,7 +72,7 @@ public:
 		force += force_;
 	}
 	void move();
-	void z_shift(double dz);
+	void moveWallGroup(vec3d shift);
 	void output(ofstream &fout);
 	inline vec3d *pu(){return &u;}
 	void velocityLimit(){ velocity = velocity_1st;}
@@ -83,6 +81,5 @@ public:
 	double stressSensor_z();
 	double stressSensor_x();
 	void stressSensor(double &stress_x, double &stress_z);
-	
 };
 #endif

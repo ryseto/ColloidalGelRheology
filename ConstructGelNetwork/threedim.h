@@ -19,7 +19,7 @@
 using namespace std;
 extern double r;
 extern int n;
-extern double L;
+extern double Lx;
 
 
 void sediment_make3dNetwork(int rank, int m, int rsd);
@@ -95,7 +95,7 @@ inline vec3d randUniformSphere(double r){
 
 void prepare_fout(ofstream &fout, int rank, int rsd){
 	char name_string[64];
-	sprintf(name_string, "L%d_rank%d_rand%d", (int)(L), rank, rsd) ;
+	sprintf(name_string, "L%d_rank%d_rand%d", (int)(Lx), rank, rsd) ;
 	string fn_fout = "sfn3D_" + (string)name_string + ".dat";
 	fout.open(fn_fout.c_str());
 }
@@ -162,17 +162,17 @@ void make_fractal_object(int m, vector<vec3d> &p){
 double collision_height(vec3d po, vec3d p){
 	double h, A, B;
 	vec3d p_po = p - po;
-	if (abs(p_po.x) > L/2){
+	if (abs(p_po.x) > Lx/2){
 		if (p_po.x > 0)
-			p_po.x += -L;
+			p_po.x += -Lx;
 		else
-			p_po.x += +L;
+			p_po.x += +Lx;
 	}
-	if (abs(p_po.y) > L/2){
+	if (abs(p_po.y) > Lx/2){
 		if (p_po.y > 0)
-			p_po.y += -L;
+			p_po.y += -Lx;
 		else
-			p_po.y += +L;
+			p_po.y += +Lx;
 	}
 	
 	A = p.z - po.z;
@@ -211,8 +211,8 @@ void put_first_fo(vector<vec3d> &p, int fo_size){
 
 void drop_fo(vector<vec3d> &p, int i_premier, int fo_size){
 	int i_dernier = i_premier + fo_size;
-	double x_rand = L*drand48();
-	double y_rand = L*drand48();
+	double x_rand = Lx*drand48();
+	double y_rand = Lx*drand48();
 	double h_max = -1;
 	double z_min = 0;
 	for (int i= i_premier ; i < i_dernier; i++){
@@ -252,14 +252,14 @@ void drop_fo(vector<vec3d> &p, int i_premier, int fo_size){
 		}
 	}
 	for (int i=i_premier; i < i_dernier ; i++){
-		if (p[i].x > L)
-			p[i].x -= L;
+		if (p[i].x > Lx)
+			p[i].x -= Lx;
 		else if (p[i].x < 0)
-			p[i].x += L;
-		if (p[i].y > L)
-			p[i].y -= L;
+			p[i].x += Lx;
+		if (p[i].y > Lx)
+			p[i].y -= Lx;
 		else if (p[i].y < 0)
-			p[i].y += L;
+			p[i].y += Lx;
 	}
 }
 
@@ -316,19 +316,19 @@ void output_result(ofstream &fout, vector<vec3d> &p, int fo_size){
 			fout << setprecision(15);
 			//fout << "c " << p[k].x() << ' ' <<  p[k].y()  << ' ' <<  p[k].z() - 50 << endl;
 			while (p[k].x < 0){
-				p[k].x += L;
+				p[k].x += Lx;
 			}
 			
-			while (p[k].x > L){
-				p[k].x -= L;
+			while (p[k].x > Lx){
+				p[k].x -= Lx;
 			}
 			
 			while (p[k].y < 0){
-				p[k].y += L;
+				p[k].y += Lx;
 			}
 			
-			while (p[k].x > L){
-				p[k].y -= L;
+			while (p[k].x > Lx){
+				p[k].y -= Lx;
 			}
 			fout << p[k].x << ' ' <<  p[k].y  << ' ' <<  p[k].z << endl;
 		}
