@@ -59,6 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D912B81016B09642004787CF /* PostProcessCGR */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = PostProcessCGR; sourceTree = "<group>"; };
 		D95B781F15879BE1004590CA /* ColloidalGelRheology */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ColloidalGelRheology; sourceTree = BUILT_PRODUCTS_DIR; };
 		D95B782315879BE1004590CA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D95B782515879BE1004590CA /* ColloidalGelRheology.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ColloidalGelRheology.1; sourceTree = "<group>"; };
@@ -145,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				D95B782315879BE1004590CA /* main.cpp */,
+				D912B81016B09642004787CF /* PostProcessCGR */,
 				D95B783015879D43004590CA /* system.h */,
 				D95B783115879D6C004590CA /* system.cpp */,
 				D95B784215879F43004590CA /* bond.h */,

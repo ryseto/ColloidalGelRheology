@@ -156,6 +156,7 @@ void System::preProcesses(){
 	checkState();
 	outputData();
 	outputConfiguration('e');
+	cnt_output_config = 0;
 }
 
 void System::timeEvolution(){
@@ -209,13 +210,10 @@ void System::middleProcedures(){
 	checkStressDiff();
 	makeNeighbor();
 	optimalTimeStep();
-	static int cnt = 0;
-	if ( checkOutputStrain(1.0) || cnt > 50 ){
+	if ( cnt_output_config % interval_output_config == 0 ){
 		outputConfiguration('n');
-		cnt=0;
-	} else {
-		cnt++;
 	}
+	cnt_output_config++;
 	output_log();
 }
 
@@ -223,12 +221,18 @@ void System::strainControlSimulation(){
 	preProcesses();
 	int cnt_relaxation_loop = 0;
 	cnt_loop = 0;
+	if (simulation == 'c'){
+		interval_output_config = (int)(2.0/(wall_velocity*dt))/interval_convergence_check;
+	} else {
+		interval_output_config = 20;
+	}
+
 	while(true){
 		timeEvolution();
 		middleProcedures();
 		outlog();
 		if ( reachStrainTarget() ){
-			if ( cnt_relaxation_loop > min_relaxation_loop){
+			if (cnt_relaxation_loop > min_relaxation_loop){
 				if (cnt_relaxation_loop > max_relaxation_loop ||
 					mechanicalEquilibrium() ){
 					cerr <<"Equilibrium!"<< endl;
@@ -326,9 +330,9 @@ void System::bendingSimulation(){
 
 void System::outlog(){
 	if (simulation=='s'){
-		cerr << strain_x << " --> " << strain_target  << endl;
+		cerr << cnt_output_config << ' ' << strain_x << ": " << strain_target  << endl;
 	} else if (simulation=='c'){
-		cerr << volume_fraction << " --> " << vf_target  << endl;
+		cerr << cnt_output_config << ' ' << volume_fraction << ": " << vf_target  << endl;
 	}
 }
 

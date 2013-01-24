@@ -41,7 +41,9 @@ protected:
 	double diff_stress_convergence;
 	int interval_convergence_check;
 	int interval_makeNeighbor;
+	int interval_output_config;
 	int relax_for_restructuring;
+	int cnt_output_config;
 	/*
 	 * State parameters of system
 	 */
