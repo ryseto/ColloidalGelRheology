@@ -7,8 +7,11 @@
 //
 
 #include "particle.h"
-Particle::Particle(int particle_number_, const vec3d &position,
-				   const int _i_cluster, System &sy_){
+
+Particle::Particle(int particle_number_,
+				   const vec3d &position,
+				   const int _i_cluster,
+				   System &sy_){
 	sy = &sy_;
 	setInitial(particle_number_);
 	p = position;
@@ -20,8 +23,10 @@ Particle::Particle(int particle_number_, const vec3d &position,
 	resetForce();
 	wall = false;
 #ifdef TWODIMENSION
+	// 2D
 	cn = new ConnectPoint [6];
 #else
+	// 3D
 	cn = new ConnectPoint [12];
 #endif
 	wall_connected = 0;
@@ -67,7 +72,7 @@ void Particle::generateBond(){
 					p_pdcopy.x -= sy->lx;
 			}
 #ifndef TWODIMENSION
-			//3D
+			// 3D
 			if( abs(p.y - p_pdcopy.y) > 10. ){
 				if (p.y > p_pdcopy.y )
 					p_pdcopy.y += sy->ly;
@@ -77,9 +82,10 @@ void Particle::generateBond(){
 #endif
 			
 #ifdef TWODIMENSION
-			//2D
+			// 2D
 			bool contact_distance = (sq_dist_2d(p, p_pdcopy) <= sy->sq_dist_generate);
 #else
+			// 3D
 			bool contact_distance = (sq_dist(p, p_pdcopy) <= sy->sq_dist_generate );
 #endif
 			if ( contact_distance ) {
@@ -126,16 +132,23 @@ void Particle::move_Euler()
 	/*
 	 * The effect of eta should be checked.
 	 */
-	a_velocity = force - sy->eta*velocity;
-	a_omega = 2.5*( torque - sy->eta_rot*omega);
-	velocity += a_velocity*sy->dt;
-	omega += a_omega*sy->dt;
-	p += velocity*sy->dt;
+	if (true){
+		a_velocity = force - sy->eta*velocity;
+		a_omega    = 2.5*( torque - sy->eta_rot*omega);
+		velocity  += a_velocity*sy->dt;
+		omega     += a_omega*sy->dt;
+	} else {
+		velocity  = force*sy->dt;
+		omega     = (torque - sy->eta_rot*omega)*sy->dt;
+	}
+	
+	p         += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
 	orientation.infinitesimalRotation( d_rotation );
 	for (int i = 0; i < cn_size ; i++){
 		cn[i].u.rotateInfinitesimal( d_rotation );
 #ifndef TWODIMENSION
+		// 3D
 		cn[i].tor_angle += dot( d_rotation, cn[i].u );
 #endif
 	}
@@ -146,6 +159,7 @@ void Particle::move_Euler()
 		else if ( p.x > sy->lx )
 			p.x -= sy->lx;
 #ifndef TWODIMENSION
+		// 3D
 		if ( p.y < 0. )
 			p.y += sy->ly;
 		else if ( p.y > sy->ly )
@@ -157,19 +171,18 @@ void Particle::move_Euler()
 void Particle::output(ofstream &fout){
 	fout << "y 9" << endl;
 	fout << "@ 2" << endl;
-	
 	fout << "c " << p.x - sy->lx0 ;
 	fout << ' '  << p.y - sy->ly0 ;
 	fout << ' '  << p.z - sy->lz0 << endl;
 	vec3d vec[6];
-	vec[0].set(0.5,0,0);
-	vec[1].set(0,0.5,0);
-	vec[2].set(0,0,0.5);
-	vec[3].set(-0.5,0,0);
-	vec[4].set(0,-0.5,0);
-	vec[5].set(0,0,-0.5);
+	vec[0].set( 0.5,   0,   0);
+	vec[1].set( 0  , 0.5,   0);
+	vec[2].set( 0  ,   0, 0.5);
+	vec[3].set(-0.5,   0,   0);
+	vec[4].set( 0  ,-0.5,   0);
+	vec[5].set( 0  ,   0,-0.5);
 	fout << "y 10" << endl;
-	for(int i=0;i<6;i ++){
+	for(int i=0; i<6; i ++){
 		vec[i] = orientation.ori_forward(vec[i]);
 		fout << "l " << p.x - sy->lx0 ;
 		fout << ' '  << p.y - sy->ly0 ;
@@ -204,18 +217,20 @@ void Particle::setRotate(vec3d axis, const double angle){
 	double d_ang = 0.001;
 	while(tmp_angle < angle){
 		tmp_angle += d_ang;
-#ifndef TWODIMENSION
+#ifdef TWODIMENSION
+		// 2D
+		d_rotation = d_ang;
+		orientation.infinitesimalRotation( d_rotation );
+		for (int i = 0; i < cn_size ; i++){
+			cn[i].u.rotateInfinitesimal( d_rotation);
+		}
+#else
+		// 3D
 		d_rotation = d_ang*axis;
 		orientation.infinitesimalRotation( d_rotation );
 		for (int i = 0; i < cn_size ; i++){
 			cn[i].u.rotateInfinitesimal( d_rotation );
 			cn[i].tor_angle += dot( d_rotation, cn[i].u );
-		}
-#else
-		d_rotation = d_ang;
-		orientation.infinitesimalRotation( d_rotation );
-		for (int i = 0; i < cn_size ; i++){
-			cn[i].u.rotateInfinitesimal( d_rotation);
 		}
 #endif
 	}
@@ -273,6 +288,7 @@ void Particle::x_shift( double dx ){
 		p.x += sy->lx;
 	}
 }
+
 void Particle::outputBond(){
 	cout << "@ 2" << endl;
 	cout << "t " << p.x - sy->lx0 << ' ' << p.y- sy->ly0  << ' ' << p.z- sy->lz0 << ' ' << particle_number << endl;
@@ -282,7 +298,6 @@ void Particle::outputBond(){
 		cout << p.y + cn[i].u.y - sy->ly0  << ' ';
 		cout << p.z + cn[i].u.z - sy->lz0  << endl;
 	}
-	
 	if (cn_size >= 5){
 		cout << "r 1 " << endl;
 		cout << "@ 3 " << endl;
@@ -292,6 +307,3 @@ void Particle::outputBond(){
 		cout << p.z - sy->lz0  << endl;
 	}
 }
-
-
-

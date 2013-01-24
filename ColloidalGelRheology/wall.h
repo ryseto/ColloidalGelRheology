@@ -29,7 +29,6 @@ enum WallType {top, bot};
 class Wall{
 private:
 	System *sy;
-	int objectID;
 	WallType walltype;
 	vec3d u;
 	vector<int> neighbor;
@@ -56,7 +55,7 @@ public:
 		return wall_particle.size();
 	}
 	void getParticles(vector<int> &particles_list);
-	bool markWallConnected();
+	void markWallConnected();
 	
 	void addNewContact(vector<Particle *> &particle_active);
 	void initWallParticle(int i);

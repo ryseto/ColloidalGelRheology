@@ -37,7 +37,7 @@ class Bond {
 	vec3d moment_bending;
 	double moment_torsion;
 	vec3d ang_bend;
-	vec3d ang_bend_old;
+//	vec3d ang_bend_old;
 #else
 	/* 2D */
 	double torque0;
@@ -45,7 +45,7 @@ class Bond {
 	double moment_sliding;
 	double moment_bending;
 	double ang_bend;
-	double ang_bend_old;
+//	double ang_bend_old;
 #endif
 	vec3d force_sliding;
 
@@ -56,14 +56,14 @@ class Bond {
 	 */
 	vec3d u_vector[2];
 	vec3d u_vector_initial[2];
-	double q_old; // r-2
+//	double q_old; // r-2
 	vec3d d_slid;
-	vec3d d_slid_old;
+//	vec3d d_slid_old;
 	vec3d sum_sliding;
 	
 	
 	double ang_tort;
-	double ang_tort_old;
+//	double ang_tort_old;
 	//	double damper_tortion;
 	//double damper_normal;
 	//vec3d damper_sliding;
@@ -79,7 +79,7 @@ class Bond {
 	Particle *p_particle0;
 	Particle *p_particle1;
 	
-	double des[4];
+//	double des[4];
 	double sq_fsc;
 	double sq_mbc;
 	double sq_mtc;
@@ -112,7 +112,7 @@ public:
 	
 	double r;
 	/*
-	 *  Evaluation of the rupture condition
+	 *  To compare the stress.
 	 */
 	double D_function;
 	/*

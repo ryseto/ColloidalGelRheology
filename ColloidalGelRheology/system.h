@@ -49,6 +49,7 @@ protected:
 	vec3d force_wall;
 	double time;
 	double volume_fraction;
+	double volume_fraction_init;
 //	double area_fraction;
 	double strain_x;
 	double stress_x;
@@ -86,6 +87,10 @@ protected:
 	 */
 	bool prog_strain;
 	int counter_relax_for_restructuring;
+	int min_relaxation_loop;
+	int max_relaxation_loop;
+	int cnt_loop;
+
 	double volumefraction_increment;
 	double strain_target; // next equilibrium for shear
 	double vf_target;// next equilibrium for compaction
@@ -118,7 +123,7 @@ private:
 	void checkState();
 	void checkBondFailure();
 	void regeneration();
-	void regeneration_onebyone();
+//	void regeneration_onebyone();
 	void rupture();
 	void TimeDevStrainControlCompactionEuler();
 	void TimeDevStrainControlShearEuler();

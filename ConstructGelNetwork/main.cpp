@@ -45,11 +45,19 @@ int main (int argc, const char * argv[])
             buildSpaceFillingNetwork2D(filling, rank, rsd, vol_frac);
             break;
         case 3:
-			//       make3dNetwork(rank, m, rsd);
+			//make3dNetwork(rank, m, rsd);
             break;
         default:
             cerr << "dimension = 2 or 3" << endl;
             return 1;
     }
 }
+
+
+
+
+
+
+
+
 

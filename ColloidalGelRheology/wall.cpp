@@ -10,14 +10,12 @@
 
 #include "wall.h"
 
-Wall::Wall(int _objectID, double _z, System &sy_)
-: objectID (_objectID), z(_z){
+Wall::Wall(int topbot, double _z, System &sy_): z(_z){
 	sy = &sy_;
-
-	if ( objectID == sy->n_top){
+	if ( topbot == sy->n_top){
 		walltype = top;
 		u.set(0., 0., -1.);
-	} else if ( objectID ==	sy->n_bot){
+	} else if ( topbot ==	sy->n_bot){
 		walltype = bot;
 		u.set(0., 0., 1.);
 	}
@@ -142,12 +140,15 @@ void Wall::stressSensor(double &stress_x, double &stress_z){
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->resetForce();
 	}
-#ifndef TWODIMENSION
-	stress_x = force_x / (sy->lx*sy->ly);
-	stress_z = force_z / (sy->lx*sy->ly);
-#else
+	
+#ifdef TWODIMENSION
+	// 2D
 	stress_x = force_x / (sy->lx*2.0);
 	stress_z = force_z / (sy->lx*2.0);
+#else
+	// 3D
+	stress_x = force_x / (sy->lx*sy->ly);
+	stress_z = force_z / (sy->lx*sy->ly);
 #endif
 }
 
@@ -166,10 +167,12 @@ double Wall::stressSensor_z(){
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->resetForce();
 	}
-#ifndef TWODIMENSION
-	stress_sc = force_z / (sy->lx*sy->ly);
-#else
+#ifdef TWODIMENSION
+	// 2D
 	stress_sc = force_z / (sy->lx*2.0);
+#else
+	// 3D
+	stress_sc = force_z / (sy->lx*sy->ly);
 #endif
 	return stress_sc;
 }
@@ -189,10 +192,12 @@ double Wall::stressSensor_x(){
 		(*iter_p)->resetForce();
 	}
 	//cerr << force_x << endl;
-#ifndef TWODIMENSION
-	stress_sc = force_x / (sy->lx*sy->ly);
-#else
+#ifdef TWODIMENSION
+	// 2D
 	stress_sc = force_x / (sy->lx*2.0);
+#else
+	// 3D
+	stress_sc = force_x / (sy->lx*sy->ly);
 #endif
 	return stress_sc;
 }
@@ -205,22 +210,22 @@ void Wall::getParticles(vector<int> &particles_list){
 	}
 }
 
-bool Wall::markWallConnected(){
+void Wall::markWallConnected(){
 	int wt;
 	if (walltype == bot){
 		wt = 1;  // bt
 	} else {
 		wt = 2; // top
 	}
-	bool percolation = false;
+	//	bool percolation = false;
 	foreach( vector <Particle* >, wall_particle, iter_p){
 		(*iter_p)->markWallConnected(wt, wall_group);
-		if ( sy->percolation == true){
-			percolation = true;
-		}
+		//if ( sy->percolation == true){
+		//	percolation = true;
+		//}
 	}
 	cerr << "wall" << wt << " : "  << wall_group.size() << endl;
-	return false;
+	//return false;
 }
 
 

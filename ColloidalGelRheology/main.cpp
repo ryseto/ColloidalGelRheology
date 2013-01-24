@@ -52,7 +52,6 @@ void rheologyTest(int argc, char *const argv[], System &sy){
 		cerr_command_usage();
 		exit(1);
 	}
-
 	sy.setParameterFile(argv[2]);
 	sy.setVersion(argv[4]);
 	/* read files */

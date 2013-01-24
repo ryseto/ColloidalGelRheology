@@ -301,7 +301,18 @@ void densityDensityCorrelationFunction(double r_min,
 				if (sq_distance <= 1){
 					count_p0_inside ++;
 					if (z_pd){
-						double theta = 2*M_PI*drand48();
+						double theta ;
+						do{
+							theta = 2*M_PI*drand48();
+						} while ( abs(theta) < M_PI/2 ||  abs(theta - M_PI) < M_PI/2 );
+						
+						//			while(true){
+						//			theta = 2*M_PI*drand48();
+						//			if (abs(theta) < M_PI/4  || abs(theta - M_PI) < M_PI/4  )
+						//				break;
+						//				if (abs(theta) > M_PI/4 && abs(theta - M_PI) > M_PI/4 )
+						//					break;
+						//			};
 						p1.x = p0.x + r*cos(theta);
 						p1.z = p0.z + r*sin(theta);
 						if (p1.z < 0){
@@ -344,6 +355,33 @@ void densityDensityCorrelationFunction(double r_min,
 		ddc[k][0] = r ;
 		ddc[k][1] = (double)count_p1_inside / count_p0_inside;
 	}
+}
+
+void outputZaverageVolumeFraction( vector <vec3d> &p, double lx, double lz , ofstream &fout_phi_z){
+	int nz = 20;
+	int *z_cnt;
+	z_cnt = new int [nz];
+	for (int iz=0; iz < nz ; iz++){
+		z_cnt[iz] = 0;
+	}
+	double dz = lz / nz;
+	for (int i=0; i < p.size(); i++){
+		if ( p[i].z > 0 &&
+			p[i].z < lz  ){
+			int iz = (int)( p[i].z/dz);
+			z_cnt[iz]++;
+		}
+	}
+	
+	for (int iz = 0; iz < nz ; iz++){
+		fout_phi_z <<  iz*dz + 0.5*dz - lz/2 << ' ' << z_cnt[iz]*M_PI / (lx * dz) << endl;
+	}
+	
+	
+	fout_phi_z.close();
+	delete [] z_cnt;
+	
+	
 }
 
 int main(int argc, const char * argv[])
@@ -430,26 +468,37 @@ int main(int argc, const char * argv[])
 	ifstream fin;
 	fin.open( path.c_str());
 	
-	
 
 	vector <vec3d> p;
 	if (datatype == 'i'){
 		ofstream fout;
+		ofstream fout_phi_z;
 		string simu_name_str = simu_name;
 		string outpuffile = "dcf_" + simu_name_str + ".dat";
+		string phiz_filename = "phi_z_" + simu_name_str + ".dat";
+
+		
+		
 		cerr << outpuffile << endl;
 		
 		fout.open( outpuffile.c_str());
+		fout_phi_z.open( phiz_filename.c_str());
+
+		
 		double x, z;
 		int tmp;
+		
+		
 		while(!fin.eof()){
 			fin >> x >> z >> tmp;
 			cerr << x << ' ' << z << endl;
 			p.push_back(vec3d(x,0,z));
 		}
+	
+		
 		p.pop_back();
 		
-		phi = M_PI*p.size()/(lx*lz);
+		phi = M_PI*p.size()/(lx*lz);//
 		cerr << "phi = " << phi << endl;
 		
 		double **ddc;
@@ -475,10 +524,18 @@ int main(int argc, const char * argv[])
 		}
 		fout.close();
 		
+		
+
+			
 		for (int k=0; k < resolution; k++){
 			delete [] ddc[k];
 		}
 		delete [] ddc;
+		
+
+		outputZaverageVolumeFraction(p, lx, lz , fout_phi_z);
+		
+		fout_phi_z.close();
 		//densityDensityCorrelationFunction(p, lx, lz);
 		// densityDensityCorrelationFunction2(p, lx,lz, fout);
 		fout.close();
@@ -513,27 +570,36 @@ int main(int argc, const char * argv[])
 				}
 				densityDensityCorrelationFunction(r_min, r_max, resolution, ddc,
 												  p, lx, lz, z_periodic_boundary);
-
 				double area_fraction = (M_PI*p.size())/(lx*lz);
 				ofstream fout;
+				ofstream fout_phi_z;
 				ostringstream ddc_filename;
+				ostringstream phiz_filename;
+
 				if (back_bone){
 					ddc_filename << simu_name <<  "/bb_ddc" << i << ".dat";
+					
 				} else {
 					ddc_filename << simu_name <<  "/ddc" << i << ".dat";
-					
+					phiz_filename << simu_name <<  "/phi_z_" << i << ".dat";
 				}
 				fout.open(ddc_filename.str().c_str());
 				fout << "# " << area_fraction << endl;
 				for (int k=0; k< resolution; k++){
 					fout << ddc[k][0] << ' ';
-					fout << ddc[k][1]/phi << endl;
+					fout << ddc[k][																										1]/phi << endl;
 				}
 				fout.close();
+				
 				for (int k=0; k < resolution; k++){
 					delete [] ddc[k];
 				}
 				delete [] ddc;
+				////////////////////////////////////////////////////////////////////////
+				fout_phi_z.open( phiz_filename.str().c_str());
+				outputZaverageVolumeFraction(p, lx, lz, fout_phi_z);
+				fout_phi_z.close();
+				////////////////////////////////////////////////////////////////////////
 				i++;
 			}
 		}

@@ -29,8 +29,8 @@ System::~System(){
 
 void System::TimeDevStrainControlCompactionEuler(){
 	if(prog_strain){
-		wl[0]->compactionStrainControl( wall_velocity ); // bot
-		wl[1]->compactionStrainControl(-wall_velocity ); // top
+		wl[0]->compactionStrainControl(  wall_velocity ); // bot
+		wl[1]->compactionStrainControl( -wall_velocity ); // top
 	}
  	foreach( vector<Bond *>, bond_active, it_bond){
 		(*it_bond)->addContactForce();
@@ -46,8 +46,8 @@ void System::TimeDevStrainControlCompactionEuler(){
 
 void System::TimeDevStrainControlShearEuler(){
 	if(prog_strain){
-		wl[0]->shearingStrainControl(-wall_velocity ); // bot
-		wl[1]->shearingStrainControl(+wall_velocity ); // top
+		wl[0]->shearingStrainControl( -wall_velocity ); // bot
+		wl[1]->shearingStrainControl(  wall_velocity ); // top
 	}
  	foreach( vector<Bond *>, bond_active, it_bond){
 		(*it_bond)->addContactForce();
@@ -63,9 +63,9 @@ void System::TimeDevStrainControlShearEuler(){
 
 void System::TimeDevBendingTest(){
 
-	particle_active[0]->stackForce(-f_ex, 0);
-	particle_active[5]->stackForce(2*f_ex, 0);
-	particle_active[10]->stackForce(-f_ex, 0);
+	particle_active[0]->stackForce(-0.5*f_ex, 0);
+	particle_active[5]->stackForce(f_ex, 0);
+	particle_active[10]->stackForce(-0.5*f_ex, 0);
 
  	foreach( vector<Bond *>, bond_active, it_bond){
 		(*it_bond)->addContactForce();
@@ -96,8 +96,8 @@ bool System::mechanicalEquilibrium(){
 		if ((diff_stress_x < diff_stress_convergence
 			 ||  stress_x < stress_minimum)
 			&& stress_x_change < stress_change_convergence
-			&& max_velocity < max_velocity_convergence
-			&& max_ang_velocity < max_ang_velocity_convergence
+			&& max_velocity < max_velocity_convergence // less important
+			&& max_ang_velocity < max_ang_velocity_convergence // less important
 			&& counterRegenerate_before == counterRegenerate
 			){
 			mechanical_equilibrium =  true;
@@ -180,7 +180,7 @@ void System::timeEvolution(){
 			checkBondFailure();
 			if (!regeneration_bond.empty()){
 				//outputRestructuring();
-				regeneration_onebyone();
+				regeneration();
 				counter_relax_for_restructuring = 0;
 			}
 			if (!rupture_bond.empty()){
@@ -205,38 +205,49 @@ void System::timeEvolution(){
 void System::middleProcedures(){
 	simuAdjustment();
 	calcStress();
-
 	checkState();
 	checkStressDiff();
 	makeNeighbor();
 	optimalTimeStep();
-	if ( checkOutputStrain(1.0) ){
+	static int cnt = 0;
+	if ( checkOutputStrain(1.0) || cnt > 50 ){
 		outputConfiguration('n');
+		cnt=0;
+	} else {
+		cnt++;
 	}
 	output_log();
 }
 
 void System::strainControlSimulation(){
 	preProcesses();
+	int cnt_relaxation_loop = 0;
+	cnt_loop = 0;
 	while(true){
 		timeEvolution();
 		middleProcedures();
 		outlog();
 		if ( reachStrainTarget() ){
-			if (mechanicalEquilibrium()){
-				cerr <<"Equilibrium!"<< endl;
-				calcStress();
-				/*  Output */
-				outputData();
-				outputConfiguration('e');
-				monitorDeformation('e');
-				/*  Prepare next step */
-				setTarget();
-				if (checkEndCondition()){
-					break;
+			if ( cnt_relaxation_loop > min_relaxation_loop){
+				if (cnt_relaxation_loop > max_relaxation_loop ||
+					mechanicalEquilibrium() ){
+					cerr <<"Equilibrium!"<< endl;
+					calcStress();
+					/*  Output */
+					outputData();
+					outputConfiguration('e');
+					monitorDeformation('e');
+					/*  Prepare next step */
+					setTarget();
+					if (checkEndCondition()){
+						break;
+					}
+					cnt_relaxation_loop = 0;
 				}
 			}
+			cnt_relaxation_loop ++;
 		}
+		cnt_loop ++;
 	}
 	return;
 }
@@ -246,7 +257,6 @@ void System::bendingSimulation(){
 	setSimulationViscosity();
 	preparationOutput();
 	setBondGenerationDistance(2.0);
-	
 	initGrid();
 	//outputParameter(sy, fout_yap);
 	initDEM();
@@ -259,7 +269,6 @@ void System::bendingSimulation(){
 	dt = dt_max;
 	checkState();
 	int cnt  = 0 ;
-	double diff_x_previous = 0;
 	double time_interval = 300;
 	double time_max = time_interval;
 	for (int i = 0; i < 2 ; i++){
@@ -272,7 +281,7 @@ void System::bendingSimulation(){
 			checkBondFailure();
 			if (!regeneration_bond.empty()){
 				//outputRestructuring();
-				regeneration_onebyone();
+				regeneration();
 				counter_relax_for_restructuring = 0;
 			}
 			if (!rupture_bond.empty()){
@@ -305,7 +314,6 @@ void System::bendingSimulation(){
 				double diff_x = particle_active[5]->p.x - particle_active[0]->p.x ;
 				
 				fout_data << time << ' ' << diff_x << ' ' << f_ex.x << ' ' << counterRegenerate << endl;
-				diff_x_previous = diff_x;
 			}
 			if ( time > time_max ){
 				break;
@@ -315,7 +323,6 @@ void System::bendingSimulation(){
 	}
 	return;
 }
-
 
 void System::outlog(){
 	if (simulation=='s'){
@@ -355,7 +362,7 @@ void System::setFirstTarget(){
 	if (simulation == 's'){
 		strain_target = step_strain_x;
 	} else {
-		vf_target = volume_fraction / initial_compaction;
+		vf_target = volume_fraction_init / initial_compaction;
 	}
 }
 
@@ -509,7 +516,7 @@ void System::generateBond(){
 	if (bond_number_before < n_bond){
 		for (int i = bond_number_before; i < n_bond; i++){
 			bond_active.push_back( bond[i] );
-			bond[i]->number_activebond  = bond_active.size() - 1;
+			bond[i]->number_activebond = bond_active.size() - 1;
 		}
 	}
 	return;
@@ -521,9 +528,8 @@ void System::generateBondAll(){
 	}
 }
 
-void System::setSimulationViscosity()
-{
-	eta = eta_factor*bond0.c_norm;
+void System::setSimulationViscosity(){
+	eta = eta_factor*2*sqrt(bond0.kb);
 	eta_rot = (4.0/3.0)*eta;
 }
 
@@ -565,15 +571,14 @@ void System::calcStress(){
 
 
 void prepareBond(BondParameter & _bond){
-	double c = 1;
 	_bond.n_max = _bond.fnc/_bond.kn;
 	_bond.s_max = _bond.fsc/_bond.ks;
 	_bond.b_max = _bond.mbc/_bond.kb;
 	_bond.t_max = _bond.mtc/_bond.kt;
-	_bond.c_norm = c*2*sqrt( _bond.kn);
-	_bond.c_slid = c*2*sqrt( _bond.ks);
-	_bond.c_bend = c*2*sqrt( (2./5.)*_bond.kb);
-	_bond.c_tort = c*2*sqrt( (2./5.)*_bond.kt);
+//	_bond.c_norm = c*2*sqrt( _bond.kn);
+//	_bond.c_slid = c*2*sqrt( _bond.ks);
+//	_bond.c_bend = c*2*sqrt( (2./5.)*_bond.kb);
+//	_bond.c_tort = c*2*sqrt( (2./5.)*_bond.kt);
 	
 	cerr << "k:" << _bond.kn << ' ' << _bond.ks << ' ' << _bond.kb << ' ' << _bond.kt << endl;
 	cerr << "critical_strain:" << _bond.n_max << ' ' << _bond.s_max << ' ';
@@ -685,7 +690,6 @@ void System::readParameter(const string &codeword, const string &value)
 	keylist["initial_compaction:"]=11; const int _initial_compaction=11;
 	keylist["volumefraction_increment:"]=12; const int _volumefraction_increment=12;
 	keylist["max_volume_fraction:"]=13; const int _max_volume_fraction=13;
-	
 	keylist["step_strain_x:"]=14; const int _step_strain_x=14;
 	keylist["max_strain_x:"]=15; const int _max_strain_x=15;
 	keylist["wall_velocity:"]=20;const int _wall_velocity=20;
@@ -699,9 +703,12 @@ void System::readParameter(const string &codeword, const string &value)
 	keylist["max_ang_velocity_convergence:"]=34; const int _max_ang_velocity_convergence=34;
 	keylist["diff_stress_convergence:"]=35;const int _diff_stress_convergence=35;
 	keylist["stress_change_convergence:"]=36;const int _stress_change_convergence=36;
-	
 	keylist["stress_minimum:"]=37; const int _stress_minimum=37;
+	keylist["min_relaxation_loop:"] =38; const int _min_relaxation_loop=38;
+	keylist["max_relaxation_loop:"] =39; const int _max_relaxation_loop=39;
+
 	cerr << codeword << ' ' << value << endl;
+
 	switch(keylist[codeword]){
 		case _bond0_file: bond0_file = value; break;
 		case _bond1_file: bond1_file = value; break;
@@ -717,13 +724,13 @@ void System::readParameter(const string &codeword, const string &value)
 		case _step_strain_x: step_strain_x = atof(value.c_str()); break;
 		case _max_strain_x: max_strain_x = atof(value.c_str()); break;
 		case _max_move_step: max_move_step = atof(value.c_str()); break;
-
-			
-		case _volumefraction_increment: volumefraction_increment = atof(value.c_str());; break;
-		case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str());; break;
-		case _stress_change_convergence: stress_change_convergence = atof(value.c_str());; break;
+		case _volumefraction_increment: volumefraction_increment = atof(value.c_str()); break;
+		case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str()); break;
+		case _stress_change_convergence: stress_change_convergence = atof(value.c_str()); break;
 		case _relax_for_restructuring: relax_for_restructuring = atoi(value.c_str()); break;
 		case _stress_minimum: stress_minimum = atof(value.c_str()); break;
+		case _min_relaxation_loop: min_relaxation_loop = atoi(value.c_str()); break;
+		case _max_relaxation_loop: max_relaxation_loop = atoi(value.c_str()); break;
 		default:
 			cerr << "The codeword " << codeword << " is'nt associated with an parameter" << endl;
 			exit(1);
@@ -800,6 +807,9 @@ void System::importPositions()
 		cerr << "failed to import the initial configuration.\n";
 		exit(1);
 	}
+	volume_fraction_init = n_particle * M_PI / (lx*lz_init);
+	cerr << "volume_fraction_init = " << volume_fraction_init << endl;
+
 }
 
 void System::setLinearChain(int number_of_particles){
@@ -1064,6 +1074,7 @@ void System::output_log()
 		fout_log << "#25 stress_z_change\n";
 		fout_log << "#26 stress_x_change\n";
 		fout_log << "#27 kinetic_energy\n";
+		fout_log << "#28 cnt_loop\n";
 	}
 	
 	fout_log << time << ' '; //1
@@ -1092,7 +1103,8 @@ void System::output_log()
 	fout_log << diff_stress_x << ' ' ; //24
 	fout_log << stress_z_change << ' '; // 25
 	fout_log << stress_x_change << ' '; // 26
-	fout_log << kinetic_energy  << endl; // 27
+	fout_log << kinetic_energy  << ' '; // 27
+	fout_log << cnt_loop << endl;
 }
 
 void System::outputConfiguration(char equilibrium){
@@ -1380,7 +1392,6 @@ void System::makeNeighbor(){
 
 void System::setWall()
 {
-	
 	double z_min = lz_init/2;
 	double z_max = lz_init/2;
 	ForAllParticle{
@@ -1407,16 +1418,17 @@ void System::setWall()
 
 }
 
-void System::regeneration(){
-	// To be checked
-	foreach(vector<int>, regeneration_bond, b){
-		bond[*b]->regeneration();
-		counterRegenerate ++;
-	}
-	regeneration_bond.clear();
-}
+//void System::regeneration(){
+//	// To be checked
+//	foreach(vector<int>, regeneration_bond, b){
+//		bond[*b]->regeneration();
+//		counterRegenerate ++;
+//	}
+//	regeneration_bond.clear();
+//}
 
-void System::regeneration_onebyone(){
+
+void System::regeneration(){
 	int most_stressed_bond = regeneration_bond[0];
 	double D_max = bond[most_stressed_bond]->D_function;
 	unsigned long n_regeneration_bond = regeneration_bond.size();
@@ -1432,6 +1444,8 @@ void System::regeneration_onebyone(){
 	counterRegenerate ++;
 	regeneration_bond.clear();
 }
+
+
 
 void System::rupture(){
 	int most_stressed_bond = rupture_bond[0] ;
