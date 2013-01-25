@@ -81,6 +81,10 @@ void System::TimeDevBendingTest(){
 }
 
 bool System::mechanicalEquilibrium(){
+	static int cnt_check = 0;
+	
+	
+	
 	bool mechanical_equilibrium = false;
 	if (simulation == 's'){
 		/* Check the equilibrium condition for shear
@@ -112,18 +116,54 @@ bool System::mechanicalEquilibrium(){
 		 * (5) No restructuring.
 		 *  ---------> The equilibrium requires (1)-(5).
 		 */
+		max_displacement = 0;
+		for (int i = 0; i< n_particle;i++){
+			vec3d disp = particle[i]->p - pos_previous[i];
+			if (disp.x > lx0){
+				disp.x -= lx;
+			} else if (disp.x < -lx0){
+				disp.x += lx;
+			}
+			if (disp.y > ly0){
+				disp.y -= ly;
+			} else if (disp.x < -ly0){
+				disp.y += ly;
+			}
+			
+			if (disp.norm() > max_displacement){
+				max_displacement = disp.norm();
+			}
+		}
+		
 
-		if (stress_z_change < stress_change_convergence
-			&& diff_stress_z < diff_stress_convergence
+		if (cnt_check > 0
+			&& counterRegenerate_before == counterRegenerate
+			&& stress_z_change < stress_change_convergence
 			&& max_velocity < max_velocity_convergence
 			&& max_ang_velocity < max_ang_velocity_convergence
-			&& counterRegenerate_before == counterRegenerate
-			){
-			mechanical_equilibrium =  true;
+			&&
+			(diff_stress_z < diff_stress_convergence
+			 || max_displacement < eq_max_displacement))
+		{
+			mechanical_equilibrium = true;
+		} else {
+			mechanical_equilibrium = false;
 		}
+		
 	}
 	counterRegenerate_before = counterRegenerate;
+	
+	
+	for (int i = 0; i < n_particle ; i++){
+		pos_previous[i] = particle[i]->p;
+	}
+	cnt_check ++;
+	if (mechanical_equilibrium == true){
+		cnt_check = 0;
+	}
+	
 	return mechanical_equilibrium;
+	
 }
 
 void System::preProcesses(){
@@ -148,7 +188,6 @@ void System::preProcesses(){
 		generateBond();
 		wl[1]->addNewContact(particle_active);
 		wl[0]->addNewContact(particle_active);
-
 	}
 	calcVolumeFraction();
 	dt = dt_max;
@@ -156,6 +195,11 @@ void System::preProcesses(){
 	checkState();
 	outputData();
 	outputConfiguration('e');
+	pos_previous.resize(n_particle);
+	for (int i = 0; i < n_particle ; i++){
+		pos_previous[i] = particle[i]->p;
+	}
+	
 	cnt_output_config = 0;
 }
 
@@ -213,20 +257,23 @@ void System::middleProcedures(){
 	if ( cnt_output_config % interval_output_config == 0 ){
 		outputConfiguration('n');
 	}
-	cnt_output_config++;
 	output_log();
+	cnt_output_config++;
+	
 }
 
 void System::strainControlSimulation(){
 	preProcesses();
 	int cnt_relaxation_loop = 0;
 	cnt_loop = 0;
+	max_displacement = 0;
 	if (simulation == 'c'){
 		interval_output_config = (int)(2.0/(wall_velocity*dt))/interval_convergence_check;
 	} else {
 		interval_output_config = 20;
 	}
-
+	
+//	cerr << interval_output_config << endl;
 	while(true){
 		timeEvolution();
 		middleProcedures();
@@ -243,9 +290,12 @@ void System::strainControlSimulation(){
 					monitorDeformation('e');
 					/*  Prepare next step */
 					setTarget();
+					
 					if (checkEndCondition()){
 						break;
 					}
+					
+
 					cnt_relaxation_loop = 0;
 				}
 			}
@@ -710,6 +760,7 @@ void System::readParameter(const string &codeword, const string &value)
 	keylist["stress_minimum:"]=37; const int _stress_minimum=37;
 	keylist["min_relaxation_loop:"] =38; const int _min_relaxation_loop=38;
 	keylist["max_relaxation_loop:"] =39; const int _max_relaxation_loop=39;
+	keylist["eq_max_displacement:"] =40; const int _eq_max_displacement=40;
 
 	cerr << codeword << ' ' << value << endl;
 
@@ -735,6 +786,7 @@ void System::readParameter(const string &codeword, const string &value)
 		case _stress_minimum: stress_minimum = atof(value.c_str()); break;
 		case _min_relaxation_loop: min_relaxation_loop = atoi(value.c_str()); break;
 		case _max_relaxation_loop: max_relaxation_loop = atoi(value.c_str()); break;
+		case _eq_max_displacement: eq_max_displacement = atof(value.c_str()); break;
 		default:
 			cerr << "The codeword " << codeword << " is'nt associated with an parameter" << endl;
 			exit(1);
@@ -1079,6 +1131,7 @@ void System::output_log()
 		fout_log << "#26 stress_x_change\n";
 		fout_log << "#27 kinetic_energy\n";
 		fout_log << "#28 cnt_loop\n";
+		fout_log << "#29 max_displacement\n";
 	}
 	
 	fout_log << time << ' '; //1
@@ -1108,7 +1161,8 @@ void System::output_log()
 	fout_log << stress_z_change << ' '; // 25
 	fout_log << stress_x_change << ' '; // 26
 	fout_log << kinetic_energy  << ' '; // 27
-	fout_log << cnt_loop << endl;
+	fout_log << cnt_loop << ' ';
+	fout_log << max_displacement << endl;
 }
 
 void System::outputConfiguration(char equilibrium){

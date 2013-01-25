@@ -69,7 +69,6 @@ while ( 1 ){
         $initial = 0;
     }
 
-	
     if ($equiv eq "e"){
         printf  "equi\n";
         printf OUT3 "1\n";
@@ -118,17 +117,22 @@ while ( 1 ){
         $stress[$p1] += 0.5*(abs($fn) + abs($fs));
     }
 	
-	#    if ($equiv eq "e"){
-	
-	for ($k=0; $k < 20; $k++ ){
-        if ($first == 1){
-            $first = 0;
-        } else {
-            printf OUT "\n" ;
-        }
+	#	for ($k=0; $k < 20; $k++ ){
+	if ($first == 0 && $equiv eq "e"){
+		for ($k=0; $k < 10; $k++ ){
+			printf OUT "\n" ;
+			&outputYaplot;
+		}
+	} else {
+		if ($first == 1){
+			$first = 0;
+		} else {
+			printf OUT "\n" ;
+		}
 		&outputYaplot;
-		last if ($equiv eq "n");
 	}
+		#last if ($equiv eq "n");
+	#}
 }
 close (OUT);
 close (OUT2);
@@ -183,7 +187,6 @@ sub outputYaplot
 			printf OUT "s $x0[$i] $y0[$i] $z0[$i] $x1[$i] $y1[$i] $z1[$i]\n";
 		}
 	}
-
 }
 
 sub modifyCoordinateForPeriodicBoundary

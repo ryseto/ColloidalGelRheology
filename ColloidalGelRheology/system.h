@@ -39,6 +39,8 @@ protected:
 	double max_velocity_convergence;
 	double max_ang_velocity_convergence;
 	double diff_stress_convergence;
+	double max_displacement;
+	double eq_max_displacement;
 	int interval_convergence_check;
 	int interval_makeNeighbor;
 	int interval_output_config;
@@ -105,6 +107,7 @@ protected:
 	char parameters[32];
 	char init_cluster_file[256]; //256
 	char init_cluster[256]; //256
+	vector <vec3d> pos_previous;
 	string version;
 	ofstream fout_data;
 	ofstream fout_log;
