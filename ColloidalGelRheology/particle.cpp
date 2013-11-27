@@ -63,10 +63,10 @@ void  Particle::makeNeighbor(){
 void Particle::generateBond(){
 	if (near_boundary){
 		unsigned long n_neighbor = neighbor.size();
-		for (int i=0; i < n_neighbor; i++){
+		for (int i=0; i < n_neighbor; i++) {
 			p_pdcopy = sy->particle[neighbor[i]]->p;
-			if( abs(p.x - p_pdcopy.x) > 10. ){
-				if (p.x > p_pdcopy.x )
+			if( abs(p.x - p_pdcopy.x) > 10) {
+				if (p.x > p_pdcopy.x)
 					p_pdcopy.x += sy->lx;
 				else
 					p_pdcopy.x -= sy->lx;
@@ -133,37 +133,39 @@ void Particle::move_Euler()
 	 * The effect of eta should be checked.
 	 */
 	if (true){
-		a_velocity = force - sy->eta*velocity;
-		a_omega    = 2.5*( torque - sy->eta_rot*omega);
-		velocity  += a_velocity*sy->dt;
-		omega     += a_omega*sy->dt;
+		a_velocity = force-sy->eta*velocity;
+		a_omega = 2.5*(torque-sy->eta_rot*omega);
+		velocity += a_velocity*sy->dt;
+		omega += a_omega*sy->dt;
 	} else {
-		velocity  = force*sy->dt;
-		omega     = (torque - sy->eta_rot*omega)*sy->dt;
+		velocity = force*sy->dt;
+		omega = (torque-sy->eta_rot*omega)*sy->dt;
 	}
 	
-	p         += velocity*sy->dt;
+	p += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
-	orientation.infinitesimalRotation( d_rotation );
-	for (int i = 0; i < cn_size ; i++){
-		cn[i].u.rotateInfinitesimal( d_rotation );
+	orientation.infinitesimalRotation(d_rotation);
+	for (int i = 0; i < cn_size ; i++) {
+		cn[i].u.rotateInfinitesimal(d_rotation);
 #ifndef TWODIMENSION
 		// 3D
-		cn[i].tor_angle += dot( d_rotation, cn[i].u );
+		cn[i].tor_angle += dot(d_rotation, cn[i].u);
 #endif
 	}
 	resetForce();
-	if (near_boundary){
-		if ( p.x < 0. )
+	if (near_boundary) {
+		if (p.x < 0) {
 			p.x += sy->lx;
-		else if ( p.x > sy->lx )
+		} else if (p.x > sy->lx) {
 			p.x -= sy->lx;
+		}
 #ifndef TWODIMENSION
 		// 3D
-		if ( p.y < 0. )
+		if (p.y < 0) {
 			p.y += sy->ly;
-		else if ( p.y > sy->ly )
+		} else if (p.y > sy->ly) {
 			p.y -= sy->ly;
+		}
 #endif
 	}
 }

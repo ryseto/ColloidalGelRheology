@@ -59,6 +59,8 @@ protected:
 	double stress_x;
 	double strain_z;
 	double stress_z;
+	double stress_z_top;
+	double stress_z_bot;
 	double stress_y;
 	double kinetic_energy;
 	int counterBreak;

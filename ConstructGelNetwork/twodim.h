@@ -253,9 +253,7 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc){
 	vector <int> f1_col;
 	vector <int> f2_col;
 
-	
-	
-	
+
 	
 	while (true){
 		int num_cluster = cluster_list.size();
@@ -322,8 +320,9 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc){
 					cluster_list.erase(remove(cluster_list.begin(), cluster_list.end(), col_f1),
 									   cluster_list.end());
 				}
-				
-				monitor(floc, floc_size, num_of_floc);
+//				
+//				if (num_cluster % 10 ==0)
+//					monitor(floc, floc_size, num_of_floc);
 				cerr <<  "num_cluster = " << num_cluster << endl;
 
 			}
@@ -402,10 +401,10 @@ void putRandom(Floc *floc, int floc_size, int num_of_floc){
 
 void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac){
 	r = 1;
-	if (rank < 1){
-		cerr << "rank < 1 is not allowed." << endl;
-		exit(1);
-	}
+	//	if (rank < 1){
+	///		cerr << "rank < 1 is not allowed." << endl;
+	//	exit(1);
+	//	}
 	//int total_number = 10000;
 	int k = 16; // number of particle 2^k
 	srand48(rsd);
@@ -474,7 +473,8 @@ void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac)
 		//n = twodim_fo_random_put(p, floc_size, number_of_floc_for_vf);
 		putRandom(floc, floc_size, number_of_floc_for_vf);
 		twodim_prepare_fout(filling, fout, rank, rsd, vol_frac, "d");
-		//	twodim_output_result(fout, p, number_of_floc_for_vf, floc_size);
+		twodim_output_result(fout, p, number_of_floc_for_vf, floc_size);
+		
 		twodim_output_flocs(fout, floc,
 							number_of_floc_for_vf,
 							floc_size);
