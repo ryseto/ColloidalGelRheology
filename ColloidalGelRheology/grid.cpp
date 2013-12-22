@@ -84,20 +84,21 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 #else
 	/* 2D */
 	int gy = 0;
-	for (int gx = 0; gx < gx_max; gx++){
-		for (int gz = 0; gz < gz_max; gz++){
+	for (int gx = 0; gx < gx_max; gx++) {
+		for (int gz = 0; gz < gz_max; gz++) {
 			////////////////////////////////////////
 			GridPoint gp;
-			for(gp.x = gx-1; gp.x <= gx+1; gp.x++){
-				for(gp.z = gz-1; gp.z <= gz+1; gp.z++){
-					if ( gp.z >= 0 && gp.z < gz_max){
+			for(gp.x = gx-1; gp.x <= gx+1; gp.x++) {
+				for(gp.z = gz-1; gp.z <= gz+1; gp.z++) {
+					if ( gp.z >= 0 && gp.z < gz_max) {
 						GridPoint gp_tmp = gp;
-						if (gp_tmp.x == -1)
+						if (gp_tmp.x == -1) {
 							gp_tmp.x = gx_max - 1;
-						else if (gp_tmp.x == gx_max)
+						} else if (gp_tmp.x == gx_max) {
 							gp_tmp.x = 0;
+						}
 						gp_tmp.y = 0;
-						neighbor_cell[gx][gy][gz].push_back( gp_tmp );
+						neighbor_cell[gx][gy][gz].push_back(gp_tmp);
 					}
 				}
 			}

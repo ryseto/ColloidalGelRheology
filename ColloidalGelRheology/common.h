@@ -97,7 +97,6 @@ struct BondParameter {
 	double s_max;
 	double b_max;
 	double t_max;
-	double reinforce_factor;
 	
 };
 

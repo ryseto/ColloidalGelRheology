@@ -26,6 +26,8 @@ public:
 	inline vec3d (const double &_x,
 				  const double &_y,
 				  const double &_z): x(_x), y(0), z(_z) {}
+	inline vec3d (const double &_x,
+				  const double &_z): x(_x), z(_z) {}
 #else
 	// 3D
 	inline vec3d (const double &_x,
@@ -74,10 +76,10 @@ public:
 	inline friend vec3d operator + (const vec3d &a1, const vec3d &a2){
 #ifdef TWODIMENSION
 		// 2D
-		return vec3d(a1.x + a2.x, 0, a1.z + a2.z);
+		return vec3d(a1.x+a2.x, a1.z+a2.z);
 #else
 		// 3D
-		return vec3d(a1.x + a2.x, a1.y + a2.y, a1.z + a2.z);
+		return vec3d(a1.x+a2.x, a1.y+a2.y, a1.z+a2.z);
 #endif
 	}
 
@@ -89,19 +91,19 @@ public:
 	inline friend vec3d operator - (const vec3d &a1, const vec3d &a2){
 #ifdef TWODIMENSION
 		// 2D
-		return vec3d( a1.x - a2.x, 0 , a1.z - a2.z);
+		return vec3d(a1.x-a2.x, a1.z-a2.z);
 #else
 		// 3D
-		return vec3d( a1.x - a2.x, a1.y - a2.y, a1.z - a2.z);
+		return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
 #endif
 	}
 	inline friend vec3d operator - (const vec3d &v){
 #ifdef TWODIMENSION
 		// 2D
-		return vec3d( -v.x, 0 , -v.z);
+		return vec3d(-v.x, -v.z);
 #else
 		// 3D
-		return vec3d( -v.x, -v.y, -v.z);
+		return vec3d(-v.x, -v.y, -v.z);
 #endif
 		
 	}
@@ -110,11 +112,11 @@ public:
 	inline friend vec3d operator * (const double &d, const vec3d &v){
 #ifdef TWODIMENSION
 		// 2D
-		return vec3d( d*v.x, 0, d*v.z);
+		return vec3d(d*v.x, d*v.z);
 	
 #else
 		// 3D
-		return vec3d( d*v.x, d*v.y, d*v.z);
+		return vec3d(d*v.x, d*v.y, d*v.z);
 #endif
 	}
 	inline friend vec3d operator * (const vec3d &v, const double &d){
@@ -133,10 +135,10 @@ public:
 	inline friend double dot(const vec3d &a1, const vec3d &a2){
 #ifdef TWODIMENSION
 		// 2D
-		return a1.x*a2.x + a1.z*a2.z;
+		return a1.x*a2.x+a1.z*a2.z;
 #else
 		// 3D
-		return a1.x*a2.x + a1.y*a2.y + a1.z*a2.z;
+		return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
 #endif
 	}
 	inline friend double dot_2d(const vec3d &a1, const vec3d &a2){
@@ -151,9 +153,9 @@ public:
 		return vec3d(0, v1.z*v2.x - v1.x*v2.z, 0);
 #else
 		// 3D
-		return vec3d(v1.y*v2.z - v1.z*v2.y,
-					 v1.z*v2.x - v1.x*v2.z,
-					 v1.x*v2.y - v1.y*v2.x);
+		return vec3d(v1.y*v2.z-v1.z*v2.y,
+					 v1.z*v2.x-v1.x*v2.z,
+					 v1.x*v2.y-v1.y*v2.x);
 #endif
 		
 	}

@@ -209,7 +209,7 @@ sub outputYaplot
 	for ($i = 0; $i < $nb; $i ++){
 		$force = $b_fn[$i];
 		#		printf OUT "r $force \n" ;
-		if ($initialbond[$i] == 1 ){
+		if (1|| $initialbond[$i] == 1 ){
 			printf OUT "l $x0[$i] $y0[$i] $z0[$i] $x1[$i] $y1[$i] $z1[$i]\n";
 #						if ($force > 0 ){
 #				printf OUT "@ 5 \n" ;

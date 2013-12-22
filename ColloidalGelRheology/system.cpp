@@ -418,28 +418,29 @@ bool System::checkEndCondition(){
 	return end_simulation;
 }
 
-void System::checkStressDiff(){
-	if (simulation == 's'){
-		if (diff_stress_x == 0){
+void System::checkStressDiff()
+{
+	if (simulation == 's') {
+		if (diff_stress_x == 0) {
 			stress_x_change = 0;
 			stress_z_change = 0;
 		} else {
-			stress_x_change = abs(stress_x - stress_x_before)/stress_x;
-			stress_z_change = abs(stress_z - stress_z_before)/stress_z;
+			stress_x_change = abs(stress_x-stress_x_before)/stress_x;
+			stress_z_change = abs(stress_z-stress_z_before)/stress_z;
 		}
-		strain_x = abs( wl[0]->x - wl[1]->x )/lz;
-		strain_z = (lz_init - lz)/lz_init;
-		
+		strain_x = abs(wl[0]->x-wl[1]->x)/lz;
+		strain_z = (lz_init-lz)/lz_init;
 	} else {
-		stress_z_change = abs(stress_z - stress_z_before)/stress_z;
-		stress_x_change = abs(stress_x - stress_x_before)/stress_x;
-		strain_z = (lz_init - lz)/lz_init;
+		stress_z_change = abs(stress_z-stress_z_before)/stress_z;
+		stress_x_change = abs(stress_x-stress_x_before)/stress_x;
+		strain_z = (lz_init-lz)/lz_init;
 	}
 	stress_z_before = stress_z;
 	stress_x_before = stress_x;
 }
 
-bool System::checkOutputStrain(double diff){
+bool System::checkOutputStrain(double diff)
+{
 	if (simulation == 's'){
 		if (strain_x > strain_x_last_output + diff){
 			lz_last_output = lz;
@@ -637,7 +638,6 @@ void readBond(const string &codeword,
 	keylist["kb:"]=7; const int _kb = 7;
 	keylist["kt:"]=8; const int _kt = 8;
 	keylist["kn3:"]=9; const int _kn3 = 9;
-	keylist["reinforce_factor:"]=10; const int _reinforce_factor = 10;
 	cerr << codeword << ' ' << value << endl;
 	switch(keylist[codeword]){
 		case _fnc: bondparameter.fnc = atof(value.c_str()); break;
@@ -649,7 +649,6 @@ void readBond(const string &codeword,
 		case _kb: bondparameter.kb = atof(value.c_str()); break;
 		case _kt: bondparameter.kt = atof(value.c_str()); break;
 		case _kn3: bondparameter.kn3 = atof(value.c_str()); break;
-		case _reinforce_factor: bondparameter.reinforce_factor = atof(value.c_str()); break;
 		default:
 			cerr << "Bond: The codeword " << codeword << " is'nt associated with an parameter" << endl;
 			exit(1);

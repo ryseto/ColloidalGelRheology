@@ -139,7 +139,7 @@ void Particle::move_Euler()
 		omega += a_omega*sy->dt;
 	} else {
 		velocity = force*sy->dt;
-		omega = (torque-sy->eta_rot*omega)*sy->dt;
+		omega = torque*sy->dt;
 	}
 	
 	p += velocity*sy->dt;
