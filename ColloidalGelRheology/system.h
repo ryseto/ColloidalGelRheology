@@ -116,6 +116,9 @@ protected:
 	ofstream fout_yap;
 	ofstream fout_conf;
 	ofstream fout_deform;
+	ofstream fout_particle;
+	ofstream fout_bond;
+	
 	vec3d f_ex;
 private:
 	void preProcesses();
@@ -134,6 +137,7 @@ private:
 	void rupture();
 	void TimeDevStrainControlCompactionEuler();
 	void TimeDevStrainControlShearEuler();
+	void TimeDevPeriodicBoundaryCompactionEuler();
 	void TimeDevBendingTest();
 
 	bool mechanicalEquilibrium();
@@ -161,6 +165,7 @@ private:
 	void initGrid();
 	void reset_strain_x();
 	void makeNeighbor();
+	void makeNeighborPB();
 	void monitorDeformation(char equilibrium);
 	void outputData();
 	void output_log();

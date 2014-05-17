@@ -16,10 +16,13 @@ Particle::Particle(int particle_number_,
 	setInitial(particle_number_);
 	p = position;
 	init_cluster = _i_cluster;
-	if (init_cluster != 0)
+	if (init_cluster != 0){
+		std::cerr << "## particle.cpp ##" << std::endl;
 		exit(1);
+	}
 	setVelocityZero();
 	orientation.set(1., 0., 0., 0.);
+	orientation_angle = 0;
 	resetForce();
 	wall = false;
 #ifdef TWODIMENSION
@@ -47,8 +50,9 @@ void Particle::setInitial(int particle_number_){
 
 void  Particle::makeNeighbor(){
 	vector< vector<int> *> neighbor_cells;
-	sy->grid->get_neighbor_list_pointer( p, neighbor_cells);
-	near_boundary = sy->grid->near_boundary_xy(p);
+	sy->grid->get_neighbor_list_pointer(p, neighbor_cells);
+	//near_boundary = sy->grid->near_boundary_xy(p);
+	near_boundary = true;
 	neighbor.clear();
 	foreach(vector< vector<int> *>, neighbor_cells, iter){
 		foreach( vector<int>, *(*iter), i){
@@ -61,23 +65,34 @@ void  Particle::makeNeighbor(){
 }
 
 void Particle::generateBond(){
-	if (near_boundary){
+	if (true ){
 		unsigned long n_neighbor = neighbor.size();
 		for (int i=0; i < n_neighbor; i++) {
 			p_pdcopy = sy->particle[neighbor[i]]->p;
-			if( abs(p.x - p_pdcopy.x) > 10) {
-				if (p.x > p_pdcopy.x)
+			if( abs(p.x - p_pdcopy.x) > 5) {
+				if (p.x > p_pdcopy.x) {
 					p_pdcopy.x += sy->lx;
-				else
+				} else {
 					p_pdcopy.x -= sy->lx;
+				}
 			}
+			if( abs(p.z - p_pdcopy.z) > 5) {
+				if (p.z > p_pdcopy.z) {
+					p_pdcopy.z += sy->lz;
+				} else {
+					p_pdcopy.z -= sy->lz;
+				}
+			}
+			
+			
 #ifndef TWODIMENSION
 			// 3D
-			if( abs(p.y - p_pdcopy.y) > 10. ){
-				if (p.y > p_pdcopy.y )
+			if( abs(p.y - p_pdcopy.y) > 10 ){
+				if (p.y > p_pdcopy.y ) {
 					p_pdcopy.y += sy->ly;
-				else
+				} else {
 					p_pdcopy.y -= sy->ly;
+				}
 			}
 #endif
 			
@@ -121,11 +136,11 @@ void Particle::delConnectPoint(int bond_number){
 	}
 	return;
 }
-
-void Particle::checkNearBoundary()
-{
-	near_boundary = sy->grid->near_boundary_xy(p);
-}
+//
+//void Particle::checkNearBoundary()
+//{
+//	near_boundary = sy->grid->near_boundary_xy(p);
+//}
 
 void Particle::move_Euler()
 {
@@ -141,10 +156,11 @@ void Particle::move_Euler()
 		velocity = force*sy->dt;
 		omega = torque*sy->dt;
 	}
-	
 	p += velocity*sy->dt;
 	d_rotation = omega*sy->dt;
+
 	orientation.infinitesimalRotation(d_rotation);
+	orientation_angle += d_rotation;
 	for (int i = 0; i < cn_size ; i++) {
 		cn[i].u.rotateInfinitesimal(d_rotation);
 #ifndef TWODIMENSION
@@ -153,20 +169,24 @@ void Particle::move_Euler()
 #endif
 	}
 	resetForce();
-	if (near_boundary) {
-		if (p.x < 0) {
-			p.x += sy->lx;
-		} else if (p.x > sy->lx) {
-			p.x -= sy->lx;
-		}
+
+	if (p.x < 0) {
+		p.x += sy->lx;
+	} else if (p.x > sy->lx) {
+		p.x -= sy->lx;
+	}
 #ifndef TWODIMENSION
-		// 3D
-		if (p.y < 0) {
-			p.y += sy->ly;
-		} else if (p.y > sy->ly) {
-			p.y -= sy->ly;
-		}
+	// 3D
+	if (p.y < 0) {
+		p.y += sy->ly;
+	} else if (p.y > sy->ly) {
+		p.y -= sy->ly;
+	}
 #endif
+	if (p.z < 0) {
+		p.z += sy->lz;
+	} else if (p.z > sy->lz) {
+		p.z -= sy->lz;
 	}
 }
 

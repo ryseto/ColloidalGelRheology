@@ -9,21 +9,24 @@
 #include <iostream>
 #include "bond.h"
 
-Bond::Bond(int d0, int d1, System &sy_){
+Bond::Bond(const int d0, const int d1, System &sy_){
 	sy = &sy_;
 	status = 1;
 	initial_bond = sy->initialprocess;
 	cnt_regeneration = 0;
 	bond_number = sy->n_bond ++;
-	d[0] = d0, d[1] = d1;
+	d[0] = d0;
+	d[1] = d1;
 	sy->ct->on_connect( d[0], d[1] );
 	p_particle0 = sy->particle[d[0]];
 	p_particle1 = sy->particle[d[1]];
-	if (initial_bond)
+	if (initial_bond) {
 		para = sy->bond0;
-	else
+		bondtype = 0;
+	} else {
 		para = sy->bond1;
-	
+		bondtype = 1;
+	}
 	if (para.fnc == 0){
 		central_force = true;
 	} else {
@@ -55,7 +58,10 @@ Bond::Bond(int d0, int d1, System &sy_){
 	pu[1] = (*p_particle1).pu_back();
 	(*pu[0]) = e_normal;
 	(*pu[1]) = - e_normal;
-
+#ifdef TWODIMENSION
+	contactangle[0] = atan2( e_normal.z, e_normal.x)-(*p_particle0).orientation_angle;
+	contactangle[1] = atan2( -e_normal.z, -e_normal.x)-(*p_particle1).orientation_angle;
+#endif
 	u_vector[0] = (*p_particle0).orientation.ori_backward(*pu[0]);
 	u_vector[1] = (*p_particle1).orientation.ori_backward(*pu[1]);
 
@@ -120,9 +126,9 @@ void Bond::calcForce(){
 	r = r_vec.norm();
 	e_normal = r_vec/r;
 #endif
-	q = r - 2.;
-	if ( central_force ){
-		if ( q < 0.){
+	q = r-2;
+	if (central_force){
+		if ( q < 0){
 			/* compression --> negative */
 			kn_compression = para.kn + para.kn3*q*q;
 			force_normal = kn_compression*q;
@@ -153,7 +159,7 @@ void Bond::calcForce(){
 	ang_bend = - cross(*pu[0], *pu[1]);
 	ang_tort = - (*p_tor[0]) - (*p_tor[1]);
 #endif
-	if (q < 0.){
+	if (q < 0){
 		// compression (negative)
 		kn_compression = para.kn + para.kn3*q*q;
 		force_normal = kn_compression*q;
@@ -161,8 +167,11 @@ void Bond::calcForce(){
 		// traction (positive)
 		force_normal =  para.kn*q;
 	}
+
 	force_sliding  = para.ks*d_slid;
 	moment_bending = para.kb*ang_bend;
+
+
 #ifndef TWODIMENSION
 	// 3D
 	moment_torsion = para.kt*ang_tort;
@@ -171,6 +180,7 @@ void Bond::calcForce(){
 #ifdef TWODIMENSION
 	// 2D
 	moment_sliding = cross_2d(e_normal, force_sliding);
+
 	torque0 = moment_sliding + moment_bending;
 	torque1 = moment_sliding - moment_bending;
 #else
@@ -202,22 +212,33 @@ void Bond::chPointer(int i, int particle_num){
 void Bond::periodicBoundary_rvec(vec3d & r_vec_tmp){
 	r_vec_tmp = (*pp[1]) - (*pp[0]);
 	// use boundary flag for particles and bonds.
-	if (p_particle0->near_boundary || p_particle1->near_boundary){
-		if (abs(r_vec_tmp.x) > 5.){
-			if (r_vec_tmp.x > 0.)
+	//	if (true || (p_particle0->near_boundary || p_particle1->near_boundary)){
+	if (true){
+		if (abs(r_vec_tmp.x) > 5){
+			if (r_vec_tmp.x > 0) {
 				r_vec_tmp.x -= sy->lx;
-			else
+			} else {
 				r_vec_tmp.x += sy->lx;
+			}
+		}
+		if (abs(r_vec_tmp.z) > 5){
+			if (r_vec_tmp.z > 0) {
+				r_vec_tmp.z -= sy->lz;
+			} else {
+				r_vec_tmp.z += sy->lz;
+			}
 		}
 #ifndef TWODIMENSION
-		if (abs(r_vec_tmp.y) > 5.){
-			if (r_vec_tmp.y > 0.)
+		if (abs(r_vec_tmp.y) > 5){
+			if (r_vec_tmp.y > 0)
 				r_vec_tmp.y -= sy->ly;
 			else
 				r_vec_tmp.y += sy->ly;
 		}
 #endif
 	}
+	
+	
 }
 
 void Bond::rupture(){
@@ -290,6 +311,12 @@ void Bond::regeneration(){
 #endif
 	(*pu[0]) = e_normal;
 	(*pu[1]) = - e_normal;
+
+#ifdef TWODIMENSION
+	contactangle[0] = atan2( e_normal.z, e_normal.x)-(*p_particle0).orientation_angle;
+	contactangle[1] = atan2( -e_normal.z, -e_normal.x)-(*p_particle1).orientation_angle;
+#endif
+	
 #ifndef TWODIMENSION
 	// 3D
 	(*p_tor[0]) = 0.;

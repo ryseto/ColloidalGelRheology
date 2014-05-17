@@ -32,7 +32,8 @@ int main (int argc, const char * argv[])
      * 0 < x < L
      * 0 < z < Lz - 2
      */
-    Lz_pd = Lz - 2;
+    //Lz_pd = Lz - 2;
+	Lz_pd = Lz;
     int rank = atoi(argv[5]);
 	int rsd = atoi(argv[6]);
 	double vol_frac = atof( argv[7]);

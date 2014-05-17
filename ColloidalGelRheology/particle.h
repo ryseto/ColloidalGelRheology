@@ -50,7 +50,9 @@ public:
 	int particle_number;
 	vec3d p;
 	quaternion orientation;
-
+	double orientation_angle = 0;
+	
+	
 	int init_cluster;
 	int wall_connected; //
 	bool wall;
@@ -58,7 +60,7 @@ public:
 	double sq_force;
 	
 	void makeNeighbor();
-	void checkNearBoundary();
+//	void checkNearBoundary();
 	void addNeighbor( int neighbor_particle ){
 		neighbor.push_back( neighbor_particle );
 	}

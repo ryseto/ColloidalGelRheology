@@ -295,7 +295,7 @@ public:
 	inline friend double sq_dist_2d(const vec3d &a1, const vec3d &a2){
 		double dx = a1.x-a2.x;
 		double dz = a1.z-a2.z;
-		return dx*dx + dz*dz;
+		return dx*dx+dz*dz;
 	}
 	
 #ifdef TWODIMENSION

@@ -37,10 +37,12 @@ public:
 	
 	void init(const int num_of_particle, const double lx_, const double ly_, const double lz_,
 			  const double grid_size);
-	
+	void init_z(const int num_of_particle, const double lx_, const double ly_, const double lz_,
+				 const double grid_size);
 	void remake(vector<Particle *> &particle);
 	void remake_with_walls(double, double,vector<Particle *> &particle);
 	void remake_with_bottom(double, vector<Particle *> &particle);
+	
 	void entry(vec3d &p, int i);
 	GridPoint p_to_grid(const vec3d &p);
 #ifndef TWODIMENSION

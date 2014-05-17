@@ -92,7 +92,7 @@ private:
 public:
 	Bond(){}
 	~Bond();
-	Bond(int d0, int d1, System &sy);
+	Bond(const int d0, const int d1, System &sy);
 	/* status;
 	 * 0: The bond is ruptured.
 	 * 1: Only elastic deformation after the generation.
@@ -104,6 +104,7 @@ public:
 	 * false: The bond is generated during the compression process.
 	 */
 	bool initial_bond;
+	int bondtype;
 	/*
 	 * Distance between particle.
 	 * The gap between particles or particle and wall are give by r - 2a.
@@ -120,6 +121,14 @@ public:
 	 * This number memorize where it is in the vector.
 	 */
 	unsigned long number_activebond;
+	
+	
+	/* Angle directing to the original contact point.
+	 *
+	 */
+	double contactangle[2];
+
+	
 	vec3d e_normal;
 	void addContactForce();
 	void calcForce();
@@ -162,6 +171,13 @@ public:
 	int val_bond_number(){
 		return bond_number;
 	}
+	void updateBondParameter(double k){
+				
+		para.kn = k;
+		para.kt = k;
+		para.kb = k;
+	}
+	
 };
 
 #endif

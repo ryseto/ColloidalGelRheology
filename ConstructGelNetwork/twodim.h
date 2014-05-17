@@ -115,7 +115,7 @@ void twodim_output_flocs(ofstream &fout,
 		for (int k = 0; k < floc_size ; k++){
 			vec2d p = floc[i].pos(k);
 			//p[k].shift(0, -y_max/2);
-			p.shift(0, 1);
+			//p.shift(0, 1);
 			//p[i + j*fo_size].shift(-L/2, 0);
 			//p[i + j*fo_size].cout();
 			//p[i + j*fo_size].out_data();

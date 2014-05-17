@@ -7,7 +7,6 @@
 //
 
 #include <iostream>
-
 #include "grid.h"
 #include <algorithm>
 //extern vector<Particle *> particle;
@@ -18,13 +17,13 @@ Grid::Grid(void){
 }
 
 Grid::~Grid(void){
-	for (int gx = 0; gx < gx_max; gx++){
-		for (int gy = 0; gy < gy_max ; gy++){
-			DELETE(vcell[gx][gy]);
-		}
-		DELETE(vcell[gx]);
-	}
-	DELETE(vcell);
+//	for (int gx = 0; gx < gx_max; gx++){
+//		for (int gy = 0; gy < gy_max ; gy++){
+//			DELETE(vcell[gx][gy]);
+//		}
+//		DELETE(vcell[gx]);
+//	}
+//	DELETE(vcell);
 }
 
 void Grid::init (const int num_of_particle, const double lx_, const double ly_, const double lz_,
@@ -41,6 +40,7 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 	gy_max = 1;
 #endif
 	gz_max = (int)( lz_/h );
+	
 	vcell = new vector<int> ** [gx_max];
 	neighbor_cell = new	vector<GridPoint> ** [gx_max];
 	for (int gx = 0; gx < gx_max; gx++){
@@ -64,15 +64,16 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 						for(gp.z = gz-1; gp.z <= gz+1; gp.z++){
 							if ( gp.z >= 0 && gp.z < gz_max){
 								GridPoint gp_tmp = gp;
-								if (gp_tmp.x == -1)
+								if (gp_tmp.x == -1) {
 									gp_tmp.x = gx_max - 1;
-								else if (gp_tmp.x == gx_max)
+								} else if (gp_tmp.x == gx_max) {
 									gp_tmp.x = 0;
-								if (gp_tmp.y == -1)
+								}
+								if (gp_tmp.y == -1) {
 									gp_tmp.y = gy_max - 1;
-								else if (gp_tmp.y == gy_max)
+								} else if (gp_tmp.y == gy_max) {
 									gp_tmp.y = 0;
-								
+								}
 								neighbor_cell[gx][gy][gz].push_back( gp_tmp );
 							}
 						}
@@ -81,6 +82,7 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 			}
 		}
 	}
+	
 #else
 	/* 2D */
 	int gy = 0;
@@ -90,22 +92,70 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 			GridPoint gp;
 			for(gp.x = gx-1; gp.x <= gx+1; gp.x++) {
 				for(gp.z = gz-1; gp.z <= gz+1; gp.z++) {
-					if ( gp.z >= 0 && gp.z < gz_max) {
-						GridPoint gp_tmp = gp;
-						if (gp_tmp.x == -1) {
-							gp_tmp.x = gx_max - 1;
-						} else if (gp_tmp.x == gx_max) {
-							gp_tmp.x = 0;
-						}
-						gp_tmp.y = 0;
-						neighbor_cell[gx][gy][gz].push_back(gp_tmp);
+					GridPoint gp_tmp = gp;
+					if (gp_tmp.x == -1) {
+						gp_tmp.x = gx_max - 1;
+					} else if (gp_tmp.x == gx_max) {
+						gp_tmp.x = 0;
 					}
+					if (gp_tmp.z == -1) {
+						gp_tmp.z = gz_max-1;
+					} else if (gp_tmp.z == gz_max) {
+						gp_tmp.z = 0;
+					}
+					gp_tmp.y = 0;
+					neighbor_cell[gx][gy][gz].push_back(gp_tmp);
 				}
 			}
 		}
 	}
+	
+
 #endif
 }
+
+void Grid::init_z (const int num_of_particle, const double lx_, const double ly_, const double lz_,
+					const double grid_size)
+{
+	
+	static int old_gz_max = 0;
+	gx_max = (int)(lx_/h);
+	gz_max = (int)(lz_/h);
+
+	if (gz_max != old_gz_max) {
+		cerr << gz_max << " <= " << old_gz_max << endl;
+		int gy = 0;
+		for (int gx = 0; gx < gx_max; gx++) {
+			for (int gz = 0; gz < gz_max; gz++) {
+				////////////////////////////////////////
+				GridPoint gp;
+				neighbor_cell[gx][gy][gz].clear();
+				for(gp.x = gx-1; gp.x <= gx+1; gp.x++) {
+					for(gp.z = gz-1; gp.z <= gz+1; gp.z++) {
+						GridPoint gp_tmp = gp;
+						if (gp_tmp.x <= -1) {
+							gp_tmp.x = gx_max - 1;
+						} else if (gp_tmp.x >= gx_max) {
+							gp_tmp.x = 0;
+						}
+						if (gp_tmp.z <= -1) {
+							gp_tmp.z = gz_max-1;
+						} else if (gp_tmp.z >= gz_max) {
+							gp_tmp.z = 0;
+						}
+						gp_tmp.y = 0;
+						neighbor_cell[gx][gy][gz].push_back(gp_tmp);
+
+					}
+				}
+			}
+		}
+		
+		
+	}
+	old_gz_max = gz_max;
+}
+
 
 void Grid::remake(vector<Particle *> &particle){
 #ifndef TWODIMENSION
@@ -117,12 +167,15 @@ void Grid::remake(vector<Particle *> &particle){
 		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
 	}
 #else
+	/* 2D
+	 */
 	for (int i = 0; i < numberOfParticle; i++ ){
 		vcell[gl[i].x][0][gl[i].z].clear();
 	}
 	for (int i = 0; i < numberOfParticle; i++ ){
 		gl[i] = p_to_grid( *particle[i]->p_pos() );
 		vcell[gl[i].x][0][gl[i].z].push_back(i);
+
 	}
 #endif
 }
@@ -172,8 +225,10 @@ void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
 GridPoint Grid::p_to_grid(const vec3d &p){
 	/* 3D */
 	gp_tmp.x = (int)(p.x/h);
-	if (gp_tmp.x == gx_max ){
-		gp_tmp.x --;
+	if (gp_tmp.x >= gx_max ){
+		gp_tmp.x = gx_max - 1;
+	} else if ( gp_tmp.x < 0) {
+		gp_tmp.x = 0;
 	}
 #ifndef TWODIMENSION
 	gp_tmp.y = (int)(p.y/h);
@@ -184,8 +239,10 @@ GridPoint Grid::p_to_grid(const vec3d &p){
 	gp_tmp.y = 0;
 #endif
 	gp_tmp.z = (int)(p.z/h);
-	if (gp_tmp.z == gz_max ){
-		gp_tmp.z --;
+	if (gp_tmp.z >= gz_max ){
+		gp_tmp.z = gz_max - 1;
+	} else if ( gp_tmp.z < 0) {
+		gp_tmp.z = 0;
 	}
 	return gp_tmp;
 }
@@ -206,14 +263,28 @@ void Grid::get_neighbor_list(const vec3d &p, vector<int> &neighbor){
 	gp_tmp = p_to_grid(p);
 	foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
 		foreach(vector<int>, vcell[(*gp).x][(*gp).y][(*gp).z], iter){
-			neighbor.push_back( *iter );
+			neighbor.push_back(*iter);
 		}
 	}
 }
 
 void Grid::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor){
-	p_neighbor.clear();
+
 	gp_tmp = p_to_grid(p);
+//	if (gz_max == 21){
+//		cerr << gp_tmp.x << ' ' << gp_tmp.y << ' ' << gp_tmp.z << endl;
+//		cerr << (vcell[0][0][1]).size() << endl;
+//		cerr << (vcell[0][0][0]).size() << endl;
+//		cerr << (vcell[0][0][20]).size() << endl;
+//		cerr << (vcell[21][0][1]).size() << endl;
+//		cerr << (vcell[21][0][0]).size() << endl;
+//		cerr << (vcell[21][0][20]).size() << endl;
+//		cerr << (vcell[1][0][1]).size() << endl;
+//		cerr << (vcell[1][0][0]).size() << endl;
+//		cerr << (vcell[1][0][20]).size() << endl;
+//
+//	}
+	p_neighbor.clear();
 	foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
 		p_neighbor.push_back( &(vcell[(*gp).x][(*gp).y][(*gp).z]));
 	}
@@ -230,12 +301,14 @@ vector<int> * Grid::get_neighbor_list_pointer_bot(){
 bool Grid::near_boundary_xy(const vec3d &p){
 #ifndef TWODIMENSION
 	int gx = (int)(p.x/h); // gx = gx_max is possible
-	if ( gx == 0 || gx >= gx_max - 1)
+	if ( gx == 0 || gx >= gx_max - 1) {
 		return true;
+	}
 	
 	int gy = (int)(p.y/h); // gy = gy_max is possible
-	if (gy == 0 || gy >=  gy_max - 1)
+	if (gy == 0 || gy >=  gy_max - 1) {
 		return true;
+	}
 	// gx = 0, 1 and gx = gx_max-2 and gx_max-1
 #else
 	int gx = (int)(p.x/h);
@@ -243,5 +316,6 @@ bool Grid::near_boundary_xy(const vec3d &p){
 		return true;
 	}
 #endif
+	
 	return false;
 }
