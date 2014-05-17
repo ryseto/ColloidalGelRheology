@@ -20,8 +20,8 @@ Wall::Wall(int topbot, double _z, System &sy_): z(_z){
 		u.set(0., 0., 1.);
 	}
 	velocity.reset();
-	x = sy->lx0;
-	y = sy->ly0;
+	x = sy->lx_half;
+	y = sy->ly_half;
 }
 
 void Wall::makeNeighbor(){
@@ -238,18 +238,18 @@ void Wall::output(ofstream &fout){
 		x_wall +=  sy->lx;
 	}
 	
-	double zz = z - sy->lz0;
-	fout << "l " <<   -sy->lx0 << ' ' <<-sy->ly0 << ' ' << zz;
-	fout <<  ' ' << sy->lx-sy->lx0 << ' ' <<-sy->ly0 << ' ' << zz << endl;
-	fout << "l " << sy->lx-sy->lx0 << ' ' <<-sy->ly0 << ' ' << zz ;
-	fout <<  ' ' << sy->lx-sy->lx0 << ' ' << sy->ly -sy->ly0 << ' ' << zz << endl;
-	fout << "l " << sy->lx-sy->lx0 << ' ' << sy->ly -sy->ly0 << ' ' << zz ;
-	fout <<  ' ' <<   -sy->lx0 << ' ' << sy->ly -sy->ly0 << ' ' << zz << endl;
-	fout << "l " <<   -sy->lx0 << ' ' << sy->ly -sy->ly0 << ' ' << zz ;
-	fout <<  ' ' <<   -sy->lx0 << ' ' <<-sy->ly0 << ' ' << zz << endl;
-	fout << "l " << x_wall-sy->lx0 << ' ' <<-sy->ly0 << ' ' << zz;
-	fout << ' '  <<	x_wall-sy->lx0 << ' ' << sy->ly -sy->ly0 << ' ' << zz << endl;
-	fout << "l " <<   -sy->lx0 << ' ' << y -sy->ly0 << ' ' << zz;
-	fout << ' '  <<	sy->lx-sy->lx0 << ' ' << y -sy->ly0 << ' ' << zz << endl;
+	double zz = z - sy->lz_half;
+	fout << "l " <<   -sy->lx_half << ' ' <<-sy->ly_half << ' ' << zz;
+	fout <<  ' ' << sy->lx-sy->lx_half << ' ' <<-sy->ly_half << ' ' << zz << endl;
+	fout << "l " << sy->lx-sy->lx_half << ' ' <<-sy->ly_half << ' ' << zz ;
+	fout <<  ' ' << sy->lx-sy->lx_half << ' ' << sy->ly -sy->ly_half << ' ' << zz << endl;
+	fout << "l " << sy->lx-sy->lx_half << ' ' << sy->ly -sy->ly_half << ' ' << zz ;
+	fout <<  ' ' <<   -sy->lx_half     << ' ' << sy->ly -sy->ly_half << ' ' << zz << endl;
+	fout << "l " <<   -sy->lx_half     << ' ' << sy->ly -sy->ly_half << ' ' << zz ;
+	fout <<  ' ' <<   -sy->lx_half     << ' ' <<-sy->ly_half << ' ' << zz << endl;
+	fout << "l " << x_wall-sy->lx_half << ' ' <<-sy->ly_half << ' ' << zz;
+	fout << ' '  <<	x_wall-sy->lx_half << ' ' << sy->ly -sy->ly_half << ' ' << zz << endl;
+	fout << "l " <<   -sy->lx_half     << ' ' << y -sy->ly_half << ' ' << zz;
+	fout << ' '  <<	sy->lx-sy->lx_half << ' ' << y -sy->ly_half << ' ' << zz << endl;
 }
 

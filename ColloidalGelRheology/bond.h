@@ -15,6 +15,7 @@
 #include "contable.h"
 #include "particle.h"
 #include "system.h"
+#include "StressTensor.h"
 class Particle;
 class System;
 
@@ -78,7 +79,7 @@ class Bond {
 	vec3d *pu[2];
 	Particle *p_particle0;
 	Particle *p_particle1;
-	
+	StressTensor contact_stresslet_XF;
 //	double des[4];
 	double sq_fsc;
 	double sq_mbc;
@@ -87,7 +88,7 @@ class Bond {
 private:
 	void setting();
 	void checkRuptureType(vec3d &, vec3d &, double);
-	void periodicBoundary_rvec(vec3d &);
+	void update_rvec();
 	
 public:
 	Bond(){}
@@ -115,14 +116,12 @@ public:
 	/*
 	 *  To compare the stress.
 	 */
-	double D_function;
+	//double D_function;
 	/*
 	 * "bond_active" vector is used to calculate efficiently.
 	 * This number memorize where it is in the vector.
 	 */
-	unsigned long number_activebond;
-	
-	
+//	unsigned long number_activebond;
 	/* Angle directing to the original contact point.
 	 *
 	 */
@@ -177,7 +176,41 @@ public:
 		para.kt = k;
 		para.kb = k;
 	}
+	StressTensor getContactStressXF(){return contact_stresslet_XF;}
 	
+	void
+	calcContactStress(){
+		/*
+		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+		 * Fc_normal = -Fc_normal_norm*nvec;
+		 * This force acts on particle 1.
+		 * stress1 is a0*nvec[*]force.
+		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+		 */
+		
+		/* When we compose stress tensor,
+		 * even individual leverl, this part calculates symmetric tensor.
+		 * This symmetry is expected in the average ensumble.
+		 * I'm not sure this is allowed or not.
+		 */
+		if (status != 0) {
+			/*
+			 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+			 * Fc_normal = -Fc_normal_norm*nvec;
+			 * This force acts on particle 1.
+			 * stress1 is a0*nvec[*]force.
+			 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+			 * stress1 + stress2 = (a1+a2)*nvec[*]force
+			 */
+			contact_stresslet_XF.set(r_vec, force0);
+			
+		} else {
+			contact_stresslet_XF.reset();
+		}
+	}
+	
+	
+
 };
 
 #endif

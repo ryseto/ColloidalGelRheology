@@ -80,6 +80,7 @@
 		D95B784115879F32004590CA /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D95B784215879F43004590CA /* bond.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bond.h; sourceTree = "<group>"; };
 		D95B784315879F67004590CA /* bond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bond.cpp; sourceTree = "<group>"; };
+		D95CB3EE1927DF0B00BB7F59 /* StressTensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressTensor.h; sourceTree = "<group>"; };
 		D98F8FDB1595597700CE8441 /* grid2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = grid2.h; sourceTree = "<group>"; };
 		D98F8FDC1595598300CE8441 /* grid2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = grid2.cpp; sourceTree = "<group>"; };
 		D998AC4715DE5A1800A88A2E /* ConstructGelNetwork */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ConstructGelNetwork; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,6 +152,7 @@
 				D95B783115879D6C004590CA /* system.cpp */,
 				D95B784215879F43004590CA /* bond.h */,
 				D95B784315879F67004590CA /* bond.cpp */,
+				D95CB3EE1927DF0B00BB7F59 /* StressTensor.h */,
 				D95B783615879DFF004590CA /* particle.h */,
 				D95B783715879E29004590CA /* particle.cpp */,
 				D95B782C15879C9F004590CA /* wall.cpp */,

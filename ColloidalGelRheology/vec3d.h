@@ -302,7 +302,7 @@ public:
 	// 2D
 	inline void rotateInfinitesimal(const double &dphi_y){
 		/* dphi must be small vector. */
-		(*this) += vec3d( dphi_y * z, 0 , - dphi_y * x);
+		(*this) += vec3d(dphi_y*z, 0, -dphi_y*x);
 	}
 #else
 	// 3D

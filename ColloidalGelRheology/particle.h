@@ -51,8 +51,6 @@ public:
 	vec3d p;
 	quaternion orientation;
 	double orientation_angle = 0;
-	
-	
 	int init_cluster;
 	int wall_connected; //
 	bool wall;
@@ -70,14 +68,11 @@ public:
 		cn[cn_size].tor_angle = 0.;
 		cn_size++;
 	}
-	
 	void addGravityForce();
 	void move_Euler();
-	
 	inline vec3d vectorForce(){
 		return force;
 	}
-
 	inline void resetForce(){
 		force.reset();
 #ifndef TWODIMENSION
@@ -86,7 +81,6 @@ public:
 		torque = 0;
 #endif
 	}
-	
 	inline void resetFz(){
 		force.z = 0;
 	}

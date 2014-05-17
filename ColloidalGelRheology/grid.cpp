@@ -26,8 +26,9 @@ Grid::~Grid(void){
 //	DELETE(vcell);
 }
 
-void Grid::init (const int num_of_particle, const double lx_, const double ly_, const double lz_,
-				 const double grid_size)
+void
+Grid::init (const int num_of_particle, const double lx_, const double ly_, const double lz_,
+			const double grid_size)
 {
 	numberOfParticle = num_of_particle;
 	h = grid_size;
@@ -114,14 +115,13 @@ void Grid::init (const int num_of_particle, const double lx_, const double ly_, 
 #endif
 }
 
-void Grid::init_z (const int num_of_particle, const double lx_, const double ly_, const double lz_,
-					const double grid_size)
+void
+Grid::init_z(const int num_of_particle, const double lx_, const double ly_, const double lz_,
+			 const double grid_size)
 {
-	
 	static int old_gz_max = 0;
 	gx_max = (int)(lx_/h);
 	gz_max = (int)(lz_/h);
-
 	if (gz_max != old_gz_max) {
 		cerr << gz_max << " <= " << old_gz_max << endl;
 		int gy = 0;
@@ -145,13 +145,10 @@ void Grid::init_z (const int num_of_particle, const double lx_, const double ly_
 						}
 						gp_tmp.y = 0;
 						neighbor_cell[gx][gy][gz].push_back(gp_tmp);
-
 					}
 				}
 			}
 		}
-		
-		
 	}
 	old_gz_max = gz_max;
 }

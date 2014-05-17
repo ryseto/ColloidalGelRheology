@@ -133,8 +133,8 @@ public:
 #ifdef TWODIMENSION
 	// 2D
 	inline void infinitesimalRotation(double dw_y){
-		q[0] += 0.5*( -dw_y * q[2]);
-		q[2] += 0.5*(  dw_y * q[0]);
+		q[0] += 0.5*( -dw_y*q[2]);
+		q[2] += 0.5*(  dw_y*q[0]);
 	}
 #else
 	// 3D

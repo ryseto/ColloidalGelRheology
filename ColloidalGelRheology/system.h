@@ -14,6 +14,7 @@
 #include "bond.h"
 #include "wall.h"
 #include "contable.h"
+#include "StressTensor.h"
 #include <vector>
 #include <map>
 using namespace std;
@@ -44,7 +45,7 @@ protected:
 	int interval_convergence_check;
 	int interval_makeNeighbor;
 	int interval_output_config;
-	int relax_for_restructuring;
+	int relax_for_restructuring; //@@@ I should chekc the effect @@@
 	int cnt_output_config;
 	/*
 	 * State parameters of system
@@ -54,7 +55,7 @@ protected:
 	double time;
 	double volume_fraction;
 	double volume_fraction_init;
-//	double area_fraction;
+	//	double area_fraction;
 	double strain_x;
 	double stress_x;
 	double strain_z;
@@ -92,6 +93,12 @@ protected:
 	 * variables for simulations
 	 */
 	bool prog_strain;
+	/*
+	 * deformation_type
+	 * 0: uniaxial compression
+	 * 1: biaxial compression
+	 */
+	int deformation_type;
 	int counter_relax_for_restructuring;
 	int min_relaxation_loop;
 	int max_relaxation_loop;
@@ -128,7 +135,6 @@ private:
 	void setWall();
 	void setBondGenerationDistance(double);
 	void generateBond();
-	void generateBondAll();
 	void makeInitialBond(double generation_distance);
 	void checkState();
 	void checkBondFailure();
@@ -141,7 +147,6 @@ private:
 	void TimeDevBendingTest();
 
 	bool mechanicalEquilibrium();
-	bool reachStrainTarget();
 	void setTarget();
 	void setFirstTarget();
 	bool checkEndCondition();
@@ -173,7 +178,7 @@ private:
 	void outputConfiguration(char equilibrium);
 	void outputRestructuring();
 	void outlog();
-
+	double system_volume();
 public:
 	System();
 	~System();
@@ -190,16 +195,14 @@ public:
 	void setExternalforce(double fex){
 		f_ex.set(fex,0,0);
 	}
-
 	void setLinearChain(int number_of_particles);
-
 	/*
 	 * Objects
 	 */
 	vector<Particle *> particle;
 	vector <Particle *> particle_active;
 	vector<Bond *> bond;
-	vector <Bond *> bond_active;
+	//vector <Bond *> bond_active;
 	vector <Wall *> wl;
 	/*
 	 * Objects for simulation
@@ -211,9 +214,13 @@ public:
 	/*
 	 * System parameters
 	 */
-	double lx, ly, lz;
+	double lx;
+	double ly;
+	double lz;
+	double lx_half;
+	double ly_half;
+	double lz_half;
 	double lz_init;
-
 	double dt; // Time step to integrate equatino of motion.
 	double eta;
 	double eta_rot;
@@ -231,12 +238,13 @@ public:
 	 */
 	char simulation;
 	bool initialprocess; // To prepare initial bonds and so on.
-	double lx0, ly0, lz0; // = (lx/2, ly/2, lz/2)
+	//double lx0, ly0, lz0; // = (lx/2, ly/2, lz/2)
 	int n_top;
 	int n_bot;
 	BondParameter bond0;
 	BondParameter bond1;
 	double sq_dist_generate;
+	StressTensor total_contact_stressXF;
 };
 
 #endif
