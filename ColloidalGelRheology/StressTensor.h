@@ -13,8 +13,6 @@
 #include <iomanip>
 
 class StressTensor {
-private:
-
 public:
 	/* 3D
 	 * (xx, xy, xz, yz, yy, zz)
@@ -28,6 +26,7 @@ public:
 			elm[i] = 0;
 		}
 	}
+	
 	void outputStressTensor(ofstream &fout)
 	{
 		fout << elm[0] << ' ';
@@ -71,8 +70,7 @@ public:
 		}
 	}
 	
-	inline friend StressTensor
-	operator + (const StressTensor &a1, const StressTensor &a2)
+	inline friend StressTensor operator + (const StressTensor &a1, const StressTensor &a2)
 	{
 		return StressTensor(a1.elm[0]+a2.elm[0],
 							a1.elm[1]+a2.elm[1],
@@ -82,15 +80,13 @@ public:
 							a1.elm[5]+a2.elm[5]);
 	}
 	
-	inline friend StressTensor
-	operator + (const StressTensor &s)
+	inline friend StressTensor operator + (const StressTensor &s)
 	{
 		return s;
 	}
 	
 	/* subtraction */
-	inline friend StressTensor
-	operator - (const StressTensor &a1, const StressTensor &a2)
+	inline friend StressTensor operator - (const StressTensor &a1, const StressTensor &a2)
 	{
 		return StressTensor(a1.elm[0]-a2.elm[0],
 							a1.elm[1]-a2.elm[1],
@@ -100,8 +96,7 @@ public:
 							a1.elm[5]-a2.elm[5]);
 	}
 	
-	inline friend StressTensor
-	operator - (const StressTensor &s)
+	inline friend StressTensor operator - (const StressTensor &s)
 	{
 		return StressTensor(s.elm[0],
 							s.elm[1],
@@ -111,8 +106,7 @@ public:
 							s.elm[5]);
 	}
 	
-	inline friend StressTensor
-	operator * (const double &d, const StressTensor &s)
+	inline friend StressTensor operator * (const double &d, const StressTensor &s)
 	{
 		return StressTensor(d*s.elm[0],
 							d*s.elm[1],
@@ -122,14 +116,12 @@ public:
 							d*s.elm[5]);
 	}
 	
-	inline friend StressTensor
-	operator * (const StressTensor &s, const double &d)
+	inline friend StressTensor operator * (const StressTensor &s, const double &d)
 	{
 		return d*s;
 	}
 	
-	inline friend StressTensor
-	operator * (const int &i, const StressTensor &s)
+	inline friend StressTensor operator * (const int &i, const StressTensor &s)
 	{
 		return StressTensor(i*s.elm[0],
 							i*s.elm[1],
@@ -139,8 +131,7 @@ public:
 							i*s.elm[5]);
 	}
 	
-	inline friend StressTensor
-	operator * (const StressTensor &s, const int &i)
+	inline friend StressTensor operator * (const StressTensor &s, const int &i)
 	{
 		return StressTensor(i*s.elm[0],
 							i*s.elm[1],
@@ -241,7 +232,7 @@ public:
 	
 	inline void reset()
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] = 0;
 		}
 	}

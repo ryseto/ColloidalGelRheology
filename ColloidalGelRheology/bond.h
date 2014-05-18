@@ -132,18 +132,13 @@ public:
 		para.kt = k;
 		para.kb = k;
 	}
-	StressTensor getContactStressXF(){return contact_stresslet_XF;}
+	StressTensor getContactStressXF()
+	{
+		return contact_stresslet_XF;
+	}
 	void calcContactStress()
 	{
 		if (status != 0) {
-			/*
-			 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
-			 * Fc_normal = -Fc_normal_norm*nvec;
-			 * This force acts on particle 1.
-			 * stress1 is a0*nvec[*]force.
-			 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-			 * stress1 + stress2 = (a1+a2)*nvec[*]force
-			 */
 			contact_stresslet_XF.set(r_vec, force0);
 		} else {
 			contact_stresslet_XF.reset();

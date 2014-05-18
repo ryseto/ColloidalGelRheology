@@ -224,9 +224,9 @@ void Particle::output(ofstream &fout)
 
 void Particle::calc_stack_Force()
 {
-	for (int i = 0; i < cn_size; i++){
-		sy->bond[ cn[i].bond ]->calcForce();
-		force += sy->bond[cn[i].bond ]->forceToParticle(particle_number);
+	for (int i = 0; i < cn_size; i++) {
+		sy->bond[cn[i].bond]->calcForce();
+		force += sy->bond[cn[i].bond]->forceToParticle(particle_number);
 	}
 }
 
