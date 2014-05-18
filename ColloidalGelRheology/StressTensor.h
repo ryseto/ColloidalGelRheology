@@ -254,7 +254,7 @@ public:
 		return elm[5]-elm[4];
 	}
 	
-	double getStressXZ(){
+	double getShearStress(){
 		return elm[2];
 	}
 	
@@ -268,6 +268,14 @@ public:
 	
 	double getCompressiveStress(){
 		return -elm[5];
+	}
+	
+	double getLateralStress(){
+#ifdef TWODIMENSION
+		return -elm[0];
+#else
+		return -0.5*(elm[0]+elm[4]);
+#endif
 	}
 	
 	void cerr(){

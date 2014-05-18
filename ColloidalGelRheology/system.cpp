@@ -13,7 +13,7 @@ System::System()
 {
 	n_particle = 0;
 	n_bond = 0;
-	version="0";
+	version = "0";
 	ct = new ConTable;
 	grid = new Grid;
 }
@@ -28,29 +28,7 @@ System::~System()
 	delete grid;
 }
 
-void
-System::TimeDevStrainControlCompactionEuler()
-{
-	if (prog_strain) {
-		wl[0]->compactionStrainControl(wall_velocity); // bot
-		wl[1]->compactionStrainControl(-wall_velocity); // top
-	}
- 	foreach (vector<Bond *>, bond, it_bond) {
-		if ((*it_bond)->status) {
-			(*it_bond)->addContactForce();
-		}
-	}
-	//////////////////////////////
-	// calculate
-	// x*_{j+1} and v*_{j+1}
-	foreach (vector<Particle *>, particle_active, it_particle) {
-		(*it_particle)->move_Euler();
-	}
-	time += dt;
-}
-
-void
-System::TimeDevPeriodicBoundaryCompactionEuler()
+void System::TimeDevPeriodicBoundaryCompactionEuler()
 {
 	if (prog_strain) {
 		if (deformation_type == 0) {
@@ -69,27 +47,7 @@ System::TimeDevPeriodicBoundaryCompactionEuler()
 	//////////////////////////////
 	// calculate
 	// x*_{j+1} and v*_{j+1}
-	foreach (vector<Particle *>, particle_active, it_particle) {
-		(*it_particle)->move_Euler();
-	}
-	time += dt;
-}
-
-
-void
-System::TimeDevStrainControlShearEuler()
-{
-	if (prog_strain) {
-		wl[0]->shearingStrainControl(-wall_velocity); // bot
-		wl[1]->shearingStrainControl(wall_velocity); // top
-	}
- 	foreach(vector<Bond *>, bond, it_bond) {
-		(*it_bond)->addContactForce();
-	}
-	//////////////////////////////
-	// calculate
-	// x*_{j+1} and v*_{j+1}
-	foreach(vector<Particle *>, particle_active, it_particle) {
+	foreach (vector<Particle *>, particle, it_particle) {
 		(*it_particle)->move_Euler();
 	}
 	time += dt;
@@ -97,58 +55,32 @@ System::TimeDevStrainControlShearEuler()
 
 void System::TimeDevBendingTest()
 {
-	particle_active[0]->stackForce(-0.5*f_ex, 0);
-	particle_active[5]->stackForce(f_ex, 0);
-	particle_active[10]->stackForce(-0.5*f_ex, 0);
+	particle[0]->stackForce(-0.5*f_ex, 0);
+	particle[5]->stackForce(f_ex, 0);
+	particle[10]->stackForce(-0.5*f_ex, 0);
  	foreach (vector<Bond *>, bond, it_bond) {
 		(*it_bond)->addContactForce();
 	}
 	//////////////////////////////
 	// calculate
 	// x*_{j+1} and v*_{j+1}
-	foreach (vector<Particle *>, particle_active, it_particle) {
+	foreach (vector<Particle *>, particle, it_particle) {
 		(*it_particle)->move_Euler();
 	}
 	time += dt;
 }
 
-bool
-System::mechanicalEquilibrium(){
+bool System::mechanicalEquilibrium()
+{
 	static int cnt_check = 0;
 	bool mechanical_equilibrium = false;
 	if (simulation == 's'){
-		/* Check the equilibrium condition for shear
-		 * (1.1) The difference between the stresses at the two walls is enough small.
-		 * (1.2) The stress is less than the minimum stress.
-		 * (2) The change of the measured stress is enough small.
-		 * (3) The maximum velocity of the particles are enough small.
-		 * (4) The maximum angular velocity of the particles are enough small.
-		 *  ---------> Bond breakup requires (1)-(4).
-		 * (5) No restructuring.
-		 *  ---------> The equilibrium requires (1)-(5).
-		 */
-//		if ((diff_stress_x < diff_stress_convergence || stress_x < stress_minimum)
-//			&& stress_x_change < stress_change_convergence
-//			&& max_velocity < max_velocity_convergence // less important
-//			&& max_ang_velocity < max_ang_velocity_convergence // less important
-//			&& counterRegenerate_before == counterRegenerate) {
-//			mechanical_equilibrium = true;
-//		}
 		if ((max_velocity < max_velocity_convergence // less important
 			 && max_ang_velocity < max_ang_velocity_convergence // less important
 			 && counterRegenerate_before == counterRegenerate)) {
 			mechanical_equilibrium = true;
 		}
 	} else {
-		/* Check the equilibrium condition
-		 * (1) The change of the measured stress is enough small.
-		 * (2) The difference between the stresses at the two walls is enough small.
-		 * (3) The maximum velocity of the particles are enough small.
-		 * (4) The maximum angular velocity of the particles are enough small.
-		 *  ---------> Bond breakup requires (1)-(4).
-		 * (5) No restructuring.
-		 *  ---------> The equilibrium requires (1)-(5).
-		 */
 		max_displacement = 0;
 		for (int i=0; i<n_particle; i++) {
 			vec3d disp = particle[i]->p-pos_previous[i];
@@ -157,16 +89,22 @@ System::mechanicalEquilibrium(){
 			} else if (disp.x < -lx_half) {
 				disp.x += lx;
 			}
+#ifndef TWODIMENSION
 			if (disp.y > ly_half) {
 				disp.y -= ly;
-			} else if (disp.x < -ly_half) {
+			} else if (disp.y < -ly_half) {
 				disp.y += ly;
+			}
+#endif
+			if (disp.z > lz_half) {
+				disp.z -= lz;
+			} else if (disp.z < -lz_half) {
+				disp.z += lz;
 			}
 			if (disp.norm() > max_displacement) {
 				max_displacement = disp.norm();
 			}
 		}
-		
 		cerr << "cnt_check : " << cnt_check << endl;
 		cerr << "counterRegenerate : " << counterRegenerate_before << ' ' << counterRegenerate << endl;
 		cerr << "max_velocity : " << max_velocity << endl;
@@ -186,7 +124,7 @@ System::mechanicalEquilibrium(){
 		}
 	}
 	counterRegenerate_before = counterRegenerate;
-	for (int i=0; i<n_particle ; i++) {
+	for (int i=0; i<n_particle; i++) {
 		pos_previous[i] = particle[i]->p;
 	}
 	cnt_check++;
@@ -196,34 +134,21 @@ System::mechanicalEquilibrium(){
 	return mechanical_equilibrium;
 }
 
-void System::preProcesses(){
+void System::preProcesses()
+{
 	initialprocess = true;
 	setSimulationViscosity();
 	preparationOutput();
 	setBondGenerationDistance(2.0);
-	//	setWall();
 	initGrid();
-	//outputParameter(sy, fout_yap);
 	initDEM();
 	makeInitialBond(2.0001);
 	initialprocess = false;
-	checkActiveElements();
 	calcVolumeFraction();
-	//	outputConfiguration('n');
-	//	while (checkPercolation() == false) {
-	//		cerr << "not percolation" << endl;
-	//		shiftForPercolation();
-	//		outputConfiguration('n');
-	//		makeNeighbor();
-	//		generateBond();
-	//		wl[1]->addNewContact(particle_active);
-	//		wl[0]->addNewContact(particle_active);
-	//	}
 	dt = dt_max;
 	setFirstTarget();
 	checkState();
 	outputData();
-	//	outputConfiguration('e');
 	pos_previous.resize(n_particle);
 	for (int i=0; i<n_particle; i++) {
 		pos_previous[i] = particle[i]->p;
@@ -231,7 +156,8 @@ void System::preProcesses(){
 	cnt_output_config = 0;
 }
 
-void System::timeEvolution(){
+void System::timeEvolution()
+{
 	double t_next = time+interval_convergence_check*dt_max;
 	int calc_count = 0;
 	counter_relax_for_restructuring = 0;
@@ -239,56 +165,52 @@ void System::timeEvolution(){
 		prog_strain = (volume_fraction < vf_target);
 		/* Main time evolution */
 		if (simulation == 's') {
-			TimeDevStrainControlShearEuler();
+			/* Shear strain is not yet implemented.
+			 * TimeDevStrainControlShearEuler();
+			 */
 		} else {
-			//TimeDevStrainControlCompactionEuler();
 			TimeDevPeriodicBoundaryCompactionEuler();
 		}
 		/* Breakup of bonds */
 		if (counter_relax_for_restructuring++ >= relax_for_restructuring) {
 			checkBondFailure();
 			if (!regeneration_bond.empty()) {
-				//outputRestructuring();
 				regeneration();
 				counter_relax_for_restructuring = 0;
 			}
 			if (!rupture_bond.empty()) {
-				//outputRestructuring();
 				rupture();
 				counter_relax_for_restructuring = 0;
 			}
 		}
 		/* Bond generation */
-		if ( calc_count++ % interval_makeNeighbor == 0 ){
+		if (calc_count++ % interval_makeNeighbor == 0) {
 			double cell_h = 2.2;
 			grid->init_z(n_particle, lx, ly, lz, cell_h);
-			//		grid->init(n_particle, lx, ly, lz, cell_h);
+			//grid->init(n_particle, lx, ly, lz, cell_h);
 			makeNeighborPB();
 		}
 		generateBond();
 	}
-	if (simulation == 'c'){
+	if (simulation == 'c') {
 		calcVolumeFraction();
 	}
 }
 
-void System::middleProcedures(){
+void System::middleProcedures()
+{
 	simuAdjustment();
 	calcStress();
 	checkState();
-	checkStressDiff();
 	makeNeighborPB();
 	optimalTimeStep();
-	//	if (cnt_output_config % interval_output_config == 0) {
-	//		outputConfiguration('n');
-	//	}
 	output_log();
 	cnt_output_config++;
 }
 
-void System::strainControlSimulation(){
+void System::strainControlSimulation()
+{
 	preProcesses();
-	int cnt_relaxation_loop = 0;
 	cnt_loop = 0;
 	max_displacement = 0;
 	if (simulation == 'c') {
@@ -296,7 +218,7 @@ void System::strainControlSimulation(){
 	} else if (simulation == 'b') {
 		deformation_type = 1; //biaxial compression
 	}
-	if (deformation_type == 0||deformation_type == 1) {
+	if (deformation_type == 0 || deformation_type == 1) {
 		interval_output_config = (int)(2.0/(wall_velocity*dt))/interval_convergence_check;
 	} else {
 		interval_output_config = 20;
@@ -323,16 +245,15 @@ void System::strainControlSimulation(){
 				if (checkEndCondition()) {
 					break;
 				}
-				cnt_relaxation_loop = 0;
 			}
-			//cnt_relaxation_loop ++;
 		}
 		cnt_loop ++;
 	}
 	return;
 }
 
-void System::bendingSimulation(){
+void System::bendingSimulation()
+{
 	initialprocess = true;
 	setSimulationViscosity();
 	preparationOutput();
@@ -342,18 +263,15 @@ void System::bendingSimulation(){
 	initDEM();
 	makeInitialBond(2.0002);
 	initialprocess = false;
-	checkActiveElements();
-	
 	dt = dt_max;
 	checkState();
 	int cnt  = 0 ;
 	double time_interval = 300;
 	double time_max = time_interval;
-	for (int i = 0; i < 2 ; i++){
-		if (i==1){
+	for (int i = 0; i < 2 ; i++) {
+		if (i == 1) {
 			f_ex.set(0,0,0);
 		}
-		
 		while(true){
 			TimeDevBendingTest();
 			checkBondFailure();
@@ -370,7 +288,7 @@ void System::bendingSimulation(){
 			if (cnt++ % 100 ==0){
 				
 				fout_conf << "# " << f_ex.x << endl;
-				foreach( vector<Particle *>, particle_active, it_particle){
+				foreach( vector<Particle *>, particle, it_particle){
 					cout << "c ";
 					cout << (*it_particle)->p.x -0.5*lx << ' ';
 					cout << (*it_particle)->p.y -0.5*ly << ' ';
@@ -384,16 +302,13 @@ void System::bendingSimulation(){
 					fout_conf << (*it_particle)->orientation.q[2] << ' ';
 					fout_conf << (*it_particle)->orientation.q[3] << endl;
 				}
-				
 				cout << "l 0 -0.01 -12 0 -0.01 12 \n";
 				cout << "l -12 -0.01 0 12 -0.01 0 \n";
-				
 				cout << endl;
-				double diff_x = particle_active[5]->p.x - particle_active[0]->p.x ;
-				
+				double diff_x = particle[5]->p.x-particle[0]->p.x;
 				fout_data << time << ' ' << diff_x << ' ' << f_ex.x << ' ' << counterRegenerate << endl;
 			}
-			if ( time > time_max ){
+			if (time > time_max) {
 				break;
 			}
 		}
@@ -402,38 +317,41 @@ void System::bendingSimulation(){
 	return;
 }
 
-void System::outlog(){
-	if (simulation=='s'){
-		cerr << cnt_output_config << ' ' << strain_x << ": " << strain_target  << endl;
-	} else if (simulation=='c'){
+void System::outlog()
+{
+	if (simulation=='s') {
+		cerr << cnt_output_config << ' ' << shear_strain << ": " << strain_target  << endl;
+	} else if (simulation=='c') {
 		cerr << cnt_output_config << ' ' << volume_fraction << ": " << vf_target  << endl;
 	}
 }
 
-
-void System::setTarget(){
-	if (simulation=='s'){
-		strain_target += step_strain_x;
+void System::setTarget()
+{
+	if (simulation=='s') {
+		strain_target += step_shear_strain;
 	} else {
 		vf_target *= volumefraction_increment;
 	}
 }
 
-void System::setFirstTarget(){
-	if (simulation == 's'){
-		strain_target = step_strain_x;
+void System::setFirstTarget()
+{
+	if (simulation == 's') {
+		strain_target = step_shear_strain;
 	} else {
 		vf_target = volume_fraction_init / initial_compaction;
 	}
 }
 
-bool System::checkEndCondition(){
+bool System::checkEndCondition()
+{
 	bool end_simulation = false;
-	if (simulation =='s' ){
-		if (strain_x > max_strain_x){
+	if (simulation =='s') {
+		if (shear_strain > max_shear_strain){
 			end_simulation = true;
 		}
-	} else if (simulation =='c' ){
+	} else if (simulation =='c') {
 		if (volume_fraction > max_volume_fraction){
 			end_simulation = true;
 		}
@@ -441,36 +359,15 @@ bool System::checkEndCondition(){
 	return end_simulation;
 }
 
-void System::checkStressDiff()
-{
-	if (simulation == 's') {
-		if (diff_stress_x == 0) {
-			stress_x_change = 0;
-			stress_z_change = 0;
-		} else {
-			stress_x_change = abs(stress_x-stress_x_before)/stress_x;
-			stress_z_change = abs(stress_z-stress_z_before)/stress_z;
-		}
-		strain_x = abs(wl[0]->x-wl[1]->x)/lz;
-		strain_z = (lz_init-lz)/lz_init;
-	} else {
-		stress_z_change = abs(stress_z-stress_z_before)/stress_z;
-		stress_x_change = abs(stress_x-stress_x_before)/stress_x;
-		strain_z = (lz_init-lz)/lz_init;
-	}
-	stress_z_before = stress_z;
-	stress_x_before = stress_x;
-}
-
 bool System::checkOutputStrain(double diff)
 {
-	if (simulation == 's'){
-		if (strain_x > strain_x_last_output + diff){
+	if (simulation == 's') {
+		if (shear_strain > strain_x_last_output+diff) {
 			lz_last_output = lz;
 			return true;
 		}
 	} else {
-		if ( lz < lz_last_output - diff ){
+		if (lz < lz_last_output-diff) {
 			lz_last_output = lz;
 			return true;
 		}
@@ -489,7 +386,8 @@ void System::setParameterFile(char *parameters_file_)
 	cerr << parameters_file << ' ' << parameters << endl;
 }
 
-void System::initDEM(){
+void System::initDEM()
+{
 	ct->set(n_particle);
 	rup_normal = rup_shear = rup_bend = rup_torsion = 0;
 	rupture_bond.clear();
@@ -497,9 +395,7 @@ void System::initDEM(){
 	time = 0.;
 	counterBreak = 0;
 	counterRegenerate = 0;
-	stress_z = 0;
-	stress_x = 0;
-	strain_x = 0;
+	shear_strain = 0;
 	strain_z = 0;
 	stress_z_before = 0;
 	stress_x_before = 0;
@@ -508,16 +404,15 @@ void System::initDEM(){
 	counterRegenerate_before = 0;
 }
 
-void System::preparationOutput(){
+void System::preparationOutput()
+{
 	char fn_snapshot[128];
 	char fn_data[128];
 	char fn_log[128];
 	char fn_conf[128];
 	char fn_deform[128];
-	
 	char fn_particle[128];
 	char fn_bond[128];
-	
 	char name_string[128];
 	if(simulation == 'c'|| simulation == 's'){
 		sprintf(name_string, "%s_%s_%s",
@@ -525,18 +420,15 @@ void System::preparationOutput(){
 	} else if(simulation == 'b'){
 		sprintf(name_string, "%s_%1.2f", parameters, f_ex.x );
 	}
-
 	string fn_common = (string)name_string ;
 	cerr << version << endl;
 	cerr << fn_common.c_str() << endl;
-
 	sprintf(fn_data, "data_%s.dat", fn_common.c_str());
 	sprintf(fn_log, "log_%s.dat", fn_common.c_str());
 	sprintf(fn_conf, "conf_%s.dat", fn_common.c_str());
 	sprintf(fn_deform, "deform_%s.dat", fn_common.c_str());
 	sprintf(fn_particle, "par_%s.dat", fn_common.c_str());
 	sprintf(fn_bond, "bond_%s.dat", fn_common.c_str());
-	
 	if ( simulation == 'b'){
 		sprintf(fn_snapshot, "ss_%s.yap", fn_common.c_str());
 		fout_yap.open(fn_snapshot);
@@ -556,7 +448,7 @@ void System::setInitClusterFile(string init_cluster_file_)
 	unsigned long i_backslash = s_init_cluster_file.find_last_of( "/") + 1;
 	unsigned long i_extention = s_init_cluster_file.find( ".dat" );
 	sprintf(init_cluster, "%s",
-			(s_init_cluster_file.substr( i_backslash, i_extention-i_backslash)).c_str());
+			(s_init_cluster_file.substr(i_backslash, i_extention-i_backslash)).c_str());
 }
 
 /*
@@ -577,19 +469,22 @@ void System::setBondGenerationDistance(double distance)
 	sq_dist_generate = sq(distance);
 }
 
-void System::generateBond(){
+void System::generateBond()
+{
 	for (int i=0; i<n_particle; i++) {
 		particle[i]->generateBond();
 	}
 	return;
 }
 
-void System::setSimulationViscosity(){
+void System::setSimulationViscosity()
+{
 	eta = eta_factor*2*sqrt(bond0.kb);
-	eta_rot = (4.0/3.0)*eta;
+	eta_rot = (4./3)*eta;
 }
 
-void System::optimalTimeStep(){
+void System::optimalTimeStep()
+{
 	double dt_new1 = max_move_step/max_velocity;
 	double dt_new2 = max_move_step/max_ang_velocity;
 	double dt_new;
@@ -606,39 +501,14 @@ void System::optimalTimeStep(){
 	dt = dt_new;
 }
 
-void System::calcStress(){
+void System::calcStress()
+{
 	total_contact_stressXF.reset();
-	foreach( vector<Bond *>, bond, it_bond) {
+	foreach(vector<Bond *>, bond, it_bond) {
 		(*it_bond)->calcContactStress();
 		total_contact_stressXF += (*it_bond)->getContactStressXF();
 	}
 	total_contact_stressXF /= system_volume();
-
-//		if (interaction[k].is_active()) {
-//			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
-//		}
-//		if (interaction[k].is_contact()) {
-//			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
-//			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
-//		}
-//	}
-//	
-//	
-	//double stress_x_bot;// = wl[0]->stressSensor_x();
-	//double stress_x_top;// = wl[1]->stressSensor_x();
-	//	wl[0]->stressSensor(stress_x_bot, stress_z_bot);
-	//	wl[1]->stressSensor(stress_x_top, stress_z_top);
-	//stress_z = 0.5*(abs(stress_z_top-stress_z_bot));
-	//	diff_stress_z = abs( stress_z_bot + stress_z_top )/stress_z;
-	//diff_stress_z = abs(stress_z_bot+stress_z_top);
-	//stress_x = 0.5*(stress_x_top-stress_x_bot);
-	//	diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
-	//diff_stress_x = abs(stress_x_bot+stress_x_top);
-	//	if (stress_x < 1e-8){
-	//		diff_stress_x = 0;
-	//	}else{
-	//		diff_stress_x = abs(stress_x_bot + stress_x_top )/stress_x;
-	//	}
 }
 
 void prepareBond(BondParameter & _bond)
@@ -755,28 +625,28 @@ void System::readParameterFile()
 void System::readParameter(const string &codeword, const string &value)
 {
 	map<string,int> keylist;
-	keylist["bond0_file:"]=2; const int _bond0_file = 2;
-	keylist["bond1_file:"]=3; const int _bond1_file = 3;
-	keylist["initial_compaction:"]=11; const int _initial_compaction=11;
-	keylist["volumefraction_increment:"]=12; const int _volumefraction_increment=12;
-	keylist["max_volume_fraction:"]=13; const int _max_volume_fraction=13;
-	keylist["step_strain_x:"]=14; const int _step_strain_x=14;
-	keylist["max_strain_x:"]=15; const int _max_strain_x=15;
-	keylist["wall_velocity:"]=20;const int _wall_velocity=20;
-	keylist["dt_max:"]=21; const int _dt_max=21;
-	keylist["max_move_step:"]=22; const int _max_move_step=22;
-	keylist["eta_factor:"]=23;const int _eta_factor=23;
-	keylist["relax_for_restructuring:"]=30; const int _relax_for_restructuring=30;
-	keylist["interval_convergence_check:"]=31; const int _interval_convergence_check=31;
-	keylist["interval_makeNeighbor:"]=32; const int _interval_makeNeighbor=32;
-	keylist["max_velocity_convergence:"]=33; const int _max_velocity_convergence=33;
-	keylist["max_ang_velocity_convergence:"]=34; const int _max_ang_velocity_convergence=34;
-	keylist["diff_stress_convergence:"]=35;const int _diff_stress_convergence=35;
-	keylist["stress_change_convergence:"]=36;const int _stress_change_convergence=36;
-	keylist["stress_minimum:"]=37; const int _stress_minimum=37;
-	keylist["min_relaxation_loop:"] =38; const int _min_relaxation_loop=38;
-	keylist["max_relaxation_loop:"] =39; const int _max_relaxation_loop=39;
-	keylist["eq_max_displacement:"] =40; const int _eq_max_displacement=40;
+	keylist["bond0_file:"] = 2; const int _bond0_file = 2;
+	keylist["bond1_file:"] = 3; const int _bond1_file = 3;
+	keylist["initial_compaction:"] = 11; const int _initial_compaction = 11;
+	keylist["volumefraction_increment:"] = 12; const int _volumefraction_increment = 12;
+	keylist["max_volume_fraction:"] = 13; const int _max_volume_fraction = 13;
+	keylist["step_shear_strain:"] = 14; const int _step_shear_strain = 14;
+	keylist["max_shear_strain:"] = 15; const int _max_shear_strain = 15;
+	keylist["wall_velocity:"] = 20;const int _wall_velocity = 20;
+	keylist["dt_max:"] = 21; const int _dt_max = 21;
+	keylist["max_move_step:"] = 22; const int _max_move_step = 22;
+	keylist["eta_factor:"] = 23;const int _eta_factor = 23;
+	keylist["relax_for_restructuring:"] = 30; const int _relax_for_restructuring = 30;
+	keylist["interval_convergence_check:"] = 31; const int _interval_convergence_check = 31;
+	keylist["interval_makeNeighbor:"] = 32; const int _interval_makeNeighbor = 32;
+	keylist["max_velocity_convergence:"] = 33; const int _max_velocity_convergence = 33;
+	keylist["max_ang_velocity_convergence:"] = 34; const int _max_ang_velocity_convergence = 34;
+	keylist["diff_stress_convergence:"] = 35;const int _diff_stress_convergence = 35;
+	keylist["stress_change_convergence:"] = 36;const int _stress_change_convergence = 36;
+	keylist["stress_minimum:"] = 37; const int _stress_minimum = 37;
+	keylist["min_relaxation_loop:"] = 38; const int _min_relaxation_loop = 38;
+	keylist["max_relaxation_loop:"] = 39; const int _max_relaxation_loop = 39;
+	keylist["eq_max_displacement:"] = 40; const int _eq_max_displacement = 40;
 	cerr << codeword << ' ' << value << endl;
 	switch(keylist[codeword]){
 		case _bond0_file: bond0_file = value; break;
@@ -790,8 +660,8 @@ void System::readParameter(const string &codeword, const string &value)
 		case _eta_factor: eta_factor = atof(value.c_str()); break;
 		case _max_ang_velocity_convergence: max_ang_velocity_convergence = atof(value.c_str()); break;
 		case _max_volume_fraction: max_volume_fraction = atof(value.c_str()); break;
-		case _step_strain_x: step_strain_x = atof(value.c_str()); break;
-		case _max_strain_x: max_strain_x = atof(value.c_str()); break;
+		case _step_shear_strain: step_shear_strain = atof(value.c_str()); break;
+		case _max_shear_strain: max_shear_strain = atof(value.c_str()); break;
 		case _max_move_step: max_move_step = atof(value.c_str()); break;
 		case _volumefraction_increment: volumefraction_increment = atof(value.c_str()); break;
 		case _diff_stress_convergence: diff_stress_convergence = atof(value.c_str()); break;
@@ -822,15 +692,12 @@ void System::importPositions()
 	char height_str[4];
 	sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
 	sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
-
 	fin.open( path.c_str());
 	if (! fin.is_open() ){
 		cerr << "no initial file" << endl;
 		exit(1);
 	}
-	
 	lx = atof(width_str);
-	
 	lz_init = atof(height_str);
 	lz = lz_init;
 #ifdef TWODIMENSION
@@ -844,9 +711,7 @@ void System::importPositions()
 	lz_half = lz/2;
 	double x, y, z;
 	int i_cluster;
-	
 	if (simulation == 'c' || simulation == 's') {
-		
 		do {
 #ifdef TWODIMENSION
 			fin >> x >> z >> i_cluster ;
@@ -917,24 +782,6 @@ void System::shiftCenterOfMass(vector<vec3d> &p)
 	}
 }
 
-/* Checking active bonds at the first step.
- *
- *
- */
-void System::checkActiveElements(){
-	//	for (int i=0; i < n_bond; i++) {
-	//		if (bond[i]->status) {
-	//			bond_active.push_back(bond[i]);
-	//			bond[i]->number_activebond = bond_active.size()-1;
-	//		}
-	//	}
-	for (int i=0; i<n_particle; i++) {
-		if ( particle[i]->wall == false) {
-			particle_active.push_back(particle[i]);
-		}
-	}
-}
-
 void System::calcLocalStrains(){
 	/* The minimum and maximum distances between two particles.
 	 */
@@ -978,62 +825,6 @@ void System::initGrid(){
 	grid->init(n_particle, lx, ly, lz, cell_h);
 }
 
-//void System::setWallStress(double value_x, double value_y,  double value_z){
-//	if (value_x == -1){
-//		wl[0]->x_movable = false;
-//		wl[1]->x_movable = false;
-//		stress_x = 0;
-//	} else {
-//		wl[0]->x_movable = true;
-//		wl[1]->x_movable = true;
-//		stress_x = value_x;
-//	}
-//	if (value_y == -1){
-//		wl[0]->y_movable = false;
-//		wl[1]->y_movable = false;
-//		stress_y = 0;
-//	} else {
-//		wl[0]->y_movable = true;
-//		wl[1]->y_movable = true;
-//		stress_y = value_y;
-//	}
-//	
-//	if (value_z == -1){
-//		wl[0]->z_movable = false;
-//		wl[1]->z_movable = false;
-//		stress_z = 0;
-//	} else {
-//		wl[0]->z_movable = true;
-//		wl[1]->z_movable = true;
-//		stress_z = value_z;
-//	}
-//
-//#ifndef TWODIMENSION
-//	double fx_wall = stress_x*lx*ly;
-//	double fy_wall = stress_y*lx*ly;
-//	double fz_wall = stress_z*lx*ly;
-//#else
-//	double fx_wall = stress_x*lx*2;
-//	double fy_wall = stress_y*lx*2;
-//	double fz_wall = stress_z*lx*2;
-//#endif
-//	
-//	force_wall.set(-fx_wall, -fy_wall, fz_wall);
-//	cerr << "stress = " << stress_z << ',' << stress_x << " Pa ";
-//	cerr << " Fwall=" << fz_wall << ',' << fx_wall << " N" << endl;
-//	
-//}
-
-void System::renew_Lz() {
-	lz = wl[1]->z-wl[0]->z;
-}
-
-void System::reset_strain_x(){
-	wl[1]->x = lx_half;
-	wl[0]->x = lx_half;
-	strain_x = 0;
-}
-
 void System::outputData(){
 	static bool firsttime = true;
 	static int rup_normal_previous = 0;
@@ -1044,25 +835,22 @@ void System::outputData(){
 	double del_strain = 0;
 	if (firsttime) {
 		fout_data << "#1 volume_fraction\n";
-		fout_data << "#2 stress_z\n";
-		fout_data << "#3 stress_x\n";
-		fout_data << "#4 strain_z\n";
-		fout_data << "#5 strain_x\n";
-		fout_data << "######  rupture: total number \n";
-		fout_data << "#6  rup_normal(total number)\n";
-		fout_data << "#7  rup_shear(total number)\n";
-		fout_data << "#8  rup_bend(total number)\n";
-		fout_data << "#9 rup_torsion(total number)\n";
-		fout_data << "######  rupture: rate\n";
-		fout_data << "#10 rate_rup_normal\n";
-		fout_data << "#11 rate_rup_shear\n";
-		fout_data << "#12 rate_rup_bend\n";
-		fout_data << "#13 rate_rup_torsion\n";
-		fout_data << "###### \n";
-		fout_data << "#14 average_contact_number\n";
-		fout_data << "#15 del_strain\n";
-		fout_data << "#16 stress_z_top\n";
-		fout_data << "#17 stress_z_bot\n";
+		fout_data << "#2 shear_strain\n";
+		fout_data << "#3 ParticlePressure\n";
+		fout_data << "#4 CompressiveStress(sigma_22)\n";
+		fout_data << "#5 LateralStress\n";
+		fout_data << "#6 NormalStress1\n";
+		fout_data << "#7 NormalStress2\n";
+		fout_data << "#8  rup_normal(total number)\n";
+		fout_data << "#9  rup_shear(total number)\n";
+		fout_data << "#10 rup_bend(total number)\n";
+		fout_data << "#11 rup_torsion(total number)\n";
+		fout_data << "#12 rate_rup_normal\n";
+		fout_data << "#13 rate_rup_shear\n";
+		fout_data << "#14 rate_rup_bend\n";
+		fout_data << "#15 rate_rup_torsion\n";
+		fout_data << "#16 average_contact_number\n";
+		fout_data << "#17 del_strain\n";
 		fout_data << "# volume_fraction " << volume_fraction << endl;
 		fout_data << "# number_of_particle " << particle.size() << endl;
 		fout_data << "# lx " << lx << endl;
@@ -1073,8 +861,8 @@ void System::outputData(){
 		del_strain = (strain_z - strain_previous);
 		strain_previous = strain_z;
 	} else if (simulation == 's') {
-		del_strain = (strain_x - strain_previous);
-		strain_previous = strain_x;
+		del_strain = (shear_strain - strain_previous);
+		strain_previous = shear_strain;
 	}
 	double rate_rup_normal, rate_rup_shear, rate_rup_bend, rate_rup_torsion;
 	if (del_strain == 0) {
@@ -1088,35 +876,32 @@ void System::outputData(){
 		rate_rup_bend = (rup_bend-rup_bend_previous)/del_strain;
 		rate_rup_torsion = (rup_torsion-rup_torsion_previous)/del_strain;
 	}
-	if (firsttime ){
+	if (firsttime) {
 		firsttime = false;
 		return;
 	}
-	stress_z = 0;
-	stress_x = 0;
-	
-	fout_data << volume_fraction << ' ' ; //1
-	//fout_data << stress_z << ' ' ;  // 2
-	fout_data << total_contact_stressXF.getCompressiveStress() << ' ';
-	fout_data << total_contact_stressXF.getNormalStress1() << ' ';
-	//fout_data << stress_x << ' ' ; // 3
-	fout_data << strain_z << ' ' ; // 4
-	fout_data << strain_x << ' ' ; // 5
+	shear_strain = 0;
+	fout_data << volume_fraction << ' '; // 1
+	fout_data << shear_strain << ' '; // 2
+	fout_data << total_contact_stressXF.getParticlePressure() << ' '; // 3
+	fout_data << total_contact_stressXF.getShearStress() << ' '; // 4
+	fout_data << total_contact_stressXF.getCompressiveStress() << ' ' ; // 5
+	fout_data << total_contact_stressXF.getLateralStress() << ' '; // 6
+	fout_data << total_contact_stressXF.getNormalStress1() << ' '; // 7
+	fout_data << total_contact_stressXF.getNormalStress2() << ' '; // 8
 	///////////////////////////////////////
-	fout_data << rup_normal << ' '; //6
-	fout_data << rup_shear << ' ';  //7
-	fout_data << rup_bend << ' ';   //8
-	fout_data << rup_torsion << ' ';//9
+	fout_data << rup_normal << ' '; //9
+	fout_data << rup_shear << ' ';  //10
+	fout_data << rup_bend << ' ';   //11
+	fout_data << rup_torsion << ' ';//12
 	///////////////////////////////////////
-	fout_data << rate_rup_normal << ' '; //10
-	fout_data << rate_rup_shear << ' ';  //11
-	fout_data << rate_rup_bend << ' ';   //12
-	fout_data << rate_rup_torsion << ' ';//13
+	fout_data << rate_rup_normal << ' '; //13
+	fout_data << rate_rup_shear << ' ';  //14
+	fout_data << rate_rup_bend << ' ';   //15
+	fout_data << rate_rup_torsion << ' ';//16
 	///////////////////////////////////////
-	fout_data << average_contact_number << ' '; //14
-	fout_data << del_strain << ' '; // 15
-	fout_data << stress_z_top << ' '; // 16
-	fout_data << stress_z_bot << ' '; // 17
+	fout_data << average_contact_number << ' '; //17
+	fout_data << del_strain << ' '; // 18
 	fout_data << endl;
 	rup_normal_previous = rup_normal;
 	rup_shear_previous = rup_shear;
@@ -1127,15 +912,16 @@ void System::outputData(){
 void System::output_log()
 {
 	static bool firsttime = true;
-	if ( firsttime ){
+	if (firsttime) {
 		firsttime = false;
 		fout_log << "#1 time\n";
-		fout_log << "#2 lz\n";
-		fout_log << "#3 volume_fraction\n";
-		fout_log << "#4 stress_z\n";
-		fout_log << "#5 stress_x\n";
-		fout_log << "#6 strain_z\n";
-		fout_log << "#7 strain_x\n";
+		fout_log << "#2 volume_fraction\n";
+		fout_log << "#3 shear_strain\n";
+		fout_log << "#4 ParticlePressure\n";
+		fout_log << "#5 CompressiveStress(sigma_22)\n";
+		fout_log << "#6 LateralStress\n";
+		fout_log << "#7 NormalStress1\n";
+		fout_log << "#8 NormalStress2\n";
 		fout_log << "#8 average_contact_number\n";
 		fout_log << "#9 ave_force\n";
 		fout_log << "#10 max_force\n";
@@ -1159,36 +945,34 @@ void System::output_log()
 		fout_log << "#28 cnt_loop\n";
 		fout_log << "#29 max_displacement\n";
 	}
-	
-	fout_log << time << ' '; //1
-	fout_log << lz << ' '; //2
-	fout_log << volume_fraction << ' ';// 3
-	fout_log << total_contact_stressXF.getCompressiveStress() << ' ' ; // 4
-	fout_log << total_contact_stressXF.getNormalStress1() << ' ' ; // 5
-	fout_log << strain_z << ' ' ; // 6
-	fout_log << strain_x << ' ' ; // 7
-	fout_log << average_contact_number << ' '; //8
-	fout_log << ave_force << ' '; //9
-	fout_log << max_force << ' '; //10
-	fout_log << r_min << ' ';// 11
-	fout_log << r_max << ' ';// 12
-	fout_log << sliding_disp_max << ' '; // 13
-	fout_log << bending_angle_max << ' '; // 14
-	fout_log << torsional_angle_max << ' '; // 15
-	fout_log << max_move_step / max_velocity << ' '; // 16
-	fout_log << counterRegenerate <<' '; //17
-	fout_log << counterBreak << ' ';//18
-	fout_log << n_bond - counterBreak << ' '; // 19
-	fout_log << max_velocity << ' ';//20
-	fout_log << max_ang_velocity << ' '; // 21
-	fout_log << ave_bondforce << ' '; // 22
-	fout_log << diff_stress_z << ' ' ; //23
-	fout_log << diff_stress_x << ' ' ; //24
-	fout_log << stress_z_change << ' '; // 25
-	fout_log << stress_x_change << ' '; // 26
-	fout_log << kinetic_energy  << ' '; // 27
-	fout_log << cnt_loop << ' '; // 28
-	fout_log << max_displacement << ' '; // 29
+	fout_log << time << ' '; // 1
+	fout_log << volume_fraction << ' '; // 2
+	fout_log << shear_strain << ' '; // 3
+	fout_log << total_contact_stressXF.getParticlePressure() << ' '; // 4
+	fout_log << total_contact_stressXF.getShearStress() << ' '; // 5
+	fout_log << total_contact_stressXF.getCompressiveStress() << ' ' ; // 6
+	fout_log << total_contact_stressXF.getLateralStress() << ' '; // 7
+	fout_log << total_contact_stressXF.getNormalStress1() << ' '; // 8
+	fout_log << total_contact_stressXF.getNormalStress2() << ' '; // 9
+	fout_log << lz << ' '; // 10
+	fout_log << lx << ' '; // 11
+	fout_log << average_contact_number << ' '; //12
+	fout_log << ave_force << ' '; //13
+	fout_log << max_force << ' '; //14
+	fout_log << r_min << ' ';// 15
+	fout_log << r_max << ' ';// 16
+	fout_log << sliding_disp_max << ' '; // 17
+	fout_log << bending_angle_max << ' '; // 18
+	fout_log << torsional_angle_max << ' '; // 19
+	fout_log << max_move_step/max_velocity << ' '; // 20
+	fout_log << counterRegenerate <<' '; //21
+	fout_log << counterBreak << ' ';//22
+	fout_log << n_bond - counterBreak << ' '; // 23
+	fout_log << max_velocity << ' ';//24
+	fout_log << max_ang_velocity << ' '; // 25
+	fout_log << ave_bondforce << ' '; // 26
+	fout_log << cnt_loop << ' '; // 27
+	fout_log << max_displacement << ' '; // 28
 	fout_log << prog_strain << endl; // 29
 }
 
@@ -1243,17 +1027,11 @@ void System::outputConfiguration(char equilibrium){
 	}
 	fout_conf << "# " << equilibrium;
 	fout_conf << ' ' << volume_fraction;
-	fout_conf << ' ' << stress_z;
-	fout_conf << ' ' << stress_x;
-	fout_conf << ' ' << strain_z;
-	fout_conf << ' ' << strain_x;
-	if (false && (simulation == 'c' || simulation == 's')) {
-		fout_conf << ' ' << wl[0]->z-lz_half;
-		fout_conf << ' ' << wl[1]->z-lz_half;
-	} else {
-		fout_conf << ' ' << lx;
-		fout_conf << ' ' << lz;
-	}
+	fout_conf << ' ' << shear_strain;
+	fout_conf << ' ' << total_contact_stressXF.getParticlePressure();
+	fout_conf << ' ' << total_contact_stressXF.getShearStress();
+	fout_conf << ' ' << lx;
+	fout_conf << ' ' << lz;
 	fout_conf << ' ' << rup_normal;
 	fout_conf << ' ' << rup_shear;
 	fout_conf << ' ' << rup_bend;
@@ -1306,14 +1084,11 @@ void System::outputConfiguration(char equilibrium){
 }
 
 void System::monitorDeformation(char equilibrium){
-	stress_x = 0; //
 	fout_deform << "# " << equilibrium;
-	fout_deform << ' ' << stress_z ;
-	fout_deform << ' ' << stress_x ;
+	fout_deform << ' ' << total_contact_stressXF.getParticlePressure();
+	fout_deform << ' ' << total_contact_stressXF.getShearStress();
 	fout_deform << ' ' << volume_fraction;
-	//	fout_deform << ' ' << wl[0]->z - lz0;
-	//	fout_deform << ' ' << wl[1]->z - lz0;
-	fout_deform << ' ' << 0;
+	fout_deform << ' ' << shear_strain;
 	fout_deform << ' ' << lz;
 	fout_deform << ' ' << rup_normal;
 	fout_deform << ' ' << rup_shear;
@@ -1322,14 +1097,14 @@ void System::monitorDeformation(char equilibrium){
 	fout_deform << ' ' << average_contact_number;
 	fout_deform << endl;
 	int count_bond = 0;
-	for(int i=0; i < n_bond; i++){
-		if ( bond[i]->initial_bond ){
+	for (int i=0; i < n_bond; i++) {
+		if ( bond[i]->initial_bond ) {
 			count_bond ++;
 		}
 	}
 	fout_deform << "B " << count_bond   <<endl;
-	for(int i=0; i < n_bond; i++){
-		if ( bond[i]->initial_bond ){
+	for (int i=0; i < n_bond; i++) {
+		if (bond[i]->initial_bond) {
 			bond[i]->monitor_state(fout_deform);
 		}
 	}
@@ -1337,14 +1112,11 @@ void System::monitorDeformation(char equilibrium){
 void System::calcVolumeFraction(){
 #ifndef TWODIMENSION
 	double volume = lx*ly*lz;
-
 	static const double volume1 = (4.0/3.0)*M_PI;
 	volume_fraction = n_particle*volume1 / volume;
-#else 
+#else
 	cerr << "lz = " << lz << endl;
-	
-	volume_fraction = n_particle* M_PI / (lx * lz);
-
+	volume_fraction = n_particle* M_PI/(lx * lz);  // Area fraction
 #endif
 }
 
@@ -1357,12 +1129,12 @@ void System::calcVolumeFraction(){
  *  - The force is calculated for only active particles (not contact to the walls.)
  */
 void System::checkState(){
-	unsigned long n_particle_active = particle_active.size();
-	int sum_num_of_contacts_for_active_particle = 0;
-	for (int i=0; i < n_particle_active; i++) {
-		sum_num_of_contacts_for_active_particle += particle_active[i]->valCn_size();
+	///unsigned long n_particle_active = particle_active.size();
+	int sum_num_of_contacts_for_particle = 0;
+	for (int i=0; i < n_particle; i++) {
+		sum_num_of_contacts_for_particle += particle[i]->valCn_size();
 	}
-	average_contact_number = ((double)sum_num_of_contacts_for_active_particle)/n_particle_active;
+	average_contact_number = ((double)sum_num_of_contacts_for_particle)/n_particle;
 	//	unsigned long n_bond_active = bond_active.size();
 	for (int i=0; i < bond.size(); i++) {
 		bond[i]->addContactForce();
@@ -1381,10 +1153,10 @@ void System::checkState(){
 	max_force = 0;
 	max_velocity = 0;
 	max_ang_velocity = 0;
-	for (int i=0; i < n_particle_active; i++) {
-		double force = particle_active[i]->valForce();
-		double velocity = particle_active[i]->valVelocity();
-		double ang_velocity = particle_active[i]->valOmega();
+	for (int i=0; i < n_particle; i++) {
+		double force = particle[i]->valForce();
+		double velocity = particle[i]->valVelocity();
+		double ang_velocity = particle[i]->valOmega();
 		sum_force += force;
 		if (force > max_force) {
 			max_force = force ;
@@ -1396,104 +1168,11 @@ void System::checkState(){
 			max_ang_velocity = ang_velocity;
 		}
 	}
-	ave_force = sum_force / n_particle_active;
-	for (int i=0; i < n_particle_active; i++) {
-		particle_active[i]->resetForce();
+	ave_force = sum_force/n_particle;
+	for (int i=0; i < n_particle; i++) {
+		particle[i]->resetForce();
 	}
 	calcLocalStrains();
-	kinetic_energy = 0;
-	for (int i=0; i < n_particle; i++) {
-		kinetic_energy += particle[i]->kineticEnergy();
-	}
-}
-
-bool System::checkPercolation(){
-	percolation = false;
-	for (int i=0; i < n_particle ;i++){
-		particle[i]->wall_connected = -1;
-	}
-	wl[0]->wall_group.clear();
-	wl[0]->markWallConnected();
-	
-	wl[1]->wall_group.clear();
-	wl[1]->markWallConnected();
-
-	return percolation;
-}
-
-void System::shiftForPercolation(){
-	/* This version can deal only 2D
-	 * This is only for the cases that a percolated cluster is separated by
-	 * top and bottom walls.
-	 *
-	 * Particles connecting to top wall will be moved.
-	 * The fist collision is considered for all other particles.
-	 *
-	 */
-	double lambda_min = 1000;
-	vec3d shift;
-	if (simulation == 's'){
-		shift.set(1,0,0);
-	}else if (simulation == 'c'){
-		shift.set(0,0,-1);
-	}
-//	outputConfiguration('e');
-	for (int i = 0; i < wl[1]->wall_group.size(); i++){
-		int i_uppder = wl[1]->wall_group[i];
-		vec3d p_up = particle[i_uppder]->p;
-		for (int j = 0; j < n_particle ; j++){
-			if (particle[j]->wall_connected != 2){
-				vec3d p_lo = particle[j]->p;
-				vec3d dp = p_up - p_lo;
-				double dot_d_dp = dot(shift, dp );
-				double discriminant = dot_d_dp*dot_d_dp - (dp.sq_norm() - 4);
-				if (discriminant > 0 ){
-					double lambda1 = - dot_d_dp + sqrt(discriminant );
-					double lambda2 = - dot_d_dp - sqrt(discriminant );
-					if (lambda1>0 && lambda_min > lambda1){
-						lambda_min = lambda1;
-					}
-					if (lambda2>0 && lambda_min > lambda2){
-						lambda_min = lambda2;
-					}
-				}
-			}
-		}
-	}
-	double z_highest = 0;
-	double z_lowest = 10;
-	int cnt = 0;
-	for (int i = 0; i < particle.size(); i++){
-		if (particle[i]->wall_connected != 2  ){
-			cnt ++;
-			if (particle[i]->p.z > z_highest){
-				cerr << z_highest << endl;
-				z_highest = particle[i]->p.z;
-			}
-		}else {
-			if (particle[i]->p.z < z_lowest){
-				z_lowest = particle[i]->p.z;
-			}
-		}
-	}
-
-	double lambda_wl_top = wl[1]->z - 1 - z_highest;
-	if ( lambda_min > lambda_wl_top){
-		lambda_min = lambda_wl_top  ;
-	}
-
-	double lambda_wl_bot = z_lowest - (wl[0]->z + 1);
-	if ( lambda_min > lambda_wl_bot){
-		lambda_min = lambda_wl_bot  ;
-	}
-	if ( lambda_min != 1000){
-		lambda_min += 1e-5; // This avoid to fail new bond generation.
-		
-		wl[1]->moveWallGroup( lambda_min*shift );
-		
-		cerr << " lambda_min : " << lambda_min << endl;
-	}
-	
 }
 
 /*
@@ -1504,25 +1183,6 @@ void System::shiftForPercolation(){
 void System::simuAdjustment(){
 	ForAllParticle{
 		(*p_iter)->setNorm_u();
-	}
-//	if (simulation == 'c'){
-//		lz0 = (wl[1]->z + wl[0]->z) / 2;
-//	}
-}
-
-void System::makeNeighbor(){
-	if (simulation == 'c'||simulation == 's'){
-		grid->remake_with_walls((wl[0]->z) + 2, (wl[1]->z) - 2, particle);
-		ForAllParticle{
-			(*p_iter)->makeNeighbor();
-		}
-		wl[0]->makeNeighbor();
-		wl[1]->makeNeighbor();
-	} else {
-		grid->remake(particle);
-		ForAllParticle{
-			(*p_iter)->makeNeighbor();
-		}
 	}
 }
 
@@ -1539,45 +1199,6 @@ void System::makeNeighborPB(){
 		}
 	}
 }
-
-
-void System::setWall()
-{
-	double z_min = lz_init/2;
-	double z_max = lz_init/2;
-	ForAllParticle{
-		if ( (*p_iter)->p.z > z_max){
-			z_max = (*p_iter)->p.z;
-		}
-		if ( (*p_iter)->p.z < z_min){
-			z_min = (*p_iter)->p.z;
-		}
-	}
-	n_bot = n_particle;
-	n_top = n_particle+1;
-	//wl.push_back(new Wall(n_bot, z_min - 1.0, *this)); // wl[0] --> bot
-	wl.push_back(new Wall(n_bot, z_min-1.0, *this)); // wl[0] --> bot
-	//  cerr << "wall created at z = " << z_min - 1.0 << endl;
-	//wl.push_back(new Wall(n_top, z_max + 1.0, *this)); // wl[1] --> top
-	wl.push_back(new Wall(n_top, z_max+1.0, *this)); // wl[1] --> top
-	//cerr << "wall created at z = " << z_max + 1.0 << endl;
-	renew_Lz();
-	
-	cerr << z_min << endl;
-	cerr << z_max << endl;
-	cerr << "Lz = " << lz << endl;
-
-}
-
-//void System::regeneration(){
-//	// To be checked
-//	foreach(vector<int>, regeneration_bond, b){
-//		bond[*b]->regeneration();
-//		counterRegenerate ++;
-//	}
-//	regeneration_bond.clear();
-//}
-
 
 void System::regeneration(){
 	foreach (vector<int>, regeneration_bond, b) {
@@ -1600,29 +1221,6 @@ void System::makeInitialBond(double generation_distance){
 	sq_dist_generate = sq(generation_distance);
 	makeNeighborPB();
 	generateBond();
-	/* z 方向の周期境界条件で生成した初期配置。
-	 * 粒子の中心座標は z
-	 */
-	if (simulation == 'c'||simulation == 's'){
-//		vector<int> bot_list;
-//		vector<int> top_list;
-//		for(int i=0; i < n_particle; i++){
-//			if ( particle[i]->p.z  <= wl[0]->z + 1.01){
-//				bot_list.push_back(i);
-//			}
-//			if ( particle[i]->p.z  >=  wl[1]->z - 1.01){
-//				top_list.push_back(i);
-//			}
-//		}
-//
-//		for (int i = 0; i < bot_list.size(); i++){
-//			wl[0]->initWallParticle(bot_list[i]);
-//		}
-//			
-//		for (int i = 0; i < top_list.size(); i++){
-//			wl[1]->initWallParticle(top_list[i]);
-//		}
-	}
 	sq_dist_generate = tmp;
 }
 

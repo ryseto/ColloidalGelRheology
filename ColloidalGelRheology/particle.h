@@ -50,7 +50,7 @@ public:
 	int particle_number;
 	vec3d p;
 	quaternion orientation;
-	double orientation_angle = 0;
+	double orientation_angle;
 	int init_cluster;
 	int wall_connected; //
 	bool wall;
@@ -142,14 +142,8 @@ public:
 	double valVelocity(){ return velocity.norm(); }
 #ifndef TWODIMENSION
 	double valOmega(){ return omega.norm(); }
-	double kineticEnergy(){
-		return 0.5*velocity.sq_norm() + 0.2*omega.sq_norm();
-	}
 #else
 	double valOmega(){ return abs(omega);}
-	double kineticEnergy(){
-		return 0.5*velocity.sq_norm() + 0.2*omega*omega;
-	}
 #endif
 	int valCn_size(){ return cn_size; }
 	void zero_velocity(){

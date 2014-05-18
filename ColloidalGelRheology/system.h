@@ -30,12 +30,13 @@ protected:
 	double dt_max;
 	double max_move_step;
 	double wall_velocity;
+	double shear_strain; 
 	double stress_change_convergence; // The change of stress during the interval_convergence_check.
 	double stress_minimum;
 	double initial_compaction;
 	double max_volume_fraction;
-	double step_strain_x;
-	double max_strain_x;
+	double step_shear_strain;
+	double max_shear_strain;
 	double dist_generate;
 	double max_velocity_convergence;
 	double max_ang_velocity_convergence;
@@ -56,14 +57,8 @@ protected:
 	double volume_fraction;
 	double volume_fraction_init;
 	//	double area_fraction;
-	double strain_x;
-	double stress_x;
+//	double strain_x;
 	double strain_z;
-	double stress_z;
-	double stress_z_top;
-	double stress_z_bot;
-	double stress_y;
-	double kinetic_energy;
 	int counterBreak;
 	int counterRegenerate;
 	double ave_force;
@@ -125,7 +120,6 @@ protected:
 	ofstream fout_deform;
 	ofstream fout_particle;
 	ofstream fout_bond;
-	
 	vec3d f_ex;
 private:
 	void preProcesses();
@@ -139,23 +133,17 @@ private:
 	void checkState();
 	void checkBondFailure();
 	void regeneration();
-//	void regeneration_onebyone();
 	void rupture();
-	void TimeDevStrainControlCompactionEuler();
-	void TimeDevStrainControlShearEuler();
 	void TimeDevPeriodicBoundaryCompactionEuler();
 	void TimeDevBendingTest();
-
 	bool mechanicalEquilibrium();
 	void setTarget();
 	void setFirstTarget();
 	bool checkEndCondition();
-	void checkActiveElements();
 	bool checkPercolation();
 	void shiftForPercolation();
 	void calcStress();
 	void calcShearStress();
-	void checkStressDiff();
 	bool checkOutputStrain(double);
 	void simuAdjustment();
 	void setSimulationViscosity();
@@ -163,7 +151,6 @@ private:
 	void calcVolumeFraction();
 	void calcLocalStrains();
 	void setUnitForce(double);
-//	void setWallStress(double, double, double);
 	void setGravityConstant(double);
 	void renew_Lz();
 	void optimalTimeStep();
@@ -200,10 +187,7 @@ public:
 	 * Objects
 	 */
 	vector<Particle *> particle;
-	vector <Particle *> particle_active;
 	vector<Bond *> bond;
-	//vector <Bond *> bond_active;
-	vector <Wall *> wl;
 	/*
 	 * Objects for simulation
 	 */
@@ -238,7 +222,6 @@ public:
 	 */
 	char simulation;
 	bool initialprocess; // To prepare initial bonds and so on.
-	//double lx0, ly0, lz0; // = (lx/2, ly/2, lz/2)
 	int n_top;
 	int n_bot;
 	BondParameter bond0;

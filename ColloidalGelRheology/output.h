@@ -34,13 +34,13 @@ void System::outputYaplot()
 	if (simulation == 'c'){
 		fout_yap << "y 11" << endl;
 		fout_yap << "@ 0" << endl;
-		wl[0]->output(fout_yap);
-		wl[1]->output(fout_yap);
+		//wl[0]->output(fout_yap);
+		//wl[1]->output(fout_yap);
 	}
 	if (simulation == 'f'){
 		fout_yap << "y 11" << endl;
 		fout_yap << "@ 0" << endl;
-		wl[0]->output(fout_yap);
+		//wl[0]->output(fout_yap);
 	}
 	
 	if (simulation != 'r'){
@@ -52,9 +52,9 @@ void System::outputYaplot()
 		fout_yap << "rup: " << rup_normal << ' ' << rup_shear << ' ';
 		fout_yap << rup_bend << ' ' << rup_torsion << endl;
 		fout_yap << "t " << lx/2 + 5 << ' ' << 0 << ' ' << 0 << ' ';
-		fout_yap << "Pz= " << stress_z ;
-		fout_yap << "  Px= " << stress_x << endl;
-		fout_yap << "t " << lx/2 + 5 << ' ' << 0 << ' ' << -5 << ' ';
+		fout_yap << "Pz= " << total_contact_stressXF.getCompressiveStress() << ' ' ;
+		fout_yap << "Px= " << total_contact_stressXF.getShearStress() << endl;
+		fout_yap << "t " << lx_half + 5 << ' ' << 0 << ' ' << -5 << ' ';
 		fout_yap << "phi= " << volume_fraction << endl;
 	}
 	/*

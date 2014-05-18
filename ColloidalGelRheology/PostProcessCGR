@@ -67,10 +67,10 @@ while ( 1 ){
     } else {
         $line = <IN_data>
     }
-    ($buf, $equiv, $vf,
-     $stress_z, $stress_x, 
-     $strain_z, $strain_x, 
-     $lx, $lz, $rn, $rs, $rb, $rt, $ac) = split(/\s+/, $line);
+    ($buf, $equiv, $vf, $shear_strain,
+	$particpe_pressure, $shear_stress,
+	$lx, $lz, $rn, $rs, $rb, $rt, $ac) = split(/\s+/, $line);
+	##
     if ($initial == 1){
         $equiv = "e";
         $initial = 0;
