@@ -9,7 +9,8 @@
 #include <iostream>
 #include "bond.h"
 
-Bond::Bond(const int d0, const int d1, System &sy_){
+Bond::Bond(const int d0, const int d1, System &sy_)
+{
 	sy = &sy_;
 	status = 1;
 	initial_bond = sy->initialprocess;
@@ -27,17 +28,15 @@ Bond::Bond(const int d0, const int d1, System &sy_){
 		para = sy->bond1;
 		bondtype = 1;
 	}
-	if (para.fnc == 0){
+	if (para.fsc == 0) {
 		central_force = true;
 	} else {
 		central_force = false;
 	}
 	(*p_particle1).setBond(bond_number, d[0]);
 	(*p_particle0).setBond(bond_number, d[1]);
-	
 	pp[0] = (*p_particle0).p_pos();
 	pp[1] = (*p_particle1).p_pos();
-	
 	update_rvec();
 #ifdef TWODIMENSION
 	// 2D
@@ -48,7 +47,7 @@ Bond::Bond(const int d0, const int d1, System &sy_){
 	r = r_vec.norm();
 	e_normal = r_vec/r;
 #endif
-	if (r < 1.5){
+	if (r < 1.5) {
 		cerr << "new bond: r = " << r << " < 1.5" << endl;
 		pp[0]->cerr();
 		pp[1]->cerr();
@@ -64,12 +63,10 @@ Bond::Bond(const int d0, const int d1, System &sy_){
 #endif
 	u_vector[0] = (*p_particle0).orientation.ori_backward(*pu[0]);
 	u_vector[1] = (*p_particle1).orientation.ori_backward(*pu[1]);
-
-	if (initial_bond){
+	if (initial_bond) {
 		u_vector_initial[0] = u_vector[0];
 		u_vector_initial[1] = u_vector[1];
 	}
-	
 #ifndef TWODIMENSION
 	// 3D
 	p_tor[0] = (*p_particle0).p_tor_angle_back();
@@ -77,7 +74,6 @@ Bond::Bond(const int d0, const int d1, System &sy_){
 	(*p_tor[0]) = 0.;
 	(*p_tor[1]) = 0.;
 #endif
-	
 #ifdef TWODIMENSION
 	// 2D
 	sq_fsc = sq(para.fsc);
@@ -100,23 +96,27 @@ Bond::Bond(const int d0, const int d1, System &sy_){
 #endif
 }
 
-Bond::~Bond(){
+Bond::~Bond()
+{
 	cerr << "deleted bond" << endl;
 }
 
-void Bond::whichparticle(int &i, int &j){
+void Bond::getParticleNumbers(int &i, int &j)
+{
 	i = (*p_particle0).particle_number;
 	j = (*p_particle1).particle_number;
 }
 
-void Bond::addContactForce(){
+void Bond::addContactForce()
+{
 	if (status == 0) return;
 	calcForce();
 	(*p_particle0).stackForce(force0, torque0);
 	(*p_particle1).stackForce(-force0, torque1);
 }
 
-void Bond::calcForce(){
+void Bond::calcForce()
+{
 	update_rvec();
 #ifdef TWODIMENSION
 	// 2D
@@ -162,8 +162,9 @@ void Bond::calcForce(){
 	return;
 }
 
-void Bond::chPointer(int i, int particle_num){
-	if (d[0] == particle_num){
+void Bond::chPointer(int i, int particle_num)
+{
+	if (d[0] == particle_num) {
 		pu[0] = (*p_particle0).pu(i);
 #ifndef TWODIMENSION
 		// 3D
@@ -178,33 +179,30 @@ void Bond::chPointer(int i, int particle_num){
 	}
 }
 
-//void Bond::periodicBoundary_rvec(vec3d & r_vec_tmp){
-void Bond::update_rvec(){
+void Bond::update_rvec()
+{
 	r_vec = (*pp[1])-(*pp[0]);
-	if (r_vec.x > sy->lx_half){
+	if (r_vec.x > sy->lx_half) {
 		r_vec.x -= sy->lx;
-	} else if (r_vec.x < -sy->lx_half){
+	} else if (r_vec.x < -sy->lx_half) {
 		r_vec.x += sy->lx;
 	}
-	if (r_vec.z > sy->lz_half){
+	if (r_vec.z > sy->lz_half) {
 		r_vec.z -= sy->lz;
-	} else if (r_vec.z < -sy->lz_half){
+	} else if (r_vec.z < -sy->lz_half) {
 		r_vec.z += sy->lz;
 	}
 #ifndef TWODIMENSION
-	if (r_vec.y > sy->ly_half){
+	if (r_vec.y > sy->ly_half) {
 		r_vec.y -= sy->ly;
-	} else if (r_vec.y < -sy->ly_half){
+	} else if (r_vec.y < -sy->ly_half) {
 		r_vec.y += sy->ly;
 	}
 #endif
 }
 
-void Bond::rupture(){
-	if (status == 0){
-		cerr << "debug: at Bond::rupture" << endl;
-		exit(1);
-	}
+void Bond::rupture()
+{
 	status = 0;
 	sy->ct->off_connect(d[0], d[1]);
 	(*p_particle0).delConnectPoint(bond_number);
@@ -216,37 +214,15 @@ void Bond::rupture(){
 	}
 }
 
-void Bond::outputRuptureMark(){
-	/* Output the rupture event for debug.
-	 *
-	 */
-	cerr << (*p_particle0).particle_number << "--x--" << (*p_particle1).particle_number << endl;
-//	cerr << des[0] << ' ' << des[1] << ' ' << des[2] << endl;
-#ifdef TWODIMENSION
-	// 2D
-	cerr << force_normal <<' ' << force_sliding.norm() << ' ' << abs(moment_bending)  << endl;
-#else
-	// 3D
-	cerr << force_normal <<' ' << force_sliding.norm() << ' ' << moment_bending.norm()  << endl;
-#endif
-	cout << "@ 4" << endl;
-	cout << "r 0.3" << endl;
-	cout << "c " << (*p_particle0).p.x - sy->lx_half << ' ';
-	cout << (*p_particle0).p.y - sy->ly_half << ' ';
-	cout << (*p_particle0).p.z - sy->lz_half << endl;
-	cout << "c " << (*p_particle1).p.x - sy->lx_half << ' ';
-	cout << (*p_particle1).p.y - sy->ly_half << ' ';
-	cout << (*p_particle1).p.z - sy->lz_half << endl;
-}
-
-void Bond::regeneration(){
-	if (status == 1){
+void Bond::regeneration()
+{
+	if (status == 1) {
 		status = 2;
 		para = sy->bond1;
 		sq_fsc = sq(para.fsc);
 		sq_mbc = sq(para.mbc);
 		sq_mtc = sq(para.mtc);
-		if (para.fnc == 0){
+		if (para.fnc == 0) {
 			central_force = true;
 		}
 	}
@@ -279,8 +255,9 @@ void Bond::regeneration(){
 	u01 = *pu[1] - *pu[0];
 }
 
-void Bond::cheackBondStress(){
-	if (status == 0){
+void Bond::cheackBondStress()
+{
+	if (status == 0) {
 		return;
 	}
 	/* Condition of bond failure
@@ -290,29 +267,29 @@ void Bond::cheackBondStress(){
 	 */
 #ifdef TWODIMENSION
 	// 2D
-	if (force_normal > para.fnc){
+	if (force_normal > para.fnc) {
 		sy->rupture_bond.push_back(bond_number);
 		sy->rup_normal ++;
-	} else if (force_sliding.sq_norm() > sq_fsc){
+	} else if (force_sliding.sq_norm() > sq_fsc) {
 		sy->regeneration_bond.push_back(bond_number);
 		sy->rup_shear ++;
-	} else if ( abs(moment_bending) > para.mbc){
+	} else if ( abs(moment_bending) > para.mbc) {
 		sy->regeneration_bond.push_back(bond_number);
 		sy->rup_bend ++;
 	}
 #else
 	// 3D
-	this part need to be written.
-	if (force_normal > para.fnc){
+	not yet implemented
+	if (force_normal > para.fnc) {
 		sy->rupture_bond.push_back(bond_number);
 		sy->rup_normal ++;
-	} else if (force_sliding.sq_norm() > sq_fsc){
+	} else if (force_sliding.sq_norm() > sq_fsc) {
 		sy->regeneration_bond.push_back(bond_number);
 		sy->rup_shear ++;
-	} else if ( abs(moment_bending) > para.mbc){
+	} else if (abs(moment_bending) > para.mbc) {
 		sy->regeneration_bond.push_back(bond_number);
 		sy->rup_bend ++;
-	} else if (){
+	} else if (.....) {
 		sy->regeneration_bond.push_back(bond_number);
 		sy->rup_torsion ++;
 	}
@@ -320,7 +297,8 @@ void Bond::cheackBondStress(){
 	return;
 }
 
-void Bond::monitor_state(ofstream &out){
+void Bond::monitor_state(ofstream &out)
+{
 	/* To be checked.
 	 *
 	 */
@@ -340,10 +318,10 @@ void Bond::monitor_state(ofstream &out){
 	e_normal_init = r_vec/normal_distance;
 #endif
 	u01 = u_init[1]-u_init[0];
-	double slide_distance = (u01 - dot(u01, e_normal_init)*e_normal_init).norm();
-	double dot_prod = dot(u_init[0], - u_init[1]);
+	double slide_distance = (u01-dot(u01, e_normal_init)*e_normal_init).norm();
+	double dot_prod = dot(u_init[0], -u_init[1]);
 	double rolling_angle;
-	if ( dot_prod > 0.9 ){
+	if (dot_prod > 0.9) {
 #ifdef TWODIMENSION
 		// 2D
 		double cross_prod = abs( cross_2d( u_init[0], - u_init[1]));
@@ -352,7 +330,7 @@ void Bond::monitor_state(ofstream &out){
 		double cross_prod = (cross( u_init[0], - u_init[1])).norm();
 #endif
 		rolling_angle = asin(cross_prod);
-	}else{
+	} else {
 		rolling_angle = acos(dot_prod);
 	}
 	double torsional_angle = 0; 

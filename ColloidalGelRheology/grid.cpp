@@ -177,46 +177,46 @@ void Grid::remake(vector<Particle *> &particle){
 #endif
 }
 
-void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &particle){
-	/*
-	 * zbot and ztop are not position of wall.
-	 * Particles locating at z < zbot and z > ztop are
-	 * marked as near-wall particles.
-	 */
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
-	}
-	vcell_wall[0].clear();
-	vcell_wall[1].clear();
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vec3d ppp = *particle[i]->p_pos();
-		gl[i] = p_to_grid( *particle[i]->p_pos() );	
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
-		if (particle[i]->wall == false) {
-			if ( particle[i]->p.z < zbot ) {
-				vcell_wall[0].push_back(i);
-			} else if ( particle[i]->p.z > ztop ) {
-				vcell_wall[1].push_back(i);
-			}
-		}
-	}
-}
-
-void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
-	for (int i = 0; i < numberOfParticle; i++ ){
-		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
-	}
-	vcell_wall[0].clear();
-	for (int i = 0; i < numberOfParticle; i++ ){
-		gl[i] = p_to_grid( *particle[i]->p_pos() );
-		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
-		if (particle[i]->wall ==false) {
-			if ( particle[i]->p.z < zbot ) {
-				vcell_wall[0].push_back(i);
-			}
-		}
-	}
-}
+//void Grid::remake_with_walls(double zbot, double ztop, vector<Particle *> &particle){
+//	/*
+//	 * zbot and ztop are not position of wall.
+//	 * Particles locating at z < zbot and z > ztop are
+//	 * marked as near-wall particles.
+//	 */
+//	for (int i = 0; i < numberOfParticle; i++ ){
+//		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
+//	}
+//	vcell_wall[0].clear();
+//	vcell_wall[1].clear();
+//	for (int i = 0; i < numberOfParticle; i++ ){
+//		vec3d ppp = *particle[i]->p_pos();
+//		gl[i] = p_to_grid( *particle[i]->p_pos() );	
+//		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
+//		if (particle[i]->wall == false) {
+//			if ( particle[i]->p.z < zbot ) {
+//				vcell_wall[0].push_back(i);
+//			} else if ( particle[i]->p.z > ztop ) {
+//				vcell_wall[1].push_back(i);
+//			}
+//		}
+//	}
+//}
+//
+//void Grid::remake_with_bottom(double zbot, vector<Particle *> &particle){
+//	for (int i = 0; i < numberOfParticle; i++ ){
+//		vcell[gl[i].x][gl[i].y][gl[i].z].clear();
+//	}
+//	vcell_wall[0].clear();
+//	for (int i = 0; i < numberOfParticle; i++ ){
+//		gl[i] = p_to_grid( *particle[i]->p_pos() );
+//		vcell[gl[i].x][gl[i].y][gl[i].z].push_back(i);
+//		if (particle[i]->wall ==false) {
+//			if ( particle[i]->p.z < zbot ) {
+//				vcell_wall[0].push_back(i);
+//			}
+//		}
+//	}
+//}
 
 
 GridPoint Grid::p_to_grid(const vec3d &p){

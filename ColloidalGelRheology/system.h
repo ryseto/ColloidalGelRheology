@@ -12,7 +12,6 @@
 #include "particle.h"
 #include "grid.h"
 #include "bond.h"
-#include "wall.h"
 #include "contable.h"
 #include "StressTensor.h"
 #include <vector>
@@ -20,7 +19,7 @@
 using namespace std;
 class Grid;
 class Bond;
-class Wall;
+class Particle;
 
 class System {
 protected:
@@ -29,11 +28,10 @@ protected:
 	 */
 	double dt_max;
 	double max_move_step;
-	double wall_velocity;
+	double compaction_speed;
 	double shear_strain; 
 	double stress_change_convergence; // The change of stress during the interval_convergence_check.
 	double stress_minimum;
-	double initial_compaction;
 	double max_volume_fraction;
 	double step_shear_strain;
 	double max_shear_strain;
@@ -52,12 +50,9 @@ protected:
 	 * State parameters of system
 	 */
 	int n_particle; // Total number of particles
-	vec3d force_wall;
 	double time;
 	double volume_fraction;
 	double volume_fraction_init;
-	//	double area_fraction;
-//	double strain_x;
 	double strain_z;
 	int counterBreak;
 	int counterRegenerate;
@@ -98,7 +93,7 @@ protected:
 	int min_relaxation_loop;
 	int max_relaxation_loop;
 	int cnt_loop;
-
+	double first_volumefraction;
 	double volumefraction_increment;
 	double strain_target; // next equilibrium for shear
 	double vf_target;// next equilibrium for compaction
@@ -126,7 +121,6 @@ private:
 	void timeEvolution();
 	void middleProcedures();
 	void shiftCenterOfMass(vector<vec3d> &p);
-	void setWall();
 	void setBondGenerationDistance(double);
 	void generateBond();
 	void makeInitialBond(double generation_distance);

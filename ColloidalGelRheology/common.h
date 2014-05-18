@@ -8,8 +8,6 @@
 
 #ifndef ColloidalGelRheology_common_h
 #define ColloidalGelRheology_common_h
-
-
 #include <cmath>
 #include <iostream>
 #include <iomanip>

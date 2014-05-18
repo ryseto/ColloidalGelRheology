@@ -14,6 +14,7 @@
 #include "quaternion.h"
 class Bond;
 class System;
+
 class Particle{
 private:
 	int cn_size;
@@ -31,8 +32,6 @@ private:
 	double d_rotation;
 #endif
 	vec3d force;
-	vec3d p_mem;
-	vec3d v_relative;
 	vec3d omega_relative;
 	vec3d p_pdcopy;
 	vector<int> neighbor;
@@ -40,7 +39,6 @@ private:
 	System *sy;
 protected:
 	void (vec3d::*p_change)(double, double, double);
-	void remove_list_neighbor_all();
 public:
 	Particle(int particle_number_, const vec3d &position, const int initial_cluster,
 			 System &sy);
@@ -52,17 +50,16 @@ public:
 	quaternion orientation;
 	double orientation_angle;
 	int init_cluster;
-	int wall_connected; //
-	bool wall;
 	bool near_boundary;
 	double sq_force;
 	
 	void makeNeighbor();
-//	void checkNearBoundary();
-	void addNeighbor( int neighbor_particle ){
+	void addNeighbor(int neighbor_particle)
+	{
 		neighbor.push_back( neighbor_particle );
 	}
-	inline void setBond(int bond_number, int next_particle){
+	inline void setBond(int bond_number, int next_particle)
+	{
 		cn[cn_size].next = next_particle;
 		cn[cn_size].bond = bond_number;
 		cn[cn_size].tor_angle = 0.;
@@ -70,10 +67,9 @@ public:
 	}
 	void addGravityForce();
 	void move_Euler();
-	inline vec3d vectorForce(){
-		return force;
-	}
-	inline void resetForce(){
+	inline vec3d vectorForce(){ return force; }
+	inline void resetForce()
+	{
 		force.reset();
 #ifndef TWODIMENSION
 		torque.reset();
@@ -81,17 +77,16 @@ public:
 		torque = 0;
 #endif
 	}
-	inline void resetFz(){
-		force.z = 0;
-	}
-	inline void resetTorque(){
+	inline void resetTorque()
+	{
 #ifndef TWODIMENSION
 		torque.reset();
 #else
 		torque = 0;
 #endif
 	}
-	inline double valForceZ(){
+	inline double valForceZ()
+	{
 		double fz = force.z;
 		force.reset();
 		return  fz;
@@ -106,13 +101,14 @@ public:
 		torque += torque_;
 	}
 	void calc_stack_Force();
-	void setRotate(vec3d axis, const double angle);
-	void setNorm_u(){
-		for (int i = 0; i < cn_size ; i++){
+	void setNorm_u()
+	{
+		for (int i=0; i<cn_size ; i++) {
 			cn[i].u.unitvector();
 		}
 	}
-	void setVelocityZero(){
+	void setVelocityZero()
+	{
 		velocity.reset();
 #ifndef TWODIMENSION
 		omega.reset();
@@ -121,12 +117,11 @@ public:
 #endif
 	}
 	void delConnectPoint(int bond_number);
-	void z_shift( double dz ){ p.z += dz; }
-	void x_shift( double dx );
 	inline vec3d pos(){return p;}
 	void setInitial(int disk_number_);
-	inline double distOverlap(const vec3d &pp){
-		return dist(p, pp) - 2.0; // ro = 2a = 1.0
+	inline double distOverlap(const vec3d &pp)
+	{
+		return dist(p, pp)-2; // ro = 2a = 1.0
 	}
 	vec3d *p_pos(){return &p; }
 	vec3d *pu_back(){return &( cn[cn_size-1].u );}
@@ -155,9 +150,7 @@ public:
 		force.z += fz;
 	}
 	bool percolate(vector<int> perco_path);
-	void markWallConnected(int wt, vector<int> &wall_group);
 	void outputBond();
-	
 };
 
 #endif

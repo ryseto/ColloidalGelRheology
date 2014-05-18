@@ -8,7 +8,6 @@
 
 #ifndef ColloidalGelRheology_bond_h
 #define ColloidalGelRheology_bond_h
-
 #include "common.h"
 #include <cstdlib>
 #include <cmath>
@@ -25,11 +24,8 @@ class Bond {
 	System *sy;
 	double force_normal;
 	vec3d r_vec;
-	/*
-	 * force1 is always -force0
-	 */
 	bool central_force;
-	vec3d force0;
+	vec3d force0; // force1 = -force0
 #ifndef TWODIMENSION
 	/* 3D */
 	vec3d torque0;
@@ -38,7 +34,6 @@ class Bond {
 	vec3d moment_bending;
 	double moment_torsion;
 	vec3d ang_bend;
-//	vec3d ang_bend_old;
 #else
 	/* 2D */
 	double torque0;
@@ -46,10 +41,8 @@ class Bond {
 	double moment_sliding;
 	double moment_bending;
 	double ang_bend;
-//	double ang_bend_old;
 #endif
 	vec3d force_sliding;
-
 	vec3d u01;
 	/*
 	 * This vector indicates the contact point
@@ -57,22 +50,12 @@ class Bond {
 	 */
 	vec3d u_vector[2];
 	vec3d u_vector_initial[2];
-//	double q_old; // r-2
 	vec3d d_slid;
-//	vec3d d_slid_old;
 	vec3d sum_sliding;
-	
-	
 	double ang_tort;
-//	double ang_tort_old;
-	//	double damper_tortion;
-	//double damper_normal;
-	//vec3d damper_sliding;
-	//vec3d damper_bending;
 	double kn_compression;
 	double q;
 	vec3d torque_tmp;
-	
 	int d[2];
 	double *p_tor[2];
 	vec3d *pp[2];
@@ -80,16 +63,13 @@ class Bond {
 	Particle *p_particle0;
 	Particle *p_particle1;
 	StressTensor contact_stresslet_XF;
-//	double des[4];
 	double sq_fsc;
 	double sq_mbc;
 	double sq_mtc;
-	
 private:
 	void setting();
 	void checkRuptureType(vec3d &, vec3d &, double);
 	void update_rvec();
-	
 public:
 	Bond(){}
 	~Bond();
@@ -106,33 +86,17 @@ public:
 	 */
 	bool initial_bond;
 	int bondtype;
-	/*
-	 * Distance between particle.
-	 * The gap between particles or particle and wall are give by r - 2a.
-	 */
 	int cnt_regeneration;
-	
 	double r;
-	/*
-	 *  To compare the stress.
-	 */
-	//double D_function;
-	/*
-	 * "bond_active" vector is used to calculate efficiently.
-	 * This number memorize where it is in the vector.
-	 */
-//	unsigned long number_activebond;
 	/* Angle directing to the original contact point.
 	 *
 	 */
 	double contactangle[2];
-
-	
 	vec3d e_normal;
 	void addContactForce();
 	void calcForce();
-	vec3d forceToParticle(int paritlce_number ){
-		if (paritlce_number == d[0]){
+	vec3d forceToParticle(int paritlce_number) {
+		if (paritlce_number == d[0]) {
 			return force0;
 		} else {
 			return -force0;
@@ -140,59 +104,37 @@ public:
 	}
 	void outputCompression(ofstream &out, double f_max);
 	void outputTraction(ofstream &out, double f_max);
-	
 	void rupture();
 	void chPointer(int i, int particle_num);
 	void regeneration();
-	
-	inline double val_F_norm(){ return abs(force_normal);}
-	inline double val_F_slid(){ return force_sliding.norm();}
+	inline double val_F_norm(){ return abs(force_normal); }
+	inline double val_F_slid(){ return force_sliding.norm(); }
 #ifndef TWODIMENSION
-	inline double val_M_bend(){ return moment_bending.norm();}
-	inline double valBendingAngle(){return ang_bend.norm();}
-	inline double val_M_tors(){ return abs(moment_torsion);}
+	inline double val_M_bend(){ return moment_bending.norm(); }
+	inline double valBendingAngle(){ return ang_bend.norm(); }
+	inline double val_M_tors(){ return abs(moment_torsion); }
 #else
-	inline double val_M_bend(){ return abs(moment_bending);}
-	inline double valBendingAngle(){return abs(ang_bend);}
+	inline double val_M_bend(){ return abs(moment_bending); }
+	inline double valBendingAngle(){ return abs(ang_bend); }
 #endif
-
-	inline double valTorsionalAngle(){return abs(ang_tort);}
-	inline double valSlidingDisplacement(){return d_slid.norm();}
-	inline double forceNorm(){return force0.norm();}
-	
-	void whichparticle(int &i, int &j);
+	inline double valTorsionalAngle(){ return abs(ang_tort); }
+	inline double valSlidingDisplacement(){ return d_slid.norm(); }
+	inline double forceNorm(){ return force0.norm(); }
+	void getParticleNumbers(int &i, int &j);
 	void cheackBondStress();
 	void outputRuptureMark();
-	vec3d position(int i){
-		return *pp[i];
-	}
+	vec3d position(int i){ return *pp[i]; }
 	void monitor_state(ofstream &out);
-	int val_bond_number(){
-		return bond_number;
-	}
-	void updateBondParameter(double k){
-				
+	int val_bond_number() { return bond_number; }
+	void updateBondParameter(double k)
+	{
 		para.kn = k;
 		para.kt = k;
 		para.kb = k;
 	}
 	StressTensor getContactStressXF(){return contact_stresslet_XF;}
-	
-	void
-	calcContactStress(){
-		/*
-		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
-		 * Fc_normal = -Fc_normal_norm*nvec;
-		 * This force acts on particle 1.
-		 * stress1 is a0*nvec[*]force.
-		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-		 */
-		
-		/* When we compose stress tensor,
-		 * even individual leverl, this part calculates symmetric tensor.
-		 * This symmetry is expected in the average ensumble.
-		 * I'm not sure this is allowed or not.
-		 */
+	void calcContactStress()
+	{
 		if (status != 0) {
 			/*
 			 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
@@ -203,14 +145,9 @@ public:
 			 * stress1 + stress2 = (a1+a2)*nvec[*]force
 			 */
 			contact_stresslet_XF.set(r_vec, force0);
-			
 		} else {
 			contact_stresslet_XF.reset();
 		}
 	}
-	
-	
-
 };
-
 #endif
