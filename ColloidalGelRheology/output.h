@@ -21,7 +21,11 @@ using namespace std;
 void System::outputYaplot()
 {
 	static bool firsttime = true;
-	if ( firsttime ){firsttime = false;}else{fout_yap << endl;}
+	if (firsttime) {
+		firsttime = false;
+	} else {
+		fout_yap << endl;
+	}
 	//	fout_yap << "y 9" << endl;
 	//	fout_yap << "@ 2" << endl;
 	ForAllParticle {
@@ -29,33 +33,6 @@ void System::outputYaplot()
 	}
 	//	fout_yap << "t " << sy.lx/2 + 10 << ' ' << 0 << ' ' << -1 << ' ';
 	//	fout_yap << "N= " << sy.n_particle << "  Nb= " << sy.average_contact_number << endl;
-	
-	if (simulation == 'c'){
-		fout_yap << "y 11" << endl;
-		fout_yap << "@ 0" << endl;
-		//wl[0]->output(fout_yap);
-		//wl[1]->output(fout_yap);
-	}
-	if (simulation == 'f'){
-		fout_yap << "y 11" << endl;
-		fout_yap << "@ 0" << endl;
-		//wl[0]->output(fout_yap);
-	}
-	
-	if (simulation != 'r'){
-		fout_yap << "y 12" << endl;
-		fout_yap << "@ 3" << endl;
-		fout_yap << "t " << lx/2 + 5 << ' ' << 0 << ' ' << 10 << ' ';
-		fout_yap << "N= " << n_particle  << " Nb = " << average_contact_number << endl;
-		fout_yap << "t " << lx/2 + 5 << ' ' << 0 << ' ' << 5 << ' ';
-		fout_yap << "rup: " << rup_normal << ' ' << rup_shear << ' ';
-		fout_yap << rup_bend << ' ' << rup_torsion << endl;
-		fout_yap << "t " << lx/2 + 5 << ' ' << 0 << ' ' << 0 << ' ';
-		fout_yap << "Pz= " << total_contact_stressXF.getCompressiveStress() << ' ' ;
-		fout_yap << "Px= " << total_contact_stressXF.getShearStress() << endl;
-		fout_yap << "t " << lx_half + 5 << ' ' << 0 << ' ' << -5 << ' ';
-		fout_yap << "phi= " << volume_fraction << endl;
-	}
 	/*
 	 fout_yap << "y 10" << endl;
 	 fout_yap << "@ 3" << endl;

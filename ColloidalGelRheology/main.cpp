@@ -23,21 +23,19 @@ void bendingLinearChain(int argc, char *const argv[], System &sy);
 void rod_bending(int argc, char *const argv[], System &sy);
 int main (int argc, char *const argv[]) {
 	System sy;
-	sy.simulation = argv[1][0];
-	if (sy.simulation == 't') {
-		//testParameters(argc, argv, sy);
-	} else if (sy.simulation == 'b') {
-		bendingLinearChain(argc, argv, sy);
-	} else {
-		rheologyTest(argc, argv, sy);
-	}
+	sy.simulation = argv[1];
+	rheologyTest(argc, argv, sy);
 	return 0;
 }
 
 void cerr_command_usage()
 {
 	cerr << "usage of ColloidalGelRheology" << endl;
-	cerr << "arg: c/s ";
+	cerr << "arg: c1/c2/s/bt" << endl;
+	cerr << "  c1: uniaxial compression" << endl;
+	cerr << "  c2: biaxial compression" << endl;
+	cerr << "  s:  shear" << endl;
+	cerr << "  bt: bending test" << endl;
 	cerr << "parameter_file ";
 	cerr << "initial_file ";
 	cerr << "version ";

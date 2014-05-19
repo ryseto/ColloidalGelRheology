@@ -82,10 +82,6 @@ struct BondParameter {
 	double kb;
 	double kt;
 	double kn3;
-	double c_norm;
-	double c_slid;
-	double c_bend;
-	double c_tort;
 	
 	double fnc;
 	double fsc;

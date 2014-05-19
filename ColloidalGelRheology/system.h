@@ -74,10 +74,6 @@ protected:
 	double eta_factor; // relative viscosity used in simulation
 	double diff_stress_x;
 	double diff_stress_z;
-	double stress_z_before;
-	double stress_x_before;
-	double stress_x_change;
-	double stress_z_change;
 	int counterRegenerate_before;
 	/*
 	 * variables for simulations
@@ -214,7 +210,7 @@ public:
 	/*
 	 * Simulation parameters
 	 */
-	char simulation;
+	string simulation;
 	bool initialprocess; // To prepare initial bonds and so on.
 	int n_top;
 	int n_bot;

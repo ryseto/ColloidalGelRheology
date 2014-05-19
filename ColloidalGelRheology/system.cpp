@@ -39,6 +39,8 @@ void System::TimeDevPeriodicBoundaryCompactionEuler()
 			lx_half = lx/2;
 			lz -= compaction_speed*dt;
 			lz_half = lz/2;
+		} else {
+			exit(1);
 		}
 	}
  	foreach (vector<Bond *>, bond, it_bond) {
@@ -74,7 +76,7 @@ bool System::mechanicalEquilibrium()
 {
 	static int cnt_check = 0;
 	bool mechanical_equilibrium = false;
-	if (simulation == 's'){
+	if (simulation == "s"){
 		if ((max_velocity < max_velocity_convergence // less important
 			 && max_ang_velocity < max_ang_velocity_convergence // less important
 			 && counterRegenerate_before == counterRegenerate)) {
@@ -163,7 +165,7 @@ void System::timeEvolution()
 	while (time < t_next) {
 		prog_strain = (volume_fraction < vf_target);
 		/* Main time evolution */
-		if (simulation == 's') {
+		if (simulation == "s") {
 			/* Shear strain is not yet implemented.
 			 * TimeDevStrainControlShearEuler();
 			 */
@@ -191,7 +193,7 @@ void System::timeEvolution()
 		}
 		generateBond();
 	}
-	if (simulation == 'c') {
+	if (simulation != "s") {
 		calcVolumeFraction();
 	}
 }
@@ -212,13 +214,15 @@ void System::strainControlSimulation()
 	preProcesses();
 	cnt_loop = 0;
 	max_displacement = 0;
-	if (simulation == 'c') {
+	if (simulation == "c1") {
 		deformation_type = 0; //uniaxial compression
-	} else if (simulation == 'b') {
+	} else if (simulation == "c2") {
 		deformation_type = 1; //biaxial compression
+	} else {
+		deformation_type = 2; //shear
 	}
 	if (deformation_type == 0 || deformation_type == 1) {
-		interval_output_config = (int)(2.0/(compaction_speed*dt))/interval_convergence_check;
+		interval_output_config = (int)(2./(compaction_speed*dt))/interval_convergence_check;
 	} else {
 		interval_output_config = 20;
 	}
@@ -318,16 +322,16 @@ void System::bendingSimulation()
 
 void System::outlog()
 {
-	if (simulation=='s') {
+	if (simulation == "s") {
 		cerr << cnt_output_config << ' ' << shear_strain << ": " << strain_target  << endl;
-	} else if (simulation=='c') {
+	} else {
 		cerr << cnt_output_config << ' ' << volume_fraction << ": " << vf_target  << endl;
 	}
 }
 
 void System::setTarget()
 {
-	if (simulation == 's') {
+	if (simulation == "s") {
 		strain_target += step_shear_strain;
 	} else {
 		vf_target *= volumefraction_increment;
@@ -337,11 +341,11 @@ void System::setTarget()
 bool System::checkEndCondition()
 {
 	bool end_simulation = false;
-	if (simulation =='s') {
+	if (simulation == "s") {
 		if (shear_strain > max_shear_strain){
 			end_simulation = true;
 		}
-	} else if (simulation =='c') {
+	} else {
 		if (volume_fraction > max_volume_fraction){
 			end_simulation = true;
 		}
@@ -351,7 +355,7 @@ bool System::checkEndCondition()
 
 bool System::checkOutputStrain(double diff)
 {
-	if (simulation == 's') {
+	if (simulation == "s") {
 		if (shear_strain > strain_x_last_output+diff) {
 			lz_last_output = lz;
 			return true;
@@ -387,8 +391,6 @@ void System::initDEM()
 	counterRegenerate = 0;
 	shear_strain = 0;
 	strain_z = 0;
-	stress_z_before = 0;
-	stress_x_before = 0;
 	counter_relax_for_restructuring = 0;
 	lz_last_output = lz_init;
 	counterRegenerate_before = 0;
@@ -404,17 +406,18 @@ void System::preparationOutput()
 	char fn_particle[128];
 	char fn_bond[128];
 	char name_string[128];
-	if (simulation == 'c'|| simulation == 's') {
-		sprintf(name_string, "%s_%s_%s",
-				parameters, init_cluster, version.c_str());
-	} else if (simulation == 'b') {
+	if (simulation == "c1" || simulation == "c2" || simulation == "s") {
+		sprintf(name_string, "%s_%s_%s_%s",
+				parameters, simulation.c_str(),
+				init_cluster, version.c_str());
+	} else if (simulation == "bt") {
 		sprintf(name_string, "%s_%1.2f", parameters, f_ex.x );
 	} else {
 		cerr << "Not yet implemented" << endl;
 		exit(1);
 	}
-	string fn_common = (string)name_string ;
-	cerr << version << endl;
+	string fn_common = (string)name_string;implemented
+	implemented << version << endl;
 	cerr << fn_common.c_str() << endl;
 	sprintf(fn_data, "data_%s.dat", fn_common.c_str());
 	sprintf(fn_log, "log_%s.dat", fn_common.c_str());
@@ -422,7 +425,7 @@ void System::preparationOutput()
 	sprintf(fn_deform, "deform_%s.dat", fn_common.c_str());
 	sprintf(fn_particle, "par_%s.dat", fn_common.c_str());
 	sprintf(fn_bond, "bond_%s.dat", fn_common.c_str());
-	if (simulation == 'b') {
+	if (simulation == "bt") {
 		sprintf(fn_snapshot, "ss_%s.yap", fn_common.c_str());
 		fout_yap.open(fn_snapshot);
 	}
@@ -511,11 +514,10 @@ void prepareBond(BondParameter & _bond)
 	_bond.b_max = _bond.mbc/_bond.kb;
 	_bond.t_max = _bond.mtc/_bond.kt;
 	cerr << "k:" << _bond.kn << ' ' << _bond.ks << ' ' << _bond.kb << ' ' << _bond.kt << endl;
-	cerr << "fc:" << _bond.fnc << " * " << _bond.fsc << ' ' << _bond.mbc << endl;
+	cerr << "fc:" << _bond.fnc << ' '  << _bond.fsc << ' ' << _bond.mbc << ' ' << _bond.mtc << endl;
 	cerr << "critical_strain:" << _bond.n_max ;
 	cerr << " * " << _bond.s_max;
 	cerr << ' ' << _bond.b_max << ' ' << _bond.t_max << endl;
-	cerr << "c:" << _bond.c_norm << ' ' << _bond.c_slid << ' ' << _bond.c_bend << ' ' << _bond.c_tort << endl;
 }
 
 void readBond(const string &codeword,
@@ -533,7 +535,7 @@ void readBond(const string &codeword,
 	keylist["kt:"]=8; const int _kt = 8;
 	keylist["kn3:"]=9; const int _kn3 = 9;
 	cerr << codeword << ' ' << value << endl;
-	switch(keylist[codeword]){
+	switch (keylist[codeword]) {
 		case _fnc: bondparameter.fnc = atof(value.c_str()); break;
 		case _fsc: bondparameter.fsc = atof(value.c_str()); break;
 		case _mbc: bondparameter.mbc = atof(value.c_str()); break;
@@ -563,7 +565,7 @@ void setBondParameter(BondParameter &bondparameter, string &bond_file)
 		fin >> codeword;
 		if (codeword == "#") {
 			char buf[1024]; fin.get(buf, 1024);
-		} else if (codeword == "!"){
+		} else if (codeword == "!") {
 			break;
 		} else {
 			fin >> value ;
@@ -590,7 +592,7 @@ void System::readParameterFile()
 	// Read parameter file
 	ifstream fin_parameter;
 	fin_parameter.open(parameters_file);
-	if (fin_parameter.is_open()){
+	if (fin_parameter.is_open()) {
 		cerr << parameters_file << " is opend." << endl;
 	}
 	string codeword;
@@ -599,17 +601,19 @@ void System::readParameterFile()
 		fin_parameter >> codeword;
 		if ( codeword == "#") {
 			char buf[1024]; fin_parameter.get(buf, 1024);
-		} else if (codeword == "!"){
+		} else if (codeword == "!") {
 			break;
 		} else {
-			fin_parameter >> value ;
-			if (fin_parameter.eof()) break;
+			fin_parameter >> value;
+			if (fin_parameter.eof()) {
+				break;
+			}
 			//set_value(codeword, value, unit);
 			readParameter(codeword, value);
 		}
 	}
 	fin_parameter.close();
-	if (!fin_parameter.is_open()){
+	if (!fin_parameter.is_open()) {
 		cerr << parameters_file << " is closed." << endl;
 	}
 }
@@ -639,7 +643,7 @@ void System::readParameter(const string &codeword, const string &value)
 	keylist["max_relaxation_loop:"] = 39; const int _max_relaxation_loop = 39;
 	keylist["eq_max_displacement:"] = 40; const int _eq_max_displacement = 40;
 	cerr << codeword << ' ' << value << endl;
-	switch(keylist[codeword]){
+	switch (keylist[codeword]) {
 		case _bond0_file: bond0_file = value; break;
 		case _bond1_file: bond1_file = value; break;
 		case _interval_convergence_check: interval_convergence_check = atoi(value.c_str()); break;
@@ -682,8 +686,8 @@ void System::importPositions()
 	char height_str[4];
 	sprintf(width_str, "%s", (path.substr(i1,i2-i1)).c_str());
 	sprintf(height_str, "%s", (path.substr(i2+1,i3-i2-1)).c_str());
-	fin.open( path.c_str());
-	if (! fin.is_open() ){
+	fin.open(path.c_str());
+	if (!fin.is_open()) {
 		cerr << "no initial file" << endl;
 		exit(1);
 	}
@@ -701,14 +705,16 @@ void System::importPositions()
 	lz_half = lz/2;
 	double x, y, z;
 	int i_cluster;
-	if (simulation == 'c' || simulation == 's') {
+	if (simulation == "c1"
+		|| simulation == "c2"
+		|| simulation == "s") {
+		cerr << "AA" << endl;
 		do {
 #ifdef TWODIMENSION
 			fin >> x >> z >> i_cluster ;
 #else
 			fin >> x >> y >> z;
 #endif
-
 #ifdef TWODIMENSION
 			vec3d new_p(x, y, z);
 #else
@@ -718,13 +724,15 @@ void System::importPositions()
 			init_aggregate_cluster.push_back(i_cluster);
 			
 		} while (!fin.eof());
+	} else {
+		cerr << simulation << endl;
+		exit(1);
 	}
 	init_aggregate.pop_back();
 	int count_particle_number = 0;
 	cerr << "N=" << init_aggregate.size() << endl;
 	for (int i = 0; i < init_aggregate.size(); i++) {
 		vec3d new_p = init_aggregate[i];
-		
 		particle.push_back(new Particle(count_particle_number, new_p,
 										init_aggregate_cluster[i],
 										*this) );
@@ -851,10 +859,10 @@ void System::outputData()
 		fout_data << "# ly " << ly << endl;
 		fout_data << "# lz " << lz << endl;
 	}
-	if (simulation == 'c') {
+	if (simulation == "c1" || simulation == "c2") {
 		del_strain = (strain_z - strain_previous);
 		strain_previous = strain_z;
-	} else if (simulation == 's') {
+	} else if (simulation == "s") {
 		del_strain = (shear_strain - strain_previous);
 		strain_previous = shear_strain;
 	}
@@ -1179,16 +1187,9 @@ void System::simuAdjustment()
 
 void System::makeNeighborPB()
 {
-	if (simulation == 'c'||simulation == 's'){
-		grid->remake(particle);
-		ForAllParticle{
-			(*p_iter)->makeNeighbor();
-		}
-	} else {
-		grid->remake(particle);
-		ForAllParticle{
-			(*p_iter)->makeNeighbor();
-		}
+	grid->remake(particle);
+	ForAllParticle{
+		(*p_iter)->makeNeighbor();
 	}
 }
 
