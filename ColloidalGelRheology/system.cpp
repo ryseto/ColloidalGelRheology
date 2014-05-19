@@ -416,8 +416,8 @@ void System::preparationOutput()
 		cerr << "Not yet implemented" << endl;
 		exit(1);
 	}
-	string fn_common = (string)name_string;implemented
-	implemented << version << endl;
+	string fn_common = (string)name_string;
+	cerr << version << endl;
 	cerr << fn_common.c_str() << endl;
 	sprintf(fn_data, "data_%s.dat", fn_common.c_str());
 	sprintf(fn_log, "log_%s.dat", fn_common.c_str());
