@@ -16,6 +16,8 @@ System::System()
 	version = "0";
 	ct = new ConTable;
 	grid = new Grid;
+	
+	
 }
 
 System::~System()
@@ -28,20 +30,50 @@ System::~System()
 	delete grid;
 }
 
+void System::affineUniaxialCompression(){
+	double lz_previous = lz;
+	lz -= compaction_speed*dt;
+	double z_compaction = lz/lz_previous;
+	lz_half = lz/2;
+	foreach (vector<Particle *>, particle, it_particle) {
+		(*it_particle)->p.z *= z_compaction;
+	}
+}
+
+void System::affineBiaxialCompression(){
+	double lx_previous = lx;
+	double lz_previous = lz;
+	lx -= compaction_speed*dt;
+	lx_half = lx/2;
+	lz -= compaction_speed*dt;
+	lz_half = lz/2;
+	double z_compaction = lz/lz_previous;
+	double x_compaction = lx/lx_previous;
+
+	foreach (vector<Particle *>, particle, it_particle) {
+		(*it_particle)->p.x *= x_compaction;
+		(*it_particle)->p.z *= z_compaction;
+	}
+
+}
+void System::bounadyUniaxialCompression(){
+	lz -= compaction_speed*dt;
+	lz_half = lz/2;
+}
+void System::bounadyBiaxialCompression(){
+	lx -= compaction_speed*dt;
+	lx_half = lx/2;
+	lz -= compaction_speed*dt;
+	lz_half = lz/2;
+
+}
+
+
 void System::TimeDevPeriodicBoundaryCompactionEuler()
 {
 	if (prog_strain) {
-		if (deformation_type == 0) {
-			lz -= compaction_speed*dt;
-			lz_half = lz/2;
-		} else if (deformation_type == 1) {
-			lx -= compaction_speed*dt;
-			lx_half = lx/2;
-			lz -= compaction_speed*dt;
-			lz_half = lz/2;
-		} else {
-			exit(1);
-		}
+		(this->*enforceStrain)();
+		
 	}
  	foreach (vector<Bond *>, bond, it_bond) {
 		(*it_bond)->addContactForce();
@@ -216,8 +248,10 @@ void System::strainControlSimulation()
 	max_displacement = 0;
 	if (simulation == "c1") {
 		deformation_type = 0; //uniaxial compression
+		enforceStrain = &System::affineUniaxialCompression;
 	} else if (simulation == "c2") {
 		deformation_type = 1; //biaxial compression
+		enforceStrain = &System::affineBiaxialCompression;
 	} else {
 		deformation_type = 2; //shear
 	}
@@ -394,6 +428,8 @@ void System::initDEM()
 	counter_relax_for_restructuring = 0;
 	lz_last_output = lz_init;
 	counterRegenerate_before = 0;
+	
+	
 }
 
 void System::preparationOutput()
@@ -1146,7 +1182,6 @@ void System::checkState()
 			bforce_max = bforce;
 		}
 	}
-	//ave_bondforce = bforce_sum / n_bond_active;
 	double sum_force = 0;
 	max_force = 0;
 	max_velocity = 0;
@@ -1195,7 +1230,7 @@ void System::makeNeighborPB()
 
 void System::checkBondFailure()
 {
-	foreach( vector<Bond *>, bond, it_bond) {
+	foreach(vector<Bond *>, bond, it_bond) {
 		(*it_bond)->cheackBondStress();
 	}
 }

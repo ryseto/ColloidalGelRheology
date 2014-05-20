@@ -113,6 +113,11 @@ protected:
 	ofstream fout_bond;
 	vec3d f_ex;
 private:
+	void (System::*enforceStrain)();
+	void affineUniaxialCompression();
+	void affineBiaxialCompression();
+	void bounadyUniaxialCompression();
+	void bounadyBiaxialCompression();
 	void preProcesses();
 	void timeEvolution();
 	void middleProcedures();
