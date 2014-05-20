@@ -880,7 +880,7 @@ void System::outputData()
 		fout_data << "#7 normal_stress_diff_1\n";
 		fout_data << "#8 normal_stress_diff_2\n";
 		fout_data << "#9  rup_normal(total number)\n";
-		fout_data << "#10  rup_shear(total number)\n";
+		fout_data << "#10 rup_shear(total number)\n";
 		fout_data << "#11 rup_bend(total number)\n";
 		fout_data << "#12 rup_torsion(total number)\n";
 		fout_data << "#13 rate_rup_normal\n";
@@ -956,32 +956,34 @@ void System::output_log()
 		fout_log << "#2 volume_fraction\n";
 		fout_log << "#3 shear_strain\n";
 		fout_log << "#4 ParticlePressure\n";
-		fout_log << "#5 CompressiveStress(sigma_22)\n";
-		fout_log << "#6 LateralStress\n";
-		fout_log << "#7 NormalStress1\n";
-		fout_log << "#8 NormalStress2\n";
-		fout_log << "#8 average_contact_number\n";
-		fout_log << "#9 ave_force\n";
-		fout_log << "#10 max_force\n";
-		fout_log << "#11 r_min\n";
-		fout_log << "#12 r_max\n";
-		fout_log << "#13 sliding_disp_max\n";
-		fout_log << "#14 bending_angle_max\n";
-		fout_log << "#15 torsional_angle_max\n";
-		fout_log << "#16 dt\n";
+		fout_log << "#5 ShearStress\n";
+		fout_log << "#6 CompressiveStress(sigma_22)\n";
+		fout_log << "#7 LateralStress\n";
+		fout_log << "#8 NormalStress1\n";
+		fout_log << "#9 NormalStress2\n";
+		fout_log << "#10 lz\n";
+		fout_log << "#11 lx\n";
+		fout_log << "#12 average_contact_number\n";
+		fout_log << "#13 ave_force\n";
+		fout_log << "#14 max_force\n";
+		fout_log << "#15 r_min\n";
+		fout_log << "#16 r_max\n";
+		fout_log << "#17 sliding_disp_max\n";
+		fout_log << "#18 bending_angle_max\n";
+		fout_log << "#19 torsional_angle_max\n";
 		fout_log << "#17 counterRegenerate\n";
 		fout_log << "#18 counterBreak\n";
 		fout_log << "#19 bond number\n";
-		fout_log << "#20 max_velocity\n";
-		fout_log << "#21 max_ang_velocity\n";
-		fout_log << "#22 ave_bondforce\n";
-		fout_log << "#23 diff_stress_z\n";
-		fout_log << "#24 diff_stress_x\n";
-		fout_log << "#25 stress_z_change\n";
-		fout_log << "#26 stress_x_change\n";
-		fout_log << "#27 kinetic_energy\n";
-		fout_log << "#28 cnt_loop\n";
-		fout_log << "#29 max_displacement\n";
+		fout_log << "#20 max_move_step/max_velocity\n";
+		fout_log << "#21 counterRegenerate\n";
+		fout_log << "#22 counterBreak\n";
+		fout_log << "#23 numBond\n";
+		fout_log << "#24 max_velocity\n";
+		fout_log << "#25 max_ang_velocity\n";
+		fout_log << "#26 ave_bondforce\n";
+		fout_log << "#27 cnt_loop\n";
+		fout_log << "#28 max_displacement\n";
+		fout_log << "#29 prog_strain\n";
 	}
 	fout_log << time << ' '; // 1
 	fout_log << volume_fraction << ' '; // 2
@@ -1005,7 +1007,7 @@ void System::output_log()
 	fout_log << max_move_step/max_velocity << ' '; // 20
 	fout_log << counterRegenerate <<' '; //21
 	fout_log << counterBreak << ' ';//22
-	fout_log << n_bond - counterBreak << ' '; // 23
+	fout_log << n_bond-counterBreak << ' '; // 23
 	fout_log << max_velocity << ' ';//24
 	fout_log << max_ang_velocity << ' '; // 25
 	fout_log << ave_bondforce << ' '; // 26
