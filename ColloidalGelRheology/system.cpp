@@ -16,8 +16,6 @@ System::System()
 	version = "0";
 	ct = new ConTable;
 	grid = new Grid;
-	
-	
 }
 
 System::~System()
@@ -49,31 +47,28 @@ void System::affineBiaxialCompression(){
 	lz_half = lz/2;
 	double z_compaction = lz/lz_previous;
 	double x_compaction = lx/lx_previous;
-
 	foreach (vector<Particle *>, particle, it_particle) {
 		(*it_particle)->p.x *= x_compaction;
 		(*it_particle)->p.z *= z_compaction;
 	}
-
 }
+
 void System::bounadyUniaxialCompression(){
 	lz -= compaction_speed*dt;
 	lz_half = lz/2;
 }
+
 void System::bounadyBiaxialCompression(){
 	lx -= compaction_speed*dt;
 	lx_half = lx/2;
 	lz -= compaction_speed*dt;
 	lz_half = lz/2;
-
 }
-
 
 void System::TimeDevPeriodicBoundaryCompactionEuler()
 {
 	if (prog_strain) {
 		(this->*enforceStrain)();
-		
 	}
  	foreach (vector<Bond *>, bond, it_bond) {
 		(*it_bond)->addContactForce();
@@ -247,15 +242,14 @@ void System::strainControlSimulation()
 	cnt_loop = 0;
 	max_displacement = 0;
 	if (simulation == "c1") {
-		deformation_type = 0; //uniaxial compression
 		enforceStrain = &System::affineUniaxialCompression;
+		
 	} else if (simulation == "c2") {
-		deformation_type = 1; //biaxial compression
 		enforceStrain = &System::affineBiaxialCompression;
 	} else {
-		deformation_type = 2; //shear
+		exit(1);
 	}
-	if (deformation_type == 0 || deformation_type == 1) {
+	if (simulation == "c1" || simulation == "c2") {
 		interval_output_config = (int)(2./(compaction_speed*dt))/interval_convergence_check;
 	} else {
 		interval_output_config = 20;
@@ -296,22 +290,21 @@ void System::bendingSimulation()
 	initialprocess = true;
 	setSimulationViscosity();
 	preparationOutput();
-	setBondGenerationDistance(2.0);
+	setBondGenerationDistance(2);
 	initGrid();
-	//outputParameter(sy, fout_yap);
 	initDEM();
 	makeInitialBond(2.0002);
 	initialprocess = false;
 	dt = dt_max;
 	checkState();
-	int cnt  = 0 ;
+	int cnt = 0 ;
 	double time_interval = 300;
 	double time_max = time_interval;
-	for (int i = 0; i < 2 ; i++) {
+	for (int i=0; i<2 ; i++) {
 		if (i == 1) {
 			f_ex.set(0,0,0);
 		}
-		while(true){
+		while(true) {
 			TimeDevBendingTest();
 			checkBondFailure();
 			if (!regeneration_bond.empty()){
@@ -330,7 +323,6 @@ void System::bendingSimulation()
 					cout << (*it_particle)->p.x -0.5*lx << ' ';
 					cout << (*it_particle)->p.y -0.5*ly << ' ';
 					cout << (*it_particle)->p.z -0.5*lz << endl;
-					
 					fout_conf << (*it_particle)->p.x -0.5*lx << ' ';
 					fout_conf << (*it_particle)->p.y -0.5*ly << ' ';
 					fout_conf << (*it_particle)->p.z -0.5*lz << ' ';
@@ -376,11 +368,11 @@ bool System::checkEndCondition()
 {
 	bool end_simulation = false;
 	if (simulation == "s") {
-		if (shear_strain > max_shear_strain){
+		if (shear_strain > max_shear_strain) {
 			end_simulation = true;
 		}
 	} else {
-		if (volume_fraction > max_volume_fraction){
+		if (volume_fraction > max_volume_fraction) {
 			end_simulation = true;
 		}
 	}
@@ -428,8 +420,6 @@ void System::initDEM()
 	counter_relax_for_restructuring = 0;
 	lz_last_output = lz_init;
 	counterRegenerate_before = 0;
-	
-	
 }
 
 void System::preparationOutput()
@@ -1133,7 +1123,7 @@ void System::monitorDeformation(char equilibrium)
 	fout_deform << endl;
 	int count_bond = 0;
 	for (int i=0; i < n_bond; i++) {
-		if ( bond[i]->initial_bond ) {
+		if (bond[i]->initial_bond) {
 			count_bond ++;
 		}
 	}

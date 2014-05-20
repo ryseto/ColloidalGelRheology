@@ -79,12 +79,6 @@ protected:
 	 * variables for simulations
 	 */
 	bool prog_strain;
-	/*
-	 * deformation_type
-	 * 0: uniaxial compression
-	 * 1: biaxial compression
-	 */
-	int deformation_type;
 	int counter_relax_for_restructuring;
 	int min_relaxation_loop;
 	int max_relaxation_loop;
