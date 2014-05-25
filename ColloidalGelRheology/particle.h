@@ -40,15 +40,13 @@ private:
 protected:
 	void (vec3d::*p_change)(double, double, double);
 public:
-	Particle(int particle_number_, const vec3d &position,
-			 const int initial_cluster, System &sy);
+	Particle(int particle_number_, const vec3d &position, System &sy);                                                                                                                                                                                                                                                                                                                                                                                                                                     
 	Particle(int paritcle_number_);
 	~Particle();
 	int particle_number;
 	vec3d p;
 	quaternion orientation;
 	double orientation_angle;
-	int init_cluster;
 	bool near_boundary;
 	double sq_force;
 	void makeNeighbor();

@@ -339,3 +339,12 @@ void Bond::monitor_state(ofstream &out)
 	out << bond_number << ' ' << status  << ' ';
 	out << normal_distance << ' ' << slide_distance << ' ' << rolling_angle << ' ' << torsional_angle << endl ;
 }
+
+void Bond::calcContactStress()
+{
+	if (status != 0) {
+		contact_stresslet_XF.set(r_vec, force0);
+	} else {
+		contact_stresslet_XF.reset();
+	}
+}

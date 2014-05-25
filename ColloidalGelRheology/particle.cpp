@@ -10,17 +10,11 @@
 
 Particle::Particle(int particle_number_,
 				   const vec3d &position,
-				   const int _i_cluster,
 				   System &sy_)
 {
 	sy = &sy_;
 	setInitial(particle_number_);
 	p = position;
-	init_cluster = _i_cluster;
-	if (init_cluster != 0){
-		std::cerr << "## particle.cpp ##" << std::endl;
-		exit(1);
-	}
 	setVelocityZero();
 	orientation.set(1, 0, 0, 0);
 	orientation_angle = 0;

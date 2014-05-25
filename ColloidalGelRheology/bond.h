@@ -62,7 +62,7 @@ class Bond {
 	vec3d *pu[2];
 	Particle *p_particle0;
 	Particle *p_particle1;
-	StressTensor contact_stresslet_XF;
+	
 	double sq_fsc;
 	double sq_mbc;
 	double sq_mtc;
@@ -88,6 +88,7 @@ public:
 	int bondtype;
 	int cnt_regeneration;
 	double r;
+	StressTensor contact_stresslet_XF;
 	/* Angle directing to the original contact point.
 	 *
 	 */
@@ -126,23 +127,6 @@ public:
 	vec3d position(int i){ return *pp[i]; }
 	void monitor_state(ofstream &out);
 	int val_bond_number() { return bond_number; }
-	void updateBondParameter(double k)
-	{
-		para.kn = k;
-		para.kt = k;
-		para.kb = k;
-	}
-	StressTensor getContactStressXF()
-	{
-		return contact_stresslet_XF;
-	}
-	void calcContactStress()
-	{
-		if (status != 0) {
-			contact_stresslet_XF.set(r_vec, force0);
-		} else {
-			contact_stresslet_XF.reset();
-		}
-	}
+	void calcContactStress();
 };
 #endif

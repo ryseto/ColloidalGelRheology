@@ -525,7 +525,7 @@ void System::calcStress()
 	total_contact_stressXF.reset();
 	foreach(vector<Bond *>, bond, it_bond) {
 		(*it_bond)->calcContactStress();
-		total_contact_stressXF += (*it_bond)->getContactStressXF();
+		total_contact_stressXF += (*it_bond)->contact_stresslet_XF;
 	}
 	total_contact_stressXF /= system_volume();
 }
@@ -757,8 +757,7 @@ void System::importPositions()
 	for (int i = 0; i < init_aggregate.size(); i++) {
 		vec3d new_p = init_aggregate[i];
 		particle.push_back(new Particle(count_particle_number, new_p,
-										init_aggregate_cluster[i],
-										*this) );
+										*this));
 		count_particle_number++;
 	}
 	n_particle = count_particle_number;
@@ -776,7 +775,7 @@ void System::setLinearChain(int number_of_particles)
 	int count_particle_number = 0;
 	for (int i=0; i<m; i++) {
 		vec3d new_p(0.5*lx, 0, 2*i-number_of_particles+1+0.5*lz);
-		particle.push_back(new Particle(count_particle_number, new_p, 0, *this));
+		particle.push_back(new Particle(count_particle_number, new_p, *this));
 		++ count_particle_number;
 	}
 	n_particle = count_particle_number;
@@ -1074,7 +1073,6 @@ void System::outputConfiguration(char equilibrium)
 		fout_conf << (*p_iter)->orientation.q[1] << ' ';
 		fout_conf << (*p_iter)->orientation.q[2] << ' ';
 		fout_conf << (*p_iter)->orientation.q[3] << ' ';
-		fout_conf << (*p_iter)->init_cluster << ' ' ;
 		fout_conf << (*p_iter)->valCn_size() << endl;
 	}
 	fout_conf << "B " << number_of_live_bonds << endl;
@@ -1212,7 +1210,7 @@ void System::simuAdjustment()
 void System::makeNeighborPB()
 {
 	grid->remake(particle);
-	ForAllParticle{
+	ForAllParticle {
 		(*p_iter)->makeNeighbor();
 	}
 }
