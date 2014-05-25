@@ -109,7 +109,9 @@ void Bond::getParticleNumbers(int &i, int &j)
 
 void Bond::addContactForce()
 {
-	if (status == 0) return;
+	if (status == 0) {
+		return;
+	}
 	calcForce();
 	(*p_particle0).stackForce(force0, torque0);
 	(*p_particle1).stackForce(-force0, torque1);

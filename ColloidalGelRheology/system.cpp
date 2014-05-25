@@ -73,9 +73,6 @@ void System::TimeDevPeriodicBoundaryCompactionEuler()
  	foreach (vector<Bond *>, bond, it_bond) {
 		(*it_bond)->addContactForce();
 	}
-	//////////////////////////////
-	// calculate
-	// x*_{j+1} and v*_{j+1}
 	foreach (vector<Particle *>, particle, it_particle) {
 		(*it_particle)->move_Euler();
 	}
@@ -412,7 +409,7 @@ void System::initDEM()
 	rup_normal = rup_shear = rup_bend = rup_torsion = 0;
 	rupture_bond.clear();
 	regeneration_bond.clear();
-	time = 0.;
+	time = 0;
 	counterBreak = 0;
 	counterRegenerate = 0;
 	shear_strain = 0;

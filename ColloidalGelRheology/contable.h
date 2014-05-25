@@ -20,10 +20,7 @@ class ConTable{
 public:
 	ConTable():allocate(false) {}
 	~ConTable();
-	inline bool connect(int i, int j){
-		return tbl[i][j];
-	}
-	
+	bool connect(int i, int j);
 	void set(int particleNumber);
 	void reset();
 	void on_connect(int i, int j);

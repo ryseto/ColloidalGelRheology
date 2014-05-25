@@ -21,7 +21,6 @@ extern double r;
 extern int n;
 extern double Lx;
 
-
 void sediment_make3dNetwork(int rank, int m, int rsd);
 //int ipow(int p, int q);
 void make_fractal_object(int m, vector<vec3d> &p);
@@ -31,20 +30,19 @@ void set_initial_pairs(vector<vec3d> &p);
 //double calc_z_max(vector<vec3d> &p);
 void output_result(ofstream &fout, vector<vec3d> &p, int fo_size);
 void prepare_fout(ofstream &fout, int rank, int rsd);
-
 double collision_value(vec3d const &po, vec3d const &p, vec3d v);
 double collision_height(vec3d po, vec3d p);
 void put_first_fo(vector<vec3d> &p, int fo_size);
 void drop_fo(vector<vec3d> &p, int i_premier, int fo_size);
 
-
 //void make3dNetwork(int argc, char ** argv)
-void sediment_make3dNetwork(int rank, int m, int rsd){
-	if (rank < 1){
+void sediment_make3dNetwork(int rank, int m, int rsd)
+{
+	if (rank < 1) {
 		cerr << "rank < 1 is not allowed." << endl;
 		exit(1);
 	}
-    int k = m - rank; // 粒子数 2^k
+    int k = m-rank; // number of particle 2^k
     //	int rsd = atoi(argv[7]);
 	srand48(rsd);
 	int fo_size = ipow(2, rank);
@@ -73,7 +71,6 @@ void sediment_make3dNetwork(int rank, int m, int rsd){
 	} else if ( rank == 1 ){
 		int fo_size_tmp = 2;
 		make_fractal_object(fo_size_tmp, p);
-		
 	}
 	
 	// ランダムに落として積み上げる。
