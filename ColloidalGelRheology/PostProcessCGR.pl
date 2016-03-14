@@ -54,8 +54,11 @@ open (OUT3, "> ${output3}");
 open (OUT4, "> ${output4}");
 
 # &printHead;
+&yaplotColor;
+
 $first = 1;
 $initial = 1;
+$first_output = 1;
 $p0 = 0;
 $onetime = 1;
 
@@ -64,12 +67,9 @@ sub spherepart {
 }
 $cnt = 0;
 $out2_first = 1;
-while ( 1 ){
-    if ($p0 eq "#" ){
-        printf "\n";
-    } else {
-        $line = <IN_data>
-    }
+
+while (1){
+	$line = <IN_data>;
     ($buf, $equiv, $vf, $shear_strain,
 	$particpe_pressure, $shear_stress,
 	$lx, $lz, $rn, $rs, $rb, $rt, $ac) = split(/\s+/, $line);
@@ -133,7 +133,11 @@ while ( 1 ){
 	#	for ($k=0; $k < 20; $k++ ){
 	if ($equiv eq "e"){
 		#for ($k=0; $k < 20; $k++ ){
-		printf OUT "\n" ;
+		if ($first_output == 1) {
+			$first_output = 0;
+		} else {
+			printf OUT "\n" ;
+		}
 		&modifyCoordinateForPeriodicBoundary;
 		&outputYaplot;
 		$ene_n_total = 0;
@@ -170,7 +174,7 @@ while ( 1 ){
 		#}
 	} else {
 		if ($first == 1){
-				$first = 0;
+			$first = 0;
 		} else {
 			#	printf OUT "\n" ;
 		}
@@ -204,7 +208,7 @@ sub outputYaplot
 		#} elsif ($wlvec[$i] == -1){
 		#}
 		printf OUT "c $posx[$i] $posy[$i] $posz[$i]\n";
-		print OUT2 "$posx[$i] $posy[$i] $posz[$i] $stress[$i]\n";
+		printf OUT2 "$posx[$i] $posy[$i] $posz[$i] $stress[$i]\n";
 	}
 	
 	printf OUT "@ 3\n";
@@ -425,6 +429,52 @@ light_source{
 background {color rgb <0.02, 0.08, 0.15>}
 ";
 }
+
+sub yaplotColor {
+	printf OUT "\@0 0 0 0 \n";
+	#printf OUT "\@1 50 100 205 \n";
+	printf OUT "\@1 25 50 102 \n";
+	#printf OUT "\@1 255 255 255 \n";
+	printf OUT "\@2 200 200 200 \n";
+	printf OUT "\@3 50 150 255 \n";
+	printf OUT "\@4 50 200 50 \n";
+	printf OUT "\@5 255 100 100 \n";
+	printf OUT "\@6 50 200 50 \n";
+	printf OUT "\@7 255 255 0 \n";
+	printf OUT "\@8 255 255 255\n";
+	printf OUT "\@9 150 150 150\n";
+	#printf OUT "\@8 224 143 0 \n";
+	#printf OUT "\@9 67 163 230 \n";
+	#printf OUT "\@8 253 105 6 \n";
+	#printf OUT "\@9 109 109 109 \n";
+	printf OUT "\@10 250 250 250 \n";
+	printf OUT "\@11 240 240 240 \n";
+	printf OUT "\@12 230 230 230 \n";
+	printf OUT "\@13 220 220 220 \n";
+	printf OUT "\@14 210 210 210 \n";
+	printf OUT "\@15 200 200 200 \n";
+	printf OUT "\@16 190 190 190 \n";
+	printf OUT "\@17 180 180 180 \n";
+	printf OUT "\@18 170 170 170 \n";
+	printf OUT "\@19 160 160 160 \n";
+	printf OUT "\@20 150 150 150 \n";
+	printf OUT "\@21 140 140 140 \n";
+	printf OUT "\@22 130 130 130 \n";
+	printf OUT "\@23 120 120 120 \n";
+	printf OUT "\@24 110 110 110 \n";
+	printf OUT "\@25 100 100 100 \n";
+	printf OUT "\@26 90 90 90 \n";
+	printf OUT "\@27 80 90 90 \n";
+	printf OUT "\@28 70 70 70\n";
+	printf OUT "\@29 60 60 60 \n";
+	printf OUT "\@30 50 50 50 \n";
+	printf OUT "\@31 40 40 40 \n";
+	printf OUT "\@32 30 30 30 \n";
+	printf OUT "\@33 20 20 20 \n";
+	printf OUT "\@34 10 10 10 \n";
+	printf OUT "\@35 0 0 0 \n";
+}
+
 
 #object {
 #  Plane_XZ

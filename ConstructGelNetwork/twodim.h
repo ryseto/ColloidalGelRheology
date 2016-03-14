@@ -484,7 +484,7 @@ void twodim_prepare_fout(int filling, ofstream &fout,
 			(int)(Lx), (int)(Lz), floc_size, phi, rsd);
     string fn_fout;
     if (filling == 1) {
-        fn_fout = "sed_2D_" + (string)name_string + ".dat";
+        fn_fout = "sediment_2D_" + (string)name_string + ".dat";
     } else if (filling == 2) {
         fn_fout = "rw_2D_" + (string)name_string + ".dat"; //cluster random walk
     }
