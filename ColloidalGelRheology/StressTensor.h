@@ -27,7 +27,7 @@ public:
 		}
 	}
 	
-	void outputStressTensor(ofstream &fout)
+	void outputStressTensor(std::ofstream &fout)
 	{
 		fout << elm[0] << ' ';
 		fout << elm[1] << ' ';
@@ -195,7 +195,7 @@ public:
 	 * Finite trace
 	 */
 	inline void set(const double &_xx, const double &_xy, const double &_xz,
-		const double &_yz, const double &_yy, const double &_zz)
+					const double &_yz, const double &_yy, const double &_zz)
 	{
 		elm[0] = _xx;
 		elm[1] = _xy;
@@ -209,7 +209,7 @@ public:
 	 * Traceless
 	 */
 	inline void	set(const double &_xx, const double &_xy, const double &_xz,
-		const double &_yz, const double &_yy)
+					const double &_yz, const double &_yy)
 	{
 		elm[0] = _xx;
 		elm[1] = _xy;
@@ -239,8 +239,8 @@ public:
 	inline friend StressTensor tensor_prod (const vec3d &v1, const vec3d &v2)
 	{
 		return StressTensor(v1.x*v2.x,
-                            0.5*(v1.x*v2.y+v1.y*v2.x),
-                            0.5*(v1.x*v2.z+v1.z*v2.x),
+							0.5*(v1.x*v2.y+v1.y*v2.x),
+							0.5*(v1.x*v2.z+v1.z*v2.x),
 							0.5*(v1.y*v2.z+v1.z*v2.y),
 							v1.y*v2.y,
 							v1.z*v2.z);
@@ -286,11 +286,11 @@ public:
 		return -0.5*(elm[0]+elm[4]);
 #endif
 	}
-
+	
 	void cerr()
 	{
 		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
 	}
-
+	
 };
 #endif

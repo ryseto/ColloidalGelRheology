@@ -18,7 +18,7 @@ Bond::Bond(const int d0, const int d1, System &sy_)
 	bond_number = sy->n_bond++;
 	d[0] = d0;
 	d[1] = d1;
-	sy->ct->on_connect( d[0], d[1] );
+	sy->ct->on_connect(d[0], d[1]);
 	p_particle0 = sy->particle[d[0]];
 	p_particle1 = sy->particle[d[1]];
 	if (initial_bond) {
@@ -326,7 +326,7 @@ void Bond::monitor_state(ofstream &out)
 	if (dot_prod > 0.9) {
 #ifdef TWODIMENSION
 		// 2D
-		double cross_prod = abs( cross_2d( u_init[0], - u_init[1]));
+		double cross_prod = abs(cross_2d(u_init[0], -u_init[1]));
 #else
 		// 3D
 		double cross_prod = (cross( u_init[0], - u_init[1])).norm();

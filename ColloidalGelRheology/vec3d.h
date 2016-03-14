@@ -300,13 +300,15 @@ public:
 	
 #ifdef TWODIMENSION
 	// 2D
-	inline void rotateInfinitesimal(const double &dphi_y){
+	inline void rotateInfinitesimal(const double &dphi_y)
+	{
 		/* dphi must be small vector. */
 		(*this) += vec3d(dphi_y*z, 0, -dphi_y*x);
 	}
 #else
 	// 3D
-	inline void rotateInfinitesimal(const vec3d &dphi){
+	inline void rotateInfinitesimal(const vec3d &dphi)
+	{
 		/* dphi must be small vector. */
 		(*this) += cross(dphi, *this);
 	}

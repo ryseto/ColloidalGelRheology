@@ -11,7 +11,6 @@
 		D95B782615879BE1004590CA /* ColloidalGelRheology.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D95B782515879BE1004590CA /* ColloidalGelRheology.1 */; };
 		D95B782D15879C9F004590CA /* wall.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B782C15879C9F004590CA /* wall.cpp */; };
 		D95B783215879D6C004590CA /* system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783115879D6C004590CA /* system.cpp */; };
-		D95B783515879DE3004590CA /* quaternion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783415879DE3004590CA /* quaternion.cpp */; };
 		D95B783815879E29004590CA /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783715879E29004590CA /* particle.cpp */; };
 		D95B783C15879E8E004590CA /* grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783B15879E8E004590CA /* grid.cpp */; };
 		D95B784015879EFC004590CA /* contable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95B783F15879EFC004590CA /* contable.cpp */; };
@@ -59,7 +58,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D912B81016B09642004787CF /* PostProcessCGR */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = PostProcessCGR; sourceTree = "<group>"; };
+		D912B81016B09642004787CF /* PostProcessCGR.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = PostProcessCGR.pl; sourceTree = "<group>"; };
 		D95B781F15879BE1004590CA /* ColloidalGelRheology */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ColloidalGelRheology; sourceTree = BUILT_PRODUCTS_DIR; };
 		D95B782315879BE1004590CA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D95B782515879BE1004590CA /* ColloidalGelRheology.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ColloidalGelRheology.1; sourceTree = "<group>"; };
@@ -69,7 +68,6 @@
 		D95B783015879D43004590CA /* system.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D95B783115879D6C004590CA /* system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system.cpp; sourceTree = "<group>"; };
 		D95B783315879DA4004590CA /* quaternion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = quaternion.h; sourceTree = "<group>"; };
-		D95B783415879DE3004590CA /* quaternion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quaternion.cpp; sourceTree = "<group>"; };
 		D95B783615879DFF004590CA /* particle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = particle.h; sourceTree = "<group>"; };
 		D95B783715879E29004590CA /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
 		D95B783915879E52004590CA /* output.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = output.h; sourceTree = "<group>"; };
@@ -147,7 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				D95B782315879BE1004590CA /* main.cpp */,
-				D912B81016B09642004787CF /* PostProcessCGR */,
+				D912B81016B09642004787CF /* PostProcessCGR.pl */,
 				D95B783015879D43004590CA /* system.h */,
 				D95B783115879D6C004590CA /* system.cpp */,
 				D95B784215879F43004590CA /* bond.h */,
@@ -159,7 +157,6 @@
 				D95B782E15879CD7004590CA /* wall.h */,
 				D95B782F15879D10004590CA /* vec3d.h */,
 				D95B783315879DA4004590CA /* quaternion.h */,
-				D95B783415879DE3004590CA /* quaternion.cpp */,
 				D95B783915879E52004590CA /* output.h */,
 				D95B783B15879E8E004590CA /* grid.cpp */,
 				D95B783A15879E73004590CA /* grid.h */,
@@ -258,7 +255,7 @@
 		D95B781615879BE0004590CA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0720;
 			};
 			buildConfigurationList = D95B781915879BE0004590CA /* Build configuration list for PBXProject "ColloidalGelRheology" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -287,7 +284,6 @@
 				D95B782415879BE1004590CA /* main.cpp in Sources */,
 				D95B782D15879C9F004590CA /* wall.cpp in Sources */,
 				D95B783215879D6C004590CA /* system.cpp in Sources */,
-				D95B783515879DE3004590CA /* quaternion.cpp in Sources */,
 				D95B783815879E29004590CA /* particle.cpp in Sources */,
 				D95B783C15879E8E004590CA /* grid.cpp in Sources */,
 				D95B784015879EFC004590CA /* contable.cpp in Sources */,
@@ -327,11 +323,15 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -345,8 +345,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++11",
+				);
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 			};
@@ -362,11 +366,14 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -375,7 +382,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++11",
+				);
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 			};

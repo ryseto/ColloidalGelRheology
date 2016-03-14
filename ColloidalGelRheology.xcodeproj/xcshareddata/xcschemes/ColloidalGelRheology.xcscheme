@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0500"
+   LastUpgradeVersion = "0720"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/ColloidalGelRheology $HOME/bin/&#10;cp ${PROJECT_DIR}/ColloidalGelRheology/PostProcessCGR $HOME/bin/&#10;echo ${PROJECT_DIR} &gt; $HOME/hoge1.txt&#10;echo ${BUILT_PRODUCTS_DIR} &gt; $HOME/hoge2.txt&#10;&#10;">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/ColloidalGelRheology $HOME/bin/&#10;cp ${PROJECT_DIR}/ColloidalGelRheology/PostProcessCGR.pl $HOME/bin/&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -41,10 +41,10 @@
       </BuildActionEntries>
    </BuildAction>
    <TestAction
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      buildConfiguration = "Release">
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
       <MacroExpansion>
@@ -56,18 +56,22 @@
             ReferencedContainer = "container:ColloidalGelRheology.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <AdditionalOptions>
+      </AdditionalOptions>
    </TestAction>
    <LaunchAction
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_compression2"
-      buildConfiguration = "Release"
+      customWorkingDirectory = "/Users/seto/Documents/work/compression1"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D95B781E15879BE1004590CA"
@@ -78,19 +82,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "c"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "simu5.txt"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "CRW_2D_W50H50_cca4_phi0.30_rand1_p.dat"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "4"
+            argument = "c1 simu1.txt CRW_2D_W100H100_cca4_phi0.20_rand1_p.dat 1"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -98,12 +90,13 @@
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D95B781E15879BE1004590CA"

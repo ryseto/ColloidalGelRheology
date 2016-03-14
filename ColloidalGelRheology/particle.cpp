@@ -51,11 +51,11 @@ void Particle::makeNeighbor()
 	//near_boundary = sy->grid->near_boundary_xy(p);
 	near_boundary = true;
 	neighbor.clear();
-	foreach(vector< vector<int> *>, neighbor_cells, iter){
-		foreach( vector<int>, *(*iter), i){
-			if ( sy->ct->connect(particle_number, *i ) == false
-				&& *i < particle_number ){
-				neighbor.push_back( *i );
+	for (auto iter: neighbor_cells) {
+		for (auto i : *iter) {
+			if (sy->ct->connect(particle_number, i) == false
+				&& i < particle_number){
+				neighbor.push_back(i);
 			}
 		}
 	}

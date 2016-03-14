@@ -11,9 +11,8 @@
 #include <cmath>
 #include <cstdlib>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
-using namespace std;
 
-class ConTable{
+class ConTable {
 	bool allocate;
 	bool **tbl;
 	int n;

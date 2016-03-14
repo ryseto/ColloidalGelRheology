@@ -12,11 +12,13 @@
 //extern vector<Particle *> particle;
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 
-Grid::Grid(void){
-	std::cerr << "grid object is created" << std::endl;
+Grid::Grid(void)
+{
+	//
 }
 
-Grid::~Grid(void){
+Grid::~Grid(void)
+{
 //	for (int gx = 0; gx < gx_max; gx++){
 //		for (int gy = 0; gy < gy_max ; gy++){
 //			DELETE(vcell[gx][gy]);
@@ -258,9 +260,9 @@ void Grid::entry(vec3d &p, int i){
 void Grid::get_neighbor_list(const vec3d &p, vector<int> &neighbor){
 	//GridPoint gp;
 	gp_tmp = p_to_grid(p);
-	foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
-		foreach(vector<int>, vcell[(*gp).x][(*gp).y][(*gp).z], iter){
-			neighbor.push_back(*iter);
+	for (const auto gp : neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z]) {
+		for (auto iter : vcell[gp.x][gp.y][gp.z]) {
+			neighbor.push_back(iter);
 		}
 	}
 }
@@ -282,8 +284,8 @@ void Grid::get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbo
 //
 //	}
 	p_neighbor.clear();
-	foreach(vector<GridPoint>, neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z], gp){
-		p_neighbor.push_back( &(vcell[(*gp).x][(*gp).y][(*gp).z]));
+	for (const auto gp : neighbor_cell[gp_tmp.x][gp_tmp.y][gp_tmp.z]) {
+		p_neighbor.push_back( &(vcell[gp.x][gp.y][gp.z]));
 	}
 }
 

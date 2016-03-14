@@ -115,7 +115,6 @@ private:
 	void preProcesses();
 	void timeEvolution();
 	void middleProcedures();
-	void shiftCenterOfMass(vector<vec3d> &p);
 	void setBondGenerationDistance(double);
 	void generateBond();
 	void makeInitialBond(double generation_distance);

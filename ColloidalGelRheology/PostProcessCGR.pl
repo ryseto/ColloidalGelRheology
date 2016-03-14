@@ -1,16 +1,19 @@
 #! /usr/bin/perl
 use Math::Trig;
 $data = $ARGV[0];
-$yoko = 0;
+$laying = 0;
 open (IN_data, "< ${data}");
 #$output = "${input}" . ${n}. '.pov';
-#####
-# layer
+
+############################
+# Bond parameters need to be set
 $kn = 20;
 $ks = 20;
 $kb = 20;
 $kn3 = 80000;
+############################
 
+# Layer number
 $y1_walls = 1;
 $y2_particles = 2;
 $y3_bond = 3;
@@ -87,14 +90,14 @@ while ( 1 ){
 	$equiv = "e";
 	# import Particle position
     $line = <IN_data>;
-    ($buf, $np ) = split(/\s+/, $line);
+    ($buf, $np) = split(/\s+/, $line);
     if ($buf ne "P"){last; }
 	
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_data> ;
         ($x, $y, $z, $q0, $q1, $q2, $q3, $ic,$wg, $wl, $cn) = split(/\s+/, $line);    
         $wlvec[$i]=$wg;
-        if ( $yoko == 1 ){
+        if ($yoko == 1){
             $posx[$i] = $z; $posy[$i] = $y; $posz[$i] = -$x;
         } else {
             $posx[$i] = $x; $posy[$i] = $y; $posz[$i] = $z;
@@ -231,7 +234,7 @@ sub outputYaplot
 sub modifyCoordinateForPeriodicBoundary
 {
     for ($i = 0; $i < $nb; $i ++){
-        if ( $yoko == 1 ){
+        if ( $laying == 1 ){
             if ( abs($z0[$i] - $z1[$i]) > 5){
                 if( $z0[$i] > $z1[$i] ){
                     $z0[$i] = $z0[$i] - $L;
@@ -275,7 +278,7 @@ sub modifyCoordinateForPeriodicBoundary
 
 sub outputWalls
 {
-    if ( $yoko == 1 ){
+    if ($laying == 1){
 
         printf OUT "y $y1_walls \n";
         printf OUT "@ 2\n";
@@ -300,7 +303,7 @@ sub outputWalls
         printf OUT "l $w1z  0   $L2 $w1z 0  -$L2 \n";            
         #printf OUT "y 2\n";
         #printf OUT "@ 2\n";
-    }else{
+    } else {
         $textposition1 = $w1z +  5;
         $textposition2 = $w1z +  3;
         $textposition3 = $w1z +  1;
@@ -377,7 +380,7 @@ sub printHead
 #include \"metals.inc\"
 ";
 
-    printf OUT "
+	printf OUT "
 #macro S(p, rot)
 sphere{ 0, 1
   pigment{checker White*1.2, Yellow scale 1}

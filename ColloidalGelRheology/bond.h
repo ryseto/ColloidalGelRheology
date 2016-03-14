@@ -96,37 +96,74 @@ public:
 	vec3d e_normal;
 	void addContactForce();
 	void calcForce();
-	vec3d forceToParticle(int paritlce_number) {
+	vec3d forceToParticle(int paritlce_number)
+	{
 		if (paritlce_number == d[0]) {
 			return force0;
 		} else {
 			return -force0;
 		}
 	}
-	void outputCompression(ofstream &out, double f_max);
-	void outputTraction(ofstream &out, double f_max);
+	void outputCompression(std::ofstream &out, double f_max);
+	void outputTraction(std::ofstream &out, double f_max);
 	void rupture();
 	void chPointer(int i, int particle_num);
 	void regeneration();
-	inline double val_F_norm(){ return abs(force_normal); }
-	inline double val_F_slid(){ return force_sliding.norm(); }
+	inline double val_F_norm()
+	{
+		return std::abs(force_normal);
+	}
+	inline double val_F_slid()
+	{
+		return force_sliding.norm();
+	}
 #ifndef TWODIMENSION
-	inline double val_M_bend(){ return moment_bending.norm(); }
-	inline double valBendingAngle(){ return ang_bend.norm(); }
-	inline double val_M_tors(){ return abs(moment_torsion); }
+	inline double val_M_bend()
+	{
+		return moment_bending.norm();
+	}
+	inline double valBendingAngle()
+	{
+		return ang_bend.norm();
+	}
+	inline double val_M_tors()
+	{
+		return abs(moment_torsion);
+	}
 #else
-	inline double val_M_bend(){ return abs(moment_bending); }
-	inline double valBendingAngle(){ return abs(ang_bend); }
+	inline double val_M_bend()
+	{
+		return std::abs(moment_bending);
+	}
+	inline double valBendingAngle()
+	{
+		return std::abs(ang_bend);
+	}
 #endif
-	inline double valTorsionalAngle(){ return abs(ang_tort); }
-	inline double valSlidingDisplacement(){ return d_slid.norm(); }
-	inline double forceNorm(){ return force0.norm(); }
+	inline double valTorsionalAngle()
+	{
+		return std::abs(ang_tort);
+	}
+	inline double valSlidingDisplacement()
+	{
+		return d_slid.norm();
+	}
+	inline double forceNorm()
+	{
+		return force0.norm();
+	}
 	void getParticleNumbers(int &i, int &j);
 	void cheackBondStress();
 	void outputRuptureMark();
-	vec3d position(int i){ return *pp[i]; }
-	void monitor_state(ofstream &out);
-	int val_bond_number() { return bond_number; }
+	vec3d position(int i)
+	{
+		return *pp[i];
+	}
+	void monitor_state(std::ofstream &out);
+	int val_bond_number()
+	{
+		return bond_number;
+	}
 	void calcContactStress();
 };
 #endif

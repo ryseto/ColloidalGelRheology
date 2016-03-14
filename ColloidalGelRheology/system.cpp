@@ -28,17 +28,19 @@ System::~System()
 	delete grid;
 }
 
-void System::affineUniaxialCompression(){
+void System::affineUniaxialCompression()
+{
 	double lz_previous = lz;
 	lz -= compaction_speed*dt;
 	double z_compaction = lz/lz_previous;
 	lz_half = lz/2;
-	foreach (vector<Particle *>, particle, it_particle) {
-		(*it_particle)->p.z *= z_compaction;
+	for (auto prtcl : particle) {
+		prtcl->p.z *= z_compaction;
 	}
 }
 
-void System::affineBiaxialCompression(){
+void System::affineBiaxialCompression()
+{
 	double lx_previous = lx;
 	double lz_previous = lz;
 	lx -= compaction_speed*dt;
@@ -47,18 +49,20 @@ void System::affineBiaxialCompression(){
 	lz_half = lz/2;
 	double z_compaction = lz/lz_previous;
 	double x_compaction = lx/lx_previous;
-	foreach (vector<Particle *>, particle, it_particle) {
-		(*it_particle)->p.x *= x_compaction;
-		(*it_particle)->p.z *= z_compaction;
+	for (auto prtcl : particle) {
+		prtcl->p.x *= x_compaction;
+		prtcl->p.z *= z_compaction;
 	}
 }
 
-void System::bounadyUniaxialCompression(){
+void System::bounadyUniaxialCompression()
+{
 	lz -= compaction_speed*dt;
 	lz_half = lz/2;
 }
 
-void System::bounadyBiaxialCompression(){
+void System::bounadyBiaxialCompression()
+{
 	lx -= compaction_speed*dt;
 	lx_half = lx/2;
 	lz -= compaction_speed*dt;
@@ -70,11 +74,11 @@ void System::TimeDevPeriodicBoundaryCompactionEuler()
 	if (prog_strain) {
 		(this->*enforceStrain)();
 	}
- 	foreach (vector<Bond *>, bond, it_bond) {
-		(*it_bond)->addContactForce();
+	for (auto bnd: bond) {
+		bnd->addContactForce();
 	}
-	foreach (vector<Particle *>, particle, it_particle) {
-		(*it_particle)->move_Euler();
+	for (auto prtcl : particle) {
+		prtcl->move_Euler();
 	}
 	time += dt;
 }
@@ -84,14 +88,14 @@ void System::TimeDevBendingTest()
 	particle[0]->stackForce(-0.5*f_ex, 0);
 	particle[5]->stackForce(f_ex, 0);
 	particle[10]->stackForce(-0.5*f_ex, 0);
- 	foreach (vector<Bond *>, bond, it_bond) {
-		(*it_bond)->addContactForce();
+	for (auto bnd: bond) {
+		bnd->addContactForce();
 	}
 	//////////////////////////////
 	// calculate
 	// x*_{j+1} and v*_{j+1}
-	foreach (vector<Particle *>, particle, it_particle) {
-		(*it_particle)->move_Euler();
+	for (auto prtcl : particle) {
+		prtcl->move_Euler();
 	}
 	time += dt;
 }
@@ -100,7 +104,7 @@ bool System::mechanicalEquilibrium()
 {
 	static int cnt_check = 0;
 	bool mechanical_equilibrium = false;
-	if (simulation == "s"){
+	if (simulation == "s") {
 		if ((max_velocity < max_velocity_convergence // less important
 			 && max_ang_velocity < max_ang_velocity_convergence // less important
 			 && counterRegenerate_before == counterRegenerate)) {
@@ -133,7 +137,16 @@ bool System::mechanicalEquilibrium()
 		}
 		cerr << "cnt_check : " << cnt_check << endl;
 		cerr << "counterRegenerate : " << counterRegenerate_before << ' ' << counterRegenerate << endl;
-		cerr << "max_velocity : " << max_velocity << endl;
+		if (max_velocity > max_velocity_convergence) {
+			cerr << "max_velocity : " << max_velocity << " > " << max_velocity_convergence << endl;
+		}
+		if (max_ang_velocity > max_ang_velocity_convergence) {
+			cerr << "max_ang_velocity : " << max_ang_velocity << " > " << max_ang_velocity_convergence << endl;
+		}
+		if (max_displacement > eq_max_displacement) {
+			cerr << "max_displacement: " <<  max_displacement << " > " << eq_max_displacement << endl;
+		}
+		
 		cerr << "max_ang_velocity : " << max_ang_velocity << endl;
 		cerr << "max_displacement : " << max_displacement << endl;
 		if (max_displacement > 1) {
@@ -313,20 +326,19 @@ void System::bendingSimulation()
 				counter_relax_for_restructuring = 0;
 			}
 			if (cnt++ % 100 ==0){
-				
 				fout_conf << "# " << f_ex.x << endl;
-				foreach( vector<Particle *>, particle, it_particle){
+				for (auto prtcl : particle) {
 					cout << "c ";
-					cout << (*it_particle)->p.x -0.5*lx << ' ';
-					cout << (*it_particle)->p.y -0.5*ly << ' ';
-					cout << (*it_particle)->p.z -0.5*lz << endl;
-					fout_conf << (*it_particle)->p.x -0.5*lx << ' ';
-					fout_conf << (*it_particle)->p.y -0.5*ly << ' ';
-					fout_conf << (*it_particle)->p.z -0.5*lz << ' ';
-					fout_conf << (*it_particle)->orientation.q[0] << ' ';
-					fout_conf << (*it_particle)->orientation.q[1] << ' ';
-					fout_conf << (*it_particle)->orientation.q[2] << ' ';
-					fout_conf << (*it_particle)->orientation.q[3] << endl;
+					cout << prtcl->p.x -0.5*lx << ' ';
+					cout << prtcl->p.y -0.5*ly << ' ';
+					cout << prtcl->p.z -0.5*lz << endl;
+					fout_conf << prtcl->p.x -0.5*lx << ' ';
+					fout_conf << prtcl->p.y -0.5*ly << ' ';
+					fout_conf << prtcl->p.z -0.5*lz << ' ';
+					fout_conf << prtcl->orientation.q[0] << ' ';
+					fout_conf << prtcl->orientation.q[1] << ' ';
+					fout_conf << prtcl->orientation.q[2] << ' ';
+					fout_conf << prtcl->orientation.q[3] << endl;
 				}
 				cout << "l 0 -0.01 -12 0 -0.01 12 \n";
 				cout << "l -12 -0.01 0 12 -0.01 0 \n";
@@ -523,9 +535,9 @@ void System::optimalTimeStep()
 void System::calcStress()
 {
 	total_contact_stressXF.reset();
-	foreach(vector<Bond *>, bond, it_bond) {
-		(*it_bond)->calcContactStress();
-		total_contact_stressXF += (*it_bond)->contact_stresslet_XF;
+	for (auto bnd: bond) {
+		bnd->calcContactStress();
+		total_contact_stressXF += bnd->contact_stresslet_XF;
 	}
 	total_contact_stressXF /= system_volume();
 }
@@ -548,15 +560,15 @@ void readBond(const string &codeword,
 			  BondParameter &bondparameter)
 {
 	map<string,int> keylist;
-	keylist["fnc:"]=1; const int _fnc = 1;
-	keylist["fsc:"]=2; const int _fsc = 2;
-	keylist["mbc:"]=3; const int _mbc = 3;
-	keylist["mtc:"]=4; const int _mtc = 4;
-	keylist["kn:"]=5; const int _kn = 5;
-	keylist["ks:"]=6; const int _ks = 6;
-	keylist["kb:"]=7; const int _kb = 7;
-	keylist["kt:"]=8; const int _kt = 8;
-	keylist["kn3:"]=9; const int _kn3 = 9;
+	keylist["fnc"] = 1; const int _fnc = 1;
+	keylist["fsc"] = 2; const int _fsc = 2;
+	keylist["mbc"] = 3; const int _mbc = 3;
+	keylist["mtc"] = 4; const int _mtc = 4;
+	keylist["kn"] = 5; const int _kn = 5;
+	keylist["ks"] = 6; const int _ks = 6;
+	keylist["kb"] = 7; const int _kb = 7;
+	keylist["kt"] = 8; const int _kt = 8;
+	keylist["kn3"] = 9; const int _kn3 = 9;
 	cerr << codeword << ' ' << value << endl;
 	switch (keylist[codeword]) {
 		case _fnc: bondparameter.fnc = atof(value.c_str()); break;
@@ -620,7 +632,7 @@ void System::readParameterFile()
 	}
 	string codeword;
 	string value;
-	while (!fin_parameter.eof()){
+	while (!fin_parameter.eof()) {
 		fin_parameter >> codeword;
 		if ( codeword == "#") {
 			char buf[1024]; fin_parameter.get(buf, 1024);
@@ -644,27 +656,27 @@ void System::readParameterFile()
 void System::readParameter(const string &codeword, const string &value)
 {
 	map<string,int> keylist;
-	keylist["bond0_file:"] = 2; const int _bond0_file = 2;
-	keylist["bond1_file:"] = 3; const int _bond1_file = 3;
-	keylist["volumefraction_increment:"] = 12; const int _volumefraction_increment = 12;
-	keylist["max_volume_fraction:"] = 13; const int _max_volume_fraction = 13;
-	keylist["step_shear_strain:"] = 14; const int _step_shear_strain = 14;
-	keylist["max_shear_strain:"] = 15; const int _max_shear_strain = 15;
-	keylist["compaction_speed:"] = 20;const int _compaction_speed = 20;
-	keylist["dt_max:"] = 21; const int _dt_max = 21;
-	keylist["max_move_step:"] = 22; const int _max_move_step = 22;
-	keylist["eta_factor:"] = 23;const int _eta_factor = 23;
-	keylist["relax_for_restructuring:"] = 30; const int _relax_for_restructuring = 30;
-	keylist["interval_convergence_check:"] = 31; const int _interval_convergence_check = 31;
-	keylist["interval_makeNeighbor:"] = 32; const int _interval_makeNeighbor = 32;
-	keylist["max_velocity_convergence:"] = 33; const int _max_velocity_convergence = 33;
-	keylist["max_ang_velocity_convergence:"] = 34; const int _max_ang_velocity_convergence = 34;
-	keylist["diff_stress_convergence:"] = 35;const int _diff_stress_convergence = 35;
-	keylist["stress_change_convergence:"] = 36;const int _stress_change_convergence = 36;
-	keylist["stress_minimum:"] = 37; const int _stress_minimum = 37;
-	keylist["min_relaxation_loop:"] = 38; const int _min_relaxation_loop = 38;
-	keylist["max_relaxation_loop:"] = 39; const int _max_relaxation_loop = 39;
-	keylist["eq_max_displacement:"] = 40; const int _eq_max_displacement = 40;
+	keylist["bond0_file"] = 2; const int _bond0_file = 2;
+	keylist["bond1_file"] = 3; const int _bond1_file = 3;
+	keylist["volumefraction_increment"] = 12; const int _volumefraction_increment = 12;
+	keylist["max_volume_fraction"] = 13; const int _max_volume_fraction = 13;
+	keylist["step_shear_strain"] = 14; const int _step_shear_strain = 14;
+	keylist["max_shear_strain"] = 15; const int _max_shear_strain = 15;
+	keylist["compaction_speed"] = 20;const int _compaction_speed = 20;
+	keylist["dt_max"] = 21; const int _dt_max = 21;
+	keylist["max_move_step"] = 22; const int _max_move_step = 22;
+	keylist["eta_factor"] = 23;const int _eta_factor = 23;
+	keylist["relax_for_restructuring"] = 30; const int _relax_for_restructuring = 30;
+	keylist["interval_convergence_check"] = 31; const int _interval_convergence_check = 31;
+	keylist["interval_makeNeighbor"] = 32; const int _interval_makeNeighbor = 32;
+	keylist["max_velocity_convergence"] = 33; const int _max_velocity_convergence = 33;
+	keylist["max_ang_velocity_convergence"] = 34; const int _max_ang_velocity_convergence = 34;
+	keylist["diff_stress_convergence"] = 35; const int _diff_stress_convergence = 35;
+	keylist["stress_change_convergence"] = 36; const int _stress_change_convergence = 36;
+	keylist["stress_minimum"] = 37; const int _stress_minimum = 37;
+	keylist["min_relaxation_loop"] = 38; const int _min_relaxation_loop = 38;
+	keylist["max_relaxation_loop"] = 39; const int _max_relaxation_loop = 39;
+	keylist["eq_max_displacement"] = 40; const int _eq_max_displacement = 40;
 	cerr << codeword << ' ' << value << endl;
 	switch (keylist[codeword]) {
 		case _bond0_file: bond0_file = value; break;
@@ -785,22 +797,6 @@ void System::setLinearChain(int number_of_particles)
 	}
 }
 
-void System::shiftCenterOfMass(vector<vec3d> &p)
-{
-	vec3d cm(0,0,0);
-	foreach(vector<vec3d>, p, p_iter) {
-		cm += (*p_iter);
-	}
-	cm *= 1.0/p.size();
-	foreach(vector<vec3d>, p, p_iter) {
-		*p_iter -= cm;
-		p_iter->x += lx/2;
-#ifdef TWODIMENSION
-		p_iter->y += ly/2;
-#endif
-		p_iter->z += lz/2;
-	}
-}
 
 void System::calcLocalStrains()
 {
@@ -1006,11 +1002,11 @@ void System::outputConfiguration(char equilibrium)
 {
 	int number_of_live_bonds = n_bond-counterBreak;
 	fout_particle << "# " << n_particle << ' ' << lx << ' ' << lz << endl;
-	ForAllParticle {
-		fout_particle << (*p_iter)->particle_number << ' ';
-		fout_particle << (*p_iter)->p.x << ' ';
-		fout_particle << (*p_iter)->p.z << ' ';
-		fout_particle << (*p_iter)->orientation_angle  << endl;
+	for (auto prtcl : particle) {
+		fout_particle << prtcl->particle_number << ' ';
+		fout_particle << prtcl->p.x << ' ';
+		fout_particle << prtcl->p.z << ' ';
+		fout_particle << prtcl->orientation_angle  << endl;
 	}
 	fout_bond << "# num_bond " << number_of_live_bonds << endl;
 	fout_bond << "# box_size " << lx << ' ' << lz << ' ' << endl;
@@ -1021,30 +1017,30 @@ void System::outputConfiguration(char equilibrium)
 	fout_bond << "# bond1_s " << bond1.fsc << ' ' << bond1.ks << endl;
 	fout_bond << "# bond1_b " << bond1.mbc << ' ' << bond1.kb << endl;
 	int cnt_bond = 0;
-	ForAllBond {
-		if ((*bond_iter)->status) {
+	for (auto bnd: bond) {
+		if (bnd->status) {
 			int i_p0, i_p1;
-			(*bond_iter)->getParticleNumbers(i_p0, i_p1);
+			bnd->getParticleNumbers(i_p0, i_p1);
 			fout_bond << i_p0 << ' ';
 			fout_bond << i_p1 << ' ';
 			double angle[2];
-			angle[0] = (*bond_iter)->contactangle[0];
-			angle[1] = (*bond_iter)->contactangle[1];
-			while ( angle[0] < 0) {
+			angle[0] = bnd->contactangle[0];
+			angle[1] = bnd->contactangle[1];
+			while (angle[0] < 0) {
 				angle[0] += 2*M_PI;
 			}
-			while ( angle[0] > 2*M_PI) {
+			while (angle[0] > 2*M_PI) {
 				angle[0] -= 2*M_PI;
 			}
-			while ( angle[1] < 0) {
+			while (angle[1] < 0) {
 				angle[1] += 2*M_PI;
 			}
-			while ( angle[1] > 2*M_PI) {
+			while (angle[1] > 2*M_PI) {
 				angle[1] -= 2*M_PI;
 			}
 			fout_bond << angle[0] << ' ';
 			fout_bond << angle[1] << ' ' ;
-			fout_bond << (*bond_iter)->bondtype << endl;
+			fout_bond << bnd->bondtype << endl;
 			cnt_bond ++;
 		}
 	}
@@ -1065,38 +1061,38 @@ void System::outputConfiguration(char equilibrium)
 	fout_conf << ' ' << average_contact_number;
 	fout_conf << endl;
 	fout_conf << "P " << particle.size() << endl;
-	ForAllParticle {
-		fout_conf << (*p_iter)->p.x-lx_half << ' ';
-		fout_conf << (*p_iter)->p.y-ly_half << ' ';
-		fout_conf << (*p_iter)->p.z-lz_half << ' ';
-		fout_conf << (*p_iter)->orientation.q[0] << ' ';
-		fout_conf << (*p_iter)->orientation.q[1] << ' ';
-		fout_conf << (*p_iter)->orientation.q[2] << ' ';
-		fout_conf << (*p_iter)->orientation.q[3] << ' ';
-		fout_conf << (*p_iter)->valCn_size() << endl;
+	for (auto prtcl : particle) {
+		fout_conf << prtcl->p.x-lx_half << ' ';
+		fout_conf << prtcl->p.y-ly_half << ' ';
+		fout_conf << prtcl->p.z-lz_half << ' ';
+		fout_conf << prtcl->orientation.q[0] << ' ';
+		fout_conf << prtcl->orientation.q[1] << ' ';
+		fout_conf << prtcl->orientation.q[2] << ' ';
+		fout_conf << prtcl->orientation.q[3] << ' ';
+		fout_conf << prtcl->valCn_size() << endl;
 	}
 	fout_conf << "B " << number_of_live_bonds << endl;
-	ForAllBond {
-		if ((*bond_iter)->status) {
+	for (auto bnd: bond) {
+		if (bnd->status) {
 			int i_p0, i_p1;
 			int initial_bond;
-			if ((*bond_iter)->initial_bond) {
+			if (bnd->initial_bond) {
 				initial_bond = 1;
 			} else {
 				initial_bond = 0;
 			}
-			(*bond_iter)->getParticleNumbers(i_p0, i_p1);
+			bnd->getParticleNumbers(i_p0, i_p1);
 			fout_conf << i_p0 << ' ' << i_p1 << ' ';
-			fout_conf << initial_bond << ' ' << (*bond_iter)->status << ' ';
-			fout_conf << (*bond_iter)->val_F_norm() << ' ';
-			fout_conf << (*bond_iter)->val_F_slid() << ' ';
-			fout_conf << (*bond_iter)->val_M_bend() << ' ';
+			fout_conf << initial_bond << ' ' << bnd->status << ' ';
+			fout_conf << bnd->val_F_norm() << ' ';
+			fout_conf << bnd->val_F_slid() << ' ';
+			fout_conf << bnd->val_M_bend() << ' ';
 #ifndef TWODIMENSION
-			fout_conf << (*bond_iter)->val_M_tors() << ' ';
+			fout_conf << bnd->val_M_tors() << ' ';
 #else
 			fout_conf << 0 << ' ';
 #endif
-			fout_conf << (*bond_iter)->cnt_regeneration << endl;
+			fout_conf << bnd->cnt_regeneration << endl;
 		}
 	}
 	lz_last_output = lz;
@@ -1153,17 +1149,17 @@ void System::calcVolumeFraction()
 void System::checkState()
 {
 	int sum_num_of_contacts_for_particle = 0;
-	for (int i=0; i < n_particle; i++) {
-		sum_num_of_contacts_for_particle += particle[i]->valCn_size();
+	for (auto prtcl: particle) {
+		sum_num_of_contacts_for_particle += prtcl->valCn_size();
 	}
 	average_contact_number = ((double)sum_num_of_contacts_for_particle)/n_particle;
-	for (int i=0; i < bond.size(); i++) {
-		bond[i]->addContactForce();
+	for (auto bnd : bond) {
+		bnd->addContactForce();
 	}
 	double bforce_max = 0;
 	double bforce_sum = 0;
-	for (int i=0; i < bond.size(); i++) {
-		double bforce = bond[i]->forceNorm();
+	for (auto bnd : bond) {
+		double bforce = bnd->forceNorm();
 		bforce_sum += bforce;
 		if (bforce > bforce_max) {
 			bforce_max = bforce;
@@ -1173,10 +1169,11 @@ void System::checkState()
 	max_force = 0;
 	max_velocity = 0;
 	max_ang_velocity = 0;
-	for (int i=0; i < n_particle; i++) {
-		double force = particle[i]->valForce();
-		double velocity = particle[i]->valVelocity();
-		double ang_velocity = particle[i]->valOmega();
+
+	for (auto prtcl: particle) {
+		double force = prtcl->valForce();
+		double velocity = prtcl->valVelocity();
+		double ang_velocity = prtcl->valOmega();
 		sum_force += force;
 		if (force > max_force) {
 			max_force = force ;
@@ -1189,8 +1186,8 @@ void System::checkState()
 		}
 	}
 	ave_force = sum_force/n_particle;
-	for (int i=0; i < n_particle; i++) {
-		particle[i]->resetForce();
+	for (auto prtcl: particle) {
+		prtcl->resetForce();
 	}
 	calcLocalStrains();
 }
@@ -1202,30 +1199,30 @@ void System::checkState()
  */
 void System::simuAdjustment()
 {
-	ForAllParticle {
-		(*p_iter)->setNorm_u();
+	for (auto prtcl: particle) {
+		prtcl->setNorm_u();
 	}
 }
 
 void System::makeNeighborPB()
 {
 	grid->remake(particle);
-	ForAllParticle {
-		(*p_iter)->makeNeighbor();
+	for (auto prtcl: particle) {
+		prtcl->makeNeighbor();
 	}
 }
 
 void System::checkBondFailure()
 {
-	foreach(vector<Bond *>, bond, it_bond) {
-		(*it_bond)->cheackBondStress();
+	for (auto bnd : bond) {
+			bnd->cheackBondStress();
 	}
 }
 
 void System::regeneration()
 {
-	foreach (vector<int>, regeneration_bond, b) {
-		bond[*b]->regeneration();
+	for (const auto i_bnd : regeneration_bond) {
+		bond[i_bnd]->regeneration();
 		counterRegenerate ++;
 	}
 	regeneration_bond.clear();
@@ -1233,8 +1230,8 @@ void System::regeneration()
 
 void System::rupture()
 {
-	foreach (vector<int>, rupture_bond, b) {
-		bond[*b]->rupture();
+	for (const auto i_bnd : rupture_bond) {
+		bond[i_bnd]->rupture();
 		counterBreak ++;
 	}
 	rupture_bond.clear();

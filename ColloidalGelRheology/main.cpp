@@ -21,9 +21,13 @@ void rheologyTest(int argc, char *const argv[], System &sy);
 void bendingLinearChain(int argc, char *const argv[], System &sy);
 //void testParameters(int argc, char *const argv[], System &sy);
 void rod_bending(int argc, char *const argv[], System &sy);
-int main (int argc, char *const argv[]) {
+
+int main (int argc, char *const argv[])
+{
 	System sy;
-	sy.simulation = argv[1];
+	if (argc > 1) {
+		sy.simulation = argv[1];
+	}
 	rheologyTest(argc, argv, sy);
 	return 0;
 }

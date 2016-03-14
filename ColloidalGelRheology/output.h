@@ -28,8 +28,8 @@ void System::outputYaplot()
 	}
 	//	fout_yap << "y 9" << endl;
 	//	fout_yap << "@ 2" << endl;
-	ForAllParticle {
-		(*p_iter)->output(fout_yap);
+	for (auto prtcl : particle) {
+		prtcl->output(fout_yap);
 	}
 	//	fout_yap << "t " << sy.lx/2 + 10 << ' ' << 0 << ' ' << -1 << ' ';
 	//	fout_yap << "N= " << sy.n_particle << "  Nb= " << sy.average_contact_number << endl;

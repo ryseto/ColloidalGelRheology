@@ -16,16 +16,15 @@
 #include "common.h"
 #include "vec3d.h"
 #include "particle.h"
-using namespace std;
 const int max_number_point = 20000;
 class Particle;
 
 class Grid{
 	double h;
-	vector<GridPoint> gl;
-	vector<int> ***vcell;
-	vector<int> vcell_wall[2];
-	vector<GridPoint> ***neighbor_cell;
+	std::vector<GridPoint> gl;
+	std::vector<int> ***vcell;
+	std::vector<int> vcell_wall[2];
+	std::vector<GridPoint> ***neighbor_cell;
 	int numberOfParticle;
 	GridPoint gp_tmp;
 	int gx_max;
@@ -39,20 +38,20 @@ public:
 			  const double grid_size);
 	void init_z(const int num_of_particle, const double lx_, const double ly_, const double lz_,
 				 const double grid_size);
-	void remake(vector<Particle *> &particle);
-	void remake_with_walls(double, double,vector<Particle *> &particle);
-	void remake_with_bottom(double, vector<Particle *> &particle);
+	void remake(std::vector<Particle *> &particle);
+	void remake_with_walls(double, double, std::vector<Particle *> &particle);
+	void remake_with_bottom(double, std::vector<Particle *> &particle);
 	
 	void entry(vec3d &p, int i);
 	GridPoint p_to_grid(const vec3d &p);
 #ifndef TWODIMENSION
-	inline vector<int>* particle_in_cell(int x, int y, int z){ return &vcell[x][y][z];}
-	inline vector<int>* particle_in_toplayer(int x, int y) { return &vcell[x][y][gz_max]; }
-	inline vector<int>* particle_in_botlayer(int x, int y) { return &vcell[x][y][0]; }
+	inline std::vector<int>* particle_in_cell(int x, int y, int z){ return &vcell[x][y][z];}
+	inline std::vector<int>* particle_in_toplayer(int x, int y) { return &vcell[x][y][gz_max]; }
+	inline std::vector<int>* particle_in_botlayer(int x, int y) { return &vcell[x][y][0]; }
 #else
-	inline vector<int>* particle_in_cell(int x, int y, int z){ return &vcell[x][0][z];}
-	inline vector<int>* particle_in_toplayer(int x, int y) { return &vcell[x][0][gz_max]; }
-	inline vector<int>* particle_in_botlayer(int x, int y) { return &vcell[x][0][0]; }
+	inline std::vector<int>* particle_in_cell(int x, int y, int z){ return &vcell[x][0][z];}
+	inline std::vector<int>* particle_in_toplayer(int x, int y) { return &vcell[x][0][gz_max]; }
+	inline std::vector<int>* particle_in_botlayer(int x, int y) { return &vcell[x][0][0]; }
 #endif
 	void reset();
 	inline int val_gx_max(){ return gx_max; }
@@ -63,14 +62,12 @@ public:
 	int gy(int i){ return gl[i].y;}
 	unsigned long size(int x, int y, int z) { return vcell[x][y][z].size(); }
 	void gl_resize(int n){ gl.resize(n); }
-	void get_neighbor_list(const vec3d &p, vector<int> &neighbor);
-	void get_neighbor_list_pointer(vec3d &p, vector< vector<int>* > &p_neighbor);
-	vector<int> * get_neighbor_list_pointer_top();
-	vector<int> * get_neighbor_list_pointer_bot();
+	void get_neighbor_list(const vec3d &p, std::vector<int> &neighbor);
+	void get_neighbor_list_pointer(vec3d &p, std::vector<std::vector<int>* > &p_neighbor);
+	std::vector<int> * get_neighbor_list_pointer_top();
+	std::vector<int> * get_neighbor_list_pointer_bot();
 	bool near_boundary_xy(const vec3d &p);
 	
 };
-
-
 
 #endif
