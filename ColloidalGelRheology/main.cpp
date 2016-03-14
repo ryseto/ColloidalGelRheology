@@ -35,14 +35,15 @@ int main (int argc, char *const argv[])
 void cerr_command_usage()
 {
 	cerr << "usage of ColloidalGelRheology" << endl;
-	cerr << "arg: c1/c2/s/bt" << endl;
+	cerr << "ColloidalGelRheology [c1/c2/s/bt]";
+	cerr << " [parameter_file]";
+	cerr << " [initial_file]";
+	cerr << " [version]\n";
 	cerr << "  c1: uniaxial compression" << endl;
 	cerr << "  c2: biaxial compression" << endl;
 	cerr << "  s:  shear" << endl;
 	cerr << "  bt: bending test" << endl;
-	cerr << "parameter_file ";
-	cerr << "initial_file ";
-	cerr << "version ";
+
 	cerr << endl;
 }
 

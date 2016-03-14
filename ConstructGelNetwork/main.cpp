@@ -19,7 +19,7 @@ int main (int argc, const char * argv[])
 {
     if (argc == 1){
 		cerr << "1:dimension 2:filling 3:Lx 4:Lz 5:rank 6:rsd 7.phi " << endl;
-        cerr << "filling=1 sediment, =2 random" << endl;
+        cerr << " (filling = 1 or 2 means sediment or random walk)" << endl;
 		exit(1);
 	}
     int dimension = atoi(argv[1]);
