@@ -8,15 +8,9 @@
 
 #include "Floc.h"
 
-
 void Floc::setPosition(vector<vec2d> &pos){
-
 	positions = pos;
-	
 	floc_size = positions.size();
-	
 //	Lx = Lx_;
 //	Ly = Ly_;
-	
-	
 }

@@ -8,9 +8,6 @@
 
 #ifndef ColloidalGelRheology_tools_h
 #define ColloidalGelRheology_tools_h
-int ipow(int p, int q);
-
-
 int ipow(int p, int q){
 	int x = 1;
 	for (int i=0; i < q; i++){
@@ -18,7 +15,4 @@ int ipow(int p, int q){
 	}
 	return x;
 }
-
-
-
 #endif

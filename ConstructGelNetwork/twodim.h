@@ -108,8 +108,8 @@ void twodim_output_flocs(ofstream &fout,
 		}
 	}
 	
-	for (int i=0; i<number_of_floc_for_vf; i++){
-		for (int k=0; k<floc_size ; k++){
+	for (int i=0; i<number_of_floc_for_vf; i++) {
+		for (int k=0; k<floc_size ; k++) {
 			vec2d p = floc[i].pos(k);
 			//p[k].shift(0, -y_max/2);
 			//p.shift(0, 1);
@@ -133,24 +133,6 @@ bool checkCollision(Floc &floc1, Floc &floc2)
 	return false;
 }
 
-//void forDebug(Floc *floc, string message){
-//	int f1 =5;
-//	int f2 = 11;
-//	int i1 = 51;
-//	int i2 = 12;
-//	vec2d tmp1 = floc[5].pos(51);
-//	vec2d tmp2 = floc[11].pos(12);
-//	if ( sq_dist_pd(tmp1, tmp2) < 3.9999){
-//		cerr << message << endl;
-//		cerr << f1 << "(" << i1 << ")" << endl;
-//		cerr << f2 << "(" << i2 << ")" << endl;
-//		tmp1.cerr();
-//		tmp2.cerr();
-//		if (message != "N")
-//			exit(1);
-//	}
-//}
-
 bool checkCollision(Floc *floc,
 					int f1, int f2,
 					vector <int> &f1_col,
@@ -159,13 +141,13 @@ bool checkCollision(Floc *floc,
 	unsigned long floc_size = floc[0].size();
 	for (int i1_connect = 0; i1_connect < floc[f1].connect.size(); i1_connect++){
 		int i1_floc = floc[f1].connect[i1_connect];
-		for (int i = 0; i < floc_size; i++) {
+		for (int i=0; i<floc_size; i++) {
 			vec2d p1 = floc[i1_floc].pos(i);
 			for (int i2_connect = 0; i2_connect < floc[f2].connect.size(); i2_connect++) {
 				int i2_floc = floc[f2].connect[i2_connect];
-				for (int j = 0; j < floc_size; j++) {
+				for (int j=0; j<floc_size; j++) {
 					vec2d p2 = floc[i2_floc].pos(j);
-					if (sq_dist_pd(p1, p2) <= 4.3) {
+					if (sq_dist_pd(p1, p2) <= 4.3) { // @@@ why 4.3?
 						f1_col.push_back(i1_floc);
 						f2_col.push_back(i2_floc);
 					}
@@ -192,14 +174,14 @@ void solveCollision(Floc *floc,
 			vec2d p1 = floc[ii].pos(m);
 			for (int kk = 0; kk < floc[collided_floc].connect.size(); kk ++) {
 				int jj = floc[collided_floc].connect[kk];
-				for (int mm=0; mm < floc_size ; mm++) {
+				for (int mm=0; mm<floc_size ; mm++) {
 					vec2d dp = diff_pd(p1, floc[jj].pos(mm));
 					double dpdv = dot(dp, direction);
-					double disc = dpdv*dpdv - (dp.sq_norm() - 4.0);
-					if (disc > 0){
+					double disc = dpdv*dpdv - (dp.sq_norm()-4);
+					if (disc > 0) {
 						double sq_disc = sqrt(disc);
-						double lamda1 = - dpdv - sq_disc;
-						double lamda2 = - dpdv + sq_disc;
+						double lamda1 = -dpdv-sq_disc;
+						double lamda2 = -dpdv+sq_disc;
 						if (lamda1 > 0
 							&& lamda_min > lamda1) {
 							lamda_min = lamda1;
@@ -235,25 +217,18 @@ void solveCollision(Floc *floc,
 	}
 }
 
-
-
 void moveRandom(Floc *floc, int floc_size, int num_of_floc)
 {
 	vector<int> cluster_list;
-	for (int j = 0; j < num_of_floc; j++){
+	for (int j = 0; j < num_of_floc; j++) {
 		floc[j].parent = -1;
 		cluster_list.push_back(j);
 	}
-	
 	vector <int> f1_col;
 	vector <int> f2_col;
-
 	while (true) {
-		int num_cluster = cluster_list.size();
-		int i = cluster_list[ lrand48() % num_cluster ];
-		//		if (floc[i].parent != -1){
-		//			i = floc[i].parent;
-		//		}
+		int num_cluster = (int)cluster_list.size();
+		int i = cluster_list[lrand48() % num_cluster];
 		double theta = 2*M_PI*drand48();
 		vec2d direction(cos(theta),sin(theta));
 		for (int k=0; k < floc[i].connect.size(); k++) {
@@ -262,7 +237,7 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc)
 		}
 		for (int jj = 0; jj < num_cluster; jj++) {
 			int j = cluster_list[jj];
-			if (i != j){
+			if (i != j) {
 				checkCollision(floc, i, j,
 							   f1_col, f2_col);
 			}
@@ -277,7 +252,7 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc)
 			}
 			cerr << endl;
 			double lamda_min = 1;
-			for (int ii=0	; ii < f1_col.size() ; ii++){
+			for (int ii=0	; ii < f1_col.size() ; ii++) {
 				solveCollision(floc, f1_col[ii] , f2_col[ii] ,
 							   direction, lamda_min,
 							   col_f1, col_f2 );
@@ -289,8 +264,6 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc)
 				int ii = floc[i].connect[k];
 				floc[ii].move(lamda_min*direction);
 			}
-//			cerr << lamda_min << endl;
-//			forDebug(floc, "here");
 			if (lamda_min < 1) {
 				if (col_f1 < col_f2) {
 					for (int k = 0; k < floc[col_f2].connect.size(); k++) {
@@ -307,8 +280,6 @@ void moveRandom(Floc *floc, int floc_size, int num_of_floc)
 					cluster_list.erase(remove(cluster_list.begin(), cluster_list.end(), col_f1),
 									   cluster_list.end());
 				}
-//				if (num_cluster % 10 ==0)
-//					monitor(floc, floc_size, num_of_floc);
 				cerr <<  "num_cluster = " << num_cluster << endl;
 			}
 		}
@@ -340,57 +311,10 @@ void putRandom(Floc *floc, int floc_size, int num_of_floc)
 		floc[i].connect.push_back(i);
 	}
 }
-//        p_tmp.periodic_range_xy(L, Lz_pd);
-//		for( int j = 0; j < i_first ; j++){
-//			for (int pb = 0; pb < 4 ; pb++){
-//				vec2d p_depl;
-//				p_depl = p[j];
-//				switch (pb) {
-//					case 0:
-//						break;
-//					case 1:
-//						if (p_depl.x() > 0.5*L)
-//							p_depl.shift(-L,0);
-//						else
-//							p_depl.shift( L,0);
-//						break;
-//					case 2:
-//						if (p_depl.z() > 0.5*Lz_pd)
-//							p_depl.shift(0, -Lz_pd);
-//						else
-//							p_depl.shift(0,  Lz_pd);
-//						break;
-//					case 3:
-//						if (p_depl.x() > 0.5*L)
-//							p_depl.shift(-L,0);
-//						else
-//							p_depl.shift( L,0);
-//
-//						if (p_depl.z() > 0.5*Lz_pd)
-//							p_depl.shift(0, -Lz_pd);
-//						else
-//							p_depl.shift(0,  Lz_pd);
-//
-//						break;
-//				}
-//				if ( sq_dist(p_tmp, p_depl) <= 4.){
-//					count ++;
-//					if ( count > max_trial){
-//						return 1;
-//					}
-//					goto try_again;
-//				}
-//			}
-//		}
 
 void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac)
 {
 	r = 1;
-	//	if (rank < 1){
-	///		cerr << "rank < 1 is not allowed." << endl;
-	//	exit(1);
-	//	}
-	//int total_number = 10000;
 	int k = 16; // number of particle 2^k
 	srand48(rsd);
 	int floc_size = ipow(2, rank);
@@ -450,9 +374,9 @@ void buildSpaceFillingNetwork2D(int filling, int rank, int rsd, double vol_frac)
 	//	int total_number;
 
 	ofstream fout;
-    if (filling == 1){
+    if (filling == 1) {
 		//fo_random_fall(p, fo_size);
-    } else if (filling == 2){
+    } else if (filling == 2) {
 		//n = twodim_fo_random_put(p, floc_size, number_of_floc_for_vf);
 		putRandom(floc, floc_size, number_of_floc_for_vf);
 		//twodim_prepare_fout(filling, fout, rank, rsd, vol_frac, "d");
@@ -500,23 +424,24 @@ double twodim_collision_value(vec2d const &po, vec2d const &p,
 	A = (p.x()-po.x())*cos(theta)+(p.z()-po.z())*sin(theta);
 	//B = sq_dist_pd(p, po) - 4*r*r;
 	B = sq_dist(p, po) - 4*r*r;
-	if ( A*A - B < 0){
+	if (A*A-B < 0) {
 		return 0;
 	}
 	l1 = - A - sqrt( A*A-B );
 	l2 = - A + sqrt( A*A-B );
     
-	if (l1 > l2) //@@@@@@@@@@ l1 > l2
+	if (l1 > l2) {//@@@@@@@@@@ l1 > l2
 		return l1;
-	else
+	} else {
 		return l2;
+	}
 }
 
 void twodim_make_fractal_object(int m, vector<vec2d> &p)
 {
 	// fo_size_tmp, p
 	// m means the size of fractal cluster
-	for (int k=0; k < n; k+= m){
+	for (int k=0; k < n; k+= m) {
 		double theta = 2*M_PI*drand48();
 		double l;
 		
@@ -524,12 +449,12 @@ void twodim_make_fractal_object(int m, vector<vec2d> &p)
 		for (int i = k; i < k+m/2; i++){ //fixed particles
 			for (int j = k+m/2; j < k+m; j++){ // particles shifted
 				l = twodim_collision_value(p[i], p[j], theta);
-				if( l >= l_max )	{
+				if (l >= l_max){
 					l_max = l;
 				}
 			}
 		}
-		for (int j = k+m/2; j < k+m; j++){
+		for (int j = k+m/2; j < k+m; j++) {
 			p[j] = p[j].plus(l_max*cos(theta), l_max*sin(theta));
 		}
 		
@@ -539,7 +464,7 @@ void twodim_make_fractal_object(int m, vector<vec2d> &p)
 		}
 		
 		for(int i=k; i<k+m; i++) {
-			p[i] = p[i] - cm;
+			p[i] = p[i]-cm;
 		}
 	}
 }
@@ -547,24 +472,22 @@ void twodim_make_fractal_object(int m, vector<vec2d> &p)
 double twodim_collision_height(vec2d po, vec2d p)
 {
 	double h, A, B;
-	A = p.z() - po.z();
+	A = p.z()-po.z();
 	//B = sq_dist(p, po) - 4*r*r;
-	B = sq_dist_pd(p, po) - 4*r*r;
+	B = sq_dist_pd(p, po)-4*r*r;
 	if (A*A-B < 0) {
 		return -1;
 	}
-	h = - A + sqrt( A*A-B );
+	h = -A+sqrt(A*A-B);
     
 	if (h < -p.z()) {
 		return -1;
 	}
-	
 	return h;
 }
 
 void twodim_put_first_fo(vector<vec2d> &p, int fo_size)
 {
-	//double x_rand = L*drand48();
 	double x_mid = Lx*drand48(); //@@@@@@@@@@@ one fractal
 	double z_mid = Lz_pd*drand48();
 	for (int i=0; i < fo_size ; i++) {
@@ -587,10 +510,11 @@ void twodim_drop_fo(vector<vec2d> &p, int i_premier, int fo_size)
 		if (y_min > p[i].z()) {
 			y_min = p[i].z();
 		}
-		for(int i_stacked = 0; i_stacked<i_premier; i_stacked++){
+		for (int i_stacked = 0; i_stacked<i_premier; i_stacked++) {
 			double h = twodim_collision_height(p[i_stacked], p[i]);
-			if(h > h_max)
+			if (h > h_max) {
 				h_max = h;
+			}
 		}
 	}
 	
@@ -755,41 +679,46 @@ try_again1:
                     case 0:
                         break;
                     case 1:
-                        if (p_depl.x() > 0.5*Lx)
+						if (p_depl.x() > 0.5*Lx) {
                             p_depl.shift(-Lx,0);
-                        else
+						} else {
                             p_depl.shift( Lx,0);
+						}
                         break;
                     case 2:
-                        if (p_depl.z() > 0.5*Lz_pd)
+						if (p_depl.z() > 0.5*Lz_pd) {
                             p_depl.shift(0, -Lz_pd);
-                        else
+						} else {
                             p_depl.shift(0,  Lz_pd);
+						}
                         break;
                     case 3:
-                        if (p_depl.x() > 0.5*Lx)
+						if (p_depl.x() > 0.5*Lx) {
                             p_depl.shift(-Lx,0);
-                        else
-                            p_depl.shift( Lx,0);
-                        
-                        if (p_depl.z() > 0.5*Lz_pd)
+						} else {
+							p_depl.shift( Lx,0);
+						}
+						if (p_depl.z() > 0.5*Lz_pd) {
                             p_depl.shift(0, -Lz_pd);
-                        else
+						} else {
                             p_depl.shift(0,  Lz_pd);
+						}
                         break;
                 }
                 double B = dot(v, p_tmp - p_depl);
                 vec2d tmp = (p_tmp - p_depl);
                 double C = tmp.sq_norm() - 4;
                 double DD = B*B - A*C;
-                if ( DD  > 0 ){
+                if (DD > 0) {
                     double sqrt_DD = sqrt(DD);
                     double lambda1 = (-B + sqrt_DD)/A;
                     double lambda2 = (-B - sqrt_DD)/A;
-                    if (lambda1 > 0 && lambda1 < lambda)
+					if (lambda1 > 0 && lambda1 < lambda) {
                         lambda = lambda1;
-                    if (lambda2 > 0 && lambda2 < lambda)
-                        lambda = lambda2 ;
+					}
+					if (lambda2 > 0 && lambda2 < lambda) {
+                        lambda = lambda2;
+					}
                 }
             }
         }
@@ -814,7 +743,7 @@ int twodim_fo_random_put(vector<vec2d> &p,
 	//	unsigned long fo_num = p.size()/fo_size;
 	twodim_put_first_fo(p, floc_size);
 	//int j_max = (int)(total_number/fo_size);
-	for (int j = 1; j < number_of_particle_for_vf; j++){
+	for (int j = 1; j < number_of_particle_for_vf; j++) {
 		twodim_put_fo(p, j*floc_size, floc_size);
 	}
 	return (int)n;
